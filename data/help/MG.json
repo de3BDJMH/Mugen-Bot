@@ -1,0 +1,11 @@
+{
+    "display_name": "帮助",
+    "help": {
+        "text": "查看bot帮助",
+        "image": []
+    },
+    "state": true,
+    "filter_mode": "blacklist",
+    "whitelist": [],
+    "blacklist": []
+}

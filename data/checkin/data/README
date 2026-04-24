@@ -1,0 +1,45 @@
+user存储用户数据，比如有多少data
+每个user结构:
+{
+    "id": int, //QQ号
+    "nickname": "", //用户QQ名
+    "last": "YYYY-MM-DD", //上次签到日期
+    "total": int, //总签到天数
+    "consecutive": int, //当前连续签到天数
+    "max_consecutive": int, //最大连续签到天数
+    "data": {
+        "base": int, //可以被10整除的数，代表data基底
+        "addition": float, //乘数，代表有多少个这样的base，2的两者相加次方为总data（单位B），但是计算量太大，所以用2的addition次方+base对应单位会更方便
+        "zero": bool, //data为0时，该项为true
+    }
+}
+
+time存储历史签到信息
+{
+    "YYYY-MM-DD":[
+        ["id1", "HH:MM:SS"],
+        ["id2", "HH:MM:SS"]
+    ]
+}
+
+log存储data变化信息，每天一个文件
+{
+    "id": int, //QQ号
+    "operate": "checkin"/"rob"/"send", //变动操作，签到/抢劫/赠送
+    "type": "+"/"-", //变动类型，增加还是减少
+    "data": {
+        "base": int,
+        "addition": float
+        "zero": bool,
+    },
+    "time": "YYYY-MM-DD HH:MM:SS"
+}
+
+签到奖励信息存储在外层config中，
+checkDataRange表示每个人获取的data取值范围
+firstBonous表示前面几个签到给的奖励乘数（乘在指数上）
+thursday表示疯狂星期四，初始概率为第一项，每签到一个扣除第二项的概率
+superBonous表示小概率获得的大奖，range为取值范围，p为概率
+
+
+请记得修改文件名，.example只提供了示例

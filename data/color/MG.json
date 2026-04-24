@@ -1,0 +1,11 @@
+{
+    "display_name": "\"色色\"",
+    "help": {
+        "text": "发送色色图片",
+        "image": []
+    },
+    "state": true,
+    "filter_mode": "blacklist",
+    "whitelist": [],
+    "blacklist": []
+}

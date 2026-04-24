@@ -1,0 +1,15 @@
+{
+    "COMMAND_START": [
+        "",
+        "/",
+        "!",
+        "#",
+        "杠"
+    ],
+    "COMMAND_ALIAS": {
+        "mai": [
+            "mai",
+            "maimai"
+        ]
+    }
+}

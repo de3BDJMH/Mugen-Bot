@@ -1,0 +1,116 @@
+{
+    "phi": {
+        "help_pic_path": ""
+    },
+    "mai": {
+        "description": "舞萌指令",
+        "commands": {
+            "guess": {
+                "description": "猜歌根指令",
+                "alias": [
+                    "guess",
+                    "开字母",
+                    "开",
+                    "k",
+                    "字母"
+                ]
+            },
+            "霸者进度": {
+                "description": "查询霸者进度",
+                "alias": [
+                    "霸者进度"
+                ]
+            },
+            "舞极进度": {
+                "description": "查询舞极进度",
+                "alias": [
+                    "舞极进度"
+                ]
+            },
+            "舞将进度": {
+                "description": "查询舞将进度",
+                "alias": [
+                    "舞将进度"
+                ]
+            },
+            "舞神进度": {
+                "description": "查询舞神进度",
+                "alias": [
+                    "舞神进度"
+                ]
+            },
+            "舞舞舞进度": {
+                "description": "查询舞舞舞进度",
+                "alias": [
+                    "舞舞舞进度"
+                ]
+            },
+            "舞系列进度": {
+                "description": "查询舞系列进度",
+                "alias": [
+                    "舞系列进度"
+                ]
+            },
+            "DX霸者进度": {
+                "description": "查询DX霸者进度",
+                "alias": [
+                    "DX霸者进度",
+                    "dx霸者进度"
+                ]
+            },
+            "DX舞极进度": {
+                "description": "查询DX舞极进度",
+                "alias": [
+                    "DX舞极进度",
+                    "dx舞极进度"
+                ]
+            },
+            "DX舞将进度": {
+                "description": "查询DX舞将进度",
+                "alias": [
+                    "DX舞将进度",
+                    "dx舞将进度"
+                ]
+            },
+            "DX舞神进度": {
+                "description": "查询DX舞神进度",
+                "alias": [
+                    "DX舞神进度",
+                    "dx舞神进度"
+                ]
+            },
+            "DX舞舞舞进度": {
+                "description": "查询DX舞舞舞进度",
+                "alias": [
+                    "DX舞舞舞进度",
+                    "dx舞舞舞进度"
+                ]
+            },
+            "DX舞系列进度": {
+                "description": "查询DX舞系列进度",
+                "alias": [
+                    "DX舞系列进度",
+                    "dx舞系列进度"
+                ]
+            },
+            "rt排行": {
+                "description": "查询本群rt排行",
+                "alias": [
+                    "rt排行"
+                ]
+            },
+            "霸者排行": {
+                "description": "查询本群霸者排行",
+                "alias": [
+                    "霸者排行"
+                ]
+            },
+            "DX霸者排行": {
+                "description": "查询本群DX霸者排行",
+                "alias": [
+                    "DX霸者排行"
+                ]
+            }
+        }
+    }
+}

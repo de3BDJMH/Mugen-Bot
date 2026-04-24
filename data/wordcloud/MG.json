@@ -1,0 +1,11 @@
+{
+    "display_name": "词云",
+    "help": {
+        "text": "使用 词云 天数 查看该天数范围内群聊词云\n仅供群聊使用",
+        "image": []
+    },
+    "state": true,
+    "filter_mode": "blacklist",
+    "whitelist": [],
+    "blacklist": []
+}

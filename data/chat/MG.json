@@ -1,0 +1,11 @@
+{
+    "display_name": "随机回复",
+    "help": {
+        "text": "我喜欢你",
+        "image": []
+    },
+    "state": true,
+    "filter_mode": "blacklist",
+    "whitelist": [],
+    "blacklist": []
+}

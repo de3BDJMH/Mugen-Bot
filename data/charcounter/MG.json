@@ -1,0 +1,11 @@
+{
+    "display_name": "字符统计",
+    "help": {
+        "text": "统计每个字符被发送的次数\nchc 字符统计    查询群聊/和bot的私聊每个字符发送次数\nchc 总字符统计 [数量]    查询所有聊天记录内每个字符发送次数\nchc 查询 [qq号]    默认自己，查询指定群友的发言统计（需要在群内）",
+        "image": []
+    },
+    "state": true,
+    "filter_mode": "blacklist",
+    "whitelist": [],
+    "blacklist": []
+}

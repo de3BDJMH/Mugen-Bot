@@ -1,0 +1,13 @@
+{
+    "checkDataRange":[
+        17,23
+    ],
+    "firstBonus":[1.10,1.05,1.025],
+    "thursday":[0.5,0.05],
+    "superBonus": {
+        "range": [
+            26,27
+        ],
+        "probability": 0.01
+    }
+}

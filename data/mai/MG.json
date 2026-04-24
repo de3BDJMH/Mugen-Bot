@@ -1,0 +1,11 @@
+{
+    "display_name": "maimai",
+    "help": {
+        "text": "舞萌有关功能\n只提供舞代进度查询，数据来源：水鱼\n指令：[dx]霸者/舞极/舞将/舞神/舞舞舞/舞系列进度\n最前面加上dx时不考虑删曲，查询舞系列时会返回前面全部5张图",
+        "image": []
+    },
+    "state": true,
+    "filter_mode": "blacklist",
+    "whitelist": [],
+    "blacklist": []
+}

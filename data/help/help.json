@@ -1,0 +1,51 @@
+{
+    "11":{
+        "plugin": "",
+        "text":"",
+        "image":["D:\\LLOneBot\\guess\\guess\\plugins\\phigros\\help.png"]
+    },
+    "12":{
+        "plugin": "",
+        "text":"arc数据库缺乏更新所以不建议使用\n/arc info    获取曲目信息\n/arc ill    猜曲绘\n/arc stiker    制作arc表情（很难用）",
+        "image":[]
+    },
+    "13":{
+        "plugin": "mai",
+        "text":"",
+        "image":[]
+    },
+    "14":{
+        "plugin": "",
+        "text":"https://docs.365246692.xyz/help/",
+        "image":[]
+    },
+    "21":{
+        "text":"",
+        "image":["D:\\LLOneBot\\guess\\guess\\plugins\\help\\img\\msgc1.png","D:\\LLOneBot\\guess\\guess\\plugins\\help\\img\\msgc2.png","D:\\LLOneBot\\guess\\guess\\plugins\\help\\img\\msgc3.png"]
+    },
+    "22":{
+        "plugin": "charcounter",
+        "text":"",
+        "image":[]
+    },
+    "23":{
+        "plugin": "",
+        "text":"有很多角色的表情，发送角色名即可，请自行探索，例如：初音、真寻、龙\n注：咖波已ban",
+        "image":[]
+    },
+    "24":{
+        "plugin": "",
+        "text":"请发送meme list查看",
+        "image":[]
+    },
+    "25":{
+        "plugin": "watchice",
+        "text":"",
+        "image":[]
+    },
+    "26":{
+        "plugin": "chat",
+        "text":"",
+        "image":[]
+    }
+}

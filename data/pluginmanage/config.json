@@ -1,0 +1,5 @@
+{
+    "op":[2404164262],
+    "toggle_on_command": ["on","开"],
+    "toggle_off_command": ["off","关"]
+}
