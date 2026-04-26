@@ -1,0 +1,11 @@
+{
+    "display_name": "抢劫",
+    "help": {
+        "text": "",
+        "image": []
+    },
+    "state": true,
+    "filter_mode": "blacklist",
+    "whitelist": [],
+    "blacklist": []
+}

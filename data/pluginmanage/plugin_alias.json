@@ -5,5 +5,6 @@
     "color":["color","色色","涩涩"],
     "charcounter":["charcounter","字符统计","chc"],
     "wordcloud":["wordcloud","词云"],
-    "checkin": ["checkin","签到"]
+    "checkin": ["checkin","签到"],
+    "rob": ["rob","抢劫"]
 }

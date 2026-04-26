@@ -12,6 +12,28 @@ user存储用户数据，比如有多少data
         "addition": float, //乘数，代表有多少个这样的base，2的两者相加次方为总data（单位B），但是计算量太大，所以用2的addition次方+base对应单位会更方便
         "zero": bool, //data为0时，该项为true
     }
+    "rob": {
+        "rate": float, //成功率[0,1]
+        "last_rob": "YYYY-MM-DD HH:MM:SS", //上一次抢劫时间
+        "robbed": { //抢了谁
+            "id": {
+                "success_times": int, //成功次数
+                "fail_times": int, //失败次数
+                "success_data": { //累计抢到了多少
+                    ...
+                },
+                "fail_data": { //抢劫失败自己送出去多少
+                    ...
+                }
+            },
+            ...
+        },
+        "robbed_by": [ //被谁抢了，只做简单记录，查询到id后可快速跳转
+            "id1",
+            "id2",
+            ...//注意都是int
+        ]
+    }
 }
 
 time存储历史签到信息

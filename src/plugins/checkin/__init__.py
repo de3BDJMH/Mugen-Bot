@@ -9,6 +9,7 @@ from nonebot import get_bot
 
 import pathlib
 import datetime
+import math
 
 from ...libraries.tools import *
 from ...libraries.checkin import tools
@@ -76,10 +77,190 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
     user=tools.User(event.user_id)
     if not user.nickname:
         await selfinfo.finish("还没有你的信息呢，签到试试看吧？")
-    msg=f"{user.nickname} 的个人信息：\n"
-    msg+=f"  - Data: {user.data.display}\n"
+    
+    robtimes_ranks={}
+    robbedtimes_ranks={}
+    rob_gain_data_ranks={}
+    rob_give_data_ranks={}
+    msgs=[]
+    #统计数据
+    user_info=jsonLoad(tools.USER_PATH)
+    for uid in user_info:
+        user=tools.User(int(uid))
+        if not uid in robtimes_ranks:
+            robtimes_ranks[uid]=[0,0,uid,user.nickname]
+        for rob_user in user.rob_info["robbed"]:
+            robtimes_ranks[uid][0]+=user.rob_info["robbed"][rob_user]["success_times"]
+            robtimes_ranks[uid][1]+=user.rob_info["robbed"][rob_user]["fail_times"]
+            if not rob_user in robbedtimes_ranks:
+                robbedtimes_ranks[rob_user]=[0,0,rob_user,user_info[rob_user]["nickname"]]
+            robbedtimes_ranks[rob_user][0]+=user.rob_info["robbed"][rob_user]["success_times"]
+            robbedtimes_ranks[rob_user][1]+=user.rob_info["robbed"][rob_user]["fail_times"]
+            #初始化
+            if not uid in rob_gain_data_ranks:
+                rob_gain_data_ranks[uid]=[tools.Data([0,0],True),tools.Data([0,0],True),uid,user.nickname]
+            if not uid in rob_give_data_ranks:
+                rob_give_data_ranks[uid]=[tools.Data([0,0],True),tools.Data([0,0],True),uid,user.nickname]
+            if not rob_user in rob_gain_data_ranks:
+                rob_gain_data_ranks[rob_user]=[tools.Data([0,0],True),tools.Data([0,0],True),rob_user,user_info[rob_user]["nickname"]]
+            if not rob_user in rob_give_data_ranks:
+                rob_give_data_ranks[rob_user]=[tools.Data([0,0],True),tools.Data([0,0],True),rob_user,user_info[rob_user]["nickname"]]
+            #user成功，user的gain[0]+data，robuser的give[0]+data
+            success_data=tools.Data([user.rob_info["robbed"][rob_user]["success_data"]["base"],user.rob_info["robbed"][rob_user]["success_data"]["addition"]],user.rob_info["robbed"][rob_user]["success_data"]["zero"])
+            rob_gain_data_ranks[uid][0]=tools.plus(rob_gain_data_ranks[uid][0],success_data)
+            rob_give_data_ranks[rob_user][0]=tools.plus(rob_give_data_ranks[rob_user][0],success_data)
+            #user失败，user的give[1]+data，robuser的gain[1]+data
+            fail_data=tools.Data([user.rob_info["robbed"][rob_user]["fail_data"]["base"],user.rob_info["robbed"][rob_user]["fail_data"]["addition"]],user.rob_info["robbed"][rob_user]["fail_data"]["zero"])
+            rob_give_data_ranks[uid][1]=tools.plus(rob_give_data_ranks[uid][1],fail_data)
+            rob_gain_data_ranks[rob_user][1]=tools.plus(rob_gain_data_ranks[rob_user][1],fail_data)
+        del user
+
+    user=tools.User(event.user_id)
+    msg=f"{user.nickname if user.id!=2404164262 else user.data.display} 的个人信息：\n"#无限专属个人信息！
+    if user.last_check==datetime.datetime.now().strftime("%Y-%m-%d"):
+        msg+=f"  今日已签到\n"
+    else:
+        msg+=f"  今日未签到\n"
+    msg+=f"  - Data: {user.data.display if user.id!=2404164262 else '无限！'}\n"#小彩蛋
     msg+=f"  - 累计签到天数: {user.total_check} 天\n"
     msg+=f"  - 当前连续签到天数: {user.consecutive_check} 天\n"
-    msg+=f"  - 最大连续签到天数: {user.max_consecutive_check} 天"
-    await selfinfo.finish(msg)
+    msg+=f"  - 最大连续签到天数: {user.max_consecutive_check} 天\n"
+    rob_most=["",0]
+    for rob_user in user.rob_info["robbed"]:
+        times=user.rob_info["robbed"][rob_user]["success_times"]+user.rob_info["robbed"][rob_user]["fail_times"]
+        if times>rob_most[1]:
+            rob_most=[rob_user,times]
+    if rob_most[0]:
+        msg+=f"  - 你最喜欢抢谁: {user_info[rob_most[0]]['nickname']}，抢了 {rob_most[1]} 次\n"
+    else:
+        msg+=f"  - 你还没有抢过别人呢\n"
+    robbed_most=["",0]
+    for rob_user in user.rob_info["robbed_by"]:
+        times=user_info[str(rob_user)]["rob"]["robbed"][str(user.id)]["success_times"]+user_info[str(rob_user)]["rob"]["robbed"][str(user.id)]["fail_times"]
+        if times>robbed_most[1]:
+            robbed_most=[rob_user,times]
+    if robbed_most[0]:
+        msg+=f"  - 最喜欢抢你的人: {user_info[robbed_most[0]]['nickname']}，被抢了 {robbed_most[1]} 次\n"
+    else:
+        msg+=f"  - 还没有人抢过你呢\n"
+    msg+=f"  - 抢劫总次数: {robtimes_ranks[str(user.id)][0]}（成功 {robtimes_ranks[str(user.id)][1]} 次，失败 {robtimes_ranks[str(user.id)][0]-robtimes_ranks[str(user.id)][1]} 次）\n"
+    msg+=f"  - 被抢总次数: {robbedtimes_ranks[str(user.id)][0]} 次\n"
+    msg+=f"  - 抢到的Data: {rob_gain_data_ranks[str(user.id)][0].display}（主动抢到 {rob_gain_data_ranks[str(user.id)][0].display}，被送了 {rob_gain_data_ranks[str(user.id)][1].display}）\n"
+    msg+=f"  - 失去的Data: {rob_give_data_ranks[str(user.id)][0].display}（被抢走 {rob_give_data_ranks[str(user.id)][0].display}，主动送出了 {rob_give_data_ranks[str(user.id)][1].display}）\n"
+    msgs=[
+        {
+            "type": "node",
+            "data": {
+                "name": "プラナ",
+                "uin": str(event.self_id),
+                "content": msg
+            }
+        }
+    ]
+    if "message.group" in event.get_event_name():
+        await bot.send_group_forward_msg(group_id=event.group_id, messages=msgs)
+    elif "message.private" in event.get_event_name():
+        await bot.send_private_forward_msg(user_id=event.user_id, messages=msgs)
+
+send=on_command("赠送",aliases={"send"})
+@send.handle()
+async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+
+    if not MGPLUGIN.getPluginState():
+        return
+    if not MGPLUGIN.getGroupPluginState(event):
+        return
     
+    recive=event.get_message()
+    if len(recive)<3:
+        return
+    if not (recive[1].type=="at" and recive[2].type=="text"):#send @xxx data
+        return
+    
+    sender=tools.User(event.user_id)
+    reciver_id=int(recive[1].data["qq"])
+    reciver=tools.User(reciver_id)
+    if not sender.nickname:
+        await send.finish("还没有你的信息呢，签到试试看吧？")
+    if not reciver.nickname:
+        nickname=(await bot.get_stranger_info(user_id=reciver_id,no_cache=True))["nickname"]
+        reciver=tools.User(reciver_id,nickname)
+    send_data_unit=20#默认MB
+    send_data=recive[2].data["text"].upper()
+    for u in list(tools.DATA_UNIT.keys())[::-1]:#倒序，防止先匹配B
+        if tools.DATA_UNIT[u] in send_data:
+            send_data_unit=u
+            send_data=send_data.replace(tools.DATA_UNIT[u],"")
+            break
+    try:
+        send_data=float(send_data)
+        if send_data_unit==0:#B不能小数，稍微严谨一些
+            send_data=int(send_data)
+    except:
+        await send.finish("输入数据有误，需要为整数或小数+单位(B KB MB...)，无单位默认MB")
+    if send_data<=0 or (send_data<1 and send_data_unit==0):
+        await send.finish("笨蛋！你想干什么？！")
+    elif send_data>=1024:
+        await send.finish("太大了...不可以哦...")
+
+    send_data=tools.Data([send_data_unit,math.log2(send_data)],False)
+    if send_data.getBytes()>sender.data.getBytes():
+        await send.finish("你还没有这么多Data哦")
+    sender.delData(send_data)
+    reciver.addData(send_data)
+    sender.updateUserInfo()
+    tools.log(sender.id,"send","-",send_data,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    reciver.updateUserInfo()
+    tools.log(reciver.id,"send","+",send_data,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    await send.finish(f"成功向 {reciver.nickname} 赠送了 {send_data.display}")
+
+checkrank=on_command("签到排行榜",aliases={"签到排名","签到排行"})
+@checkrank.handle()
+async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+
+    if not MGPLUGIN.getPluginState():
+        return
+    if not MGPLUGIN.getGroupPluginState(event):
+        return
+    
+    today=tools.CheckDay(datetime.datetime.now())
+    if not today.info:
+        await checkrank.finish("今天还没有人签到哦~")
+    ranks=[]
+    for i in range(len(today.info)):
+        user_id=today.info[i][0]
+        user=tools.User(user_id)
+        ranks.append([user_id,user.nickname,today.info[i][1]])
+        del user
+    msg,me=tools.generateRank(ranks,event.user_id)
+    msg=f"{today.day}签到排行榜：\n{msg}"
+    if not me:
+        msg+=f"\n你还没有签到哦~\n"
+    
+    await checkrank.finish(msg[:-1])
+
+datarank=on_command("data排行榜",aliases={"data排名","data排行"})
+@datarank.handle()
+async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+
+    if not MGPLUGIN.getPluginState():
+        return
+    if not MGPLUGIN.getGroupPluginState(event):
+        return
+    
+    users=jsonLoad(tools.USER_PATH)
+    ranks=[]
+    for user_id in users:
+        user=tools.User(int(user_id))
+        if user.nickname and user.data.getBytes()>0:
+            ranks.append([user.id,user.nickname,user.data.display,user.data.getBytes()])
+        del user
+    ranks.sort(key=lambda x:x[3],reverse=True)
+    ranks=[r[:3] for r in ranks]
+    msg,me=tools.generateRank(ranks,event.user_id)
+    msg=f"Data排行榜：\n{msg}"
+    if not me:
+        msg+=f"\n你还没有Data哦~\n"
+    
+    await datarank.finish(msg[:-1])
