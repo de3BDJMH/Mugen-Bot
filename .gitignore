@@ -148,6 +148,8 @@ data/checkin/data/logs/*
 !data/checkin/data/logs/.gitkeep
 data/checkin/data/time.json
 data/checkin/data/user.json
+data/checkin/out/*
+!data/checkin/out/.gitkeep
 
 data/color/out/*
 !data/color/out/.gitkeep
@@ -169,3 +171,6 @@ data/wordcloud/database/user/*
 !data/wordcloud/database/user/.gitkeep
 data/wordcloud/output/*
 !data/wordcloud/output/.gitkeep
+
+data/library/password.json
+data/library/cookies.json

@@ -9,5 +9,37 @@
             26,27
         ],
         "probability": 0.01
-    }
+    },
+    "items": [
+        {
+            "id": 1,
+            "name": "1.5倍券",
+            "probability": 0.1
+        },
+        {
+            "id": 2,
+            "name": "2倍券",
+            "probability": 0.075
+        },
+        {
+            "id": 3,
+            "name": "3倍券",
+            "probability": 0.05
+        },
+        {
+            "id": 4,
+            "name": "4倍券",
+            "probability": 0.025
+        },
+        {
+            "id": 5,
+            "name": "5倍券",
+            "probability": 0.02
+        },
+        {
+            "id": 6,
+            "name": "6倍券",
+            "probability": 0.01
+        }
+    ]
 }

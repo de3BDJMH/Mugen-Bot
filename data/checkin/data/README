@@ -33,6 +33,13 @@ user存储用户数据，比如有多少data
             "id2",
             ...//注意都是int
         ]
+    },
+    "items": { //拥有的物品
+        "item_id": {
+            "name": "", //物品名字
+            "count": int, //数量
+        },
+        ...
     }
 }
 
@@ -47,13 +54,17 @@ time存储历史签到信息
 log存储data变化信息，每天一个文件
 {
     "id": int, //QQ号
-    "operate": "checkin"/"rob"/"send", //变动操作，签到/抢劫/赠送
+    "operate": "checkin"/"rob"/"send"/"item", //变动操作，签到/抢劫/赠送/背包变化
     "type": "+"/"-", //变动类型，增加还是减少
-    "data": {
+    "data": { //可以没有，如果不是和data有关
         "base": int,
-        "addition": float
+        "addition": float,
         "zero": bool,
     },
+    "item": { //可以没有，如果不是和item有关
+        "item_id": int,
+        "count": int
+    }
     "time": "YYYY-MM-DD HH:MM:SS"
 }
 

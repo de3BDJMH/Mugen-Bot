@@ -195,5 +195,18 @@ async def handle_function(matcher:Matcher,bot:Bot,event:Event,args: Message = Co
             else:
                 msg+=f"  {cs1[0]}:  {cs1[1]}\n"
         msg+="注：数据统计起始时间有差距，非统计总字符数量起始时间"
-        await commands.send(msg)
+        msgs=[
+            {
+                "type": "node",
+                "data": {
+                    "name": "プラナ",
+                    "uin": str(event.self_id),
+                    "content": msg
+                }
+            }
+        ]
+        if "message.group" in event.get_event_name():
+            await bot.send_group_forward_msg(group_id=event.group_id, messages=msgs)
+        elif "message.private" in event.get_event_name():
+            await bot.send_private_forward_msg(user_id=event.user_id, messages=msgs)
         

@@ -1,0 +1,12 @@
+{
+  "display_name": "题库刷题练习",
+  "help": {
+    "text": "选择想要练习的题库，然后进行刷题",
+    "image": []
+  },
+  "state": true,
+  "filter_mode": "blacklist",
+  "whitelist": [],
+  "blacklist": [
+  ]
+}

@@ -1,0 +1,11 @@
+{
+    "display_name": "浙师大图书馆监控",
+    "help": {
+        "text": "可以查询浙师大图书馆每一个座位的状态，查询一个区域的状态，禁止使用该代码抢座位",
+        "image": []
+    },
+    "state": true,
+    "filter_mode": "blacklist",
+    "whitelist": [],
+    "blacklist": []
+}

@@ -12,6 +12,7 @@ USER_PATH=DATA_PATH/"data"/"user.json"
 TIME_PATH=DATA_PATH/"data"/"time.json"
 LOG_PATH=DATA_PATH/"data"/"logs"
 ROB_CONFIG_PATH=DATA_PATH.parent/"rob"/"config.json"
+OUT_PATH=DATA_PATH/"out"
 
 DATA_UNIT={0:"B",
            10:"KB",
@@ -36,6 +37,10 @@ class Data:
         if zero:
             self.unit="B"
             self.display="0B"
+        elif data[0]<0:#及时纠正错误，这样传入错误数值也能修复了
+            self.unit="B"
+            self.display="0B"
+            self.is_zero=True
         else:
             self.unit=DATA_UNIT[self.base]
             self.display=f"{round(2**data[1],2)}{self.unit}"
@@ -61,6 +66,10 @@ class Data:
         if self.is_zero:
             self.unit="B"
             self.display="0B"
+        elif self.base<0:
+            self.unit="B"
+            self.display="0B"
+            self.is_zero=True
         else:
             self.unit=DATA_UNIT[self.base]
             self.display=f"{round(2**self.addition,2)}{self.unit}"
@@ -152,15 +161,25 @@ class CheckDay:
     def firstType(self):
         """获取第一的类型：'year'/'month'/'day'/'',不是第一返回''"""
         check_info=jsonLoad(TIME_PATH)
-        ftype="year"
+        ftype=[0,0,0]#年/月/日
         for day in check_info:
-            if ftype=="year" and self.date.year==int(day[:4]) and self.day!=day:
-                ftype="month"
-            if ftype=="month" and self.date.month==int(day[5:7]) and self.day!=day:
-                ftype="day"
-            if ftype=="day" and self.getRank()!=1:
-                ftype=''
-        return ftype
+            if self.day==day:
+                ftype=[1,1,1]
+                break
+            if self.date.year==int(day[:4]):
+                ftype[0]=1
+                if self.date.month==int(day[5:7]):
+                    ftype[1]=1
+                    if self.date.day==int(day[8:10]):
+                        ftype[2]=1
+        t="year"
+        if ftype[0]==1:
+            t="month"
+        if ftype[1]==1:
+            t="day"
+        if ftype[2]==1:
+            t=""
+        return t
     
     def log(self,id,data:Data):
         self.info.append([id,self.time])
@@ -184,6 +203,7 @@ class User:
             "robbed": {},
             "robbed_by": []
         }
+        self.items={}
         self.info={
             "id": self.id,
             "nickname": self.nickname,
@@ -196,7 +216,8 @@ class User:
                 "addition": self.data.addition,
                 "zero": True
             },
-            "rob": self.rob_info
+            "rob": self.rob_info,
+            "items": self.items
         }#info仅供举例用，不要使用它进行任何操作，有用的数据均被导出
         self.reloadUserInfo()
     
@@ -213,6 +234,7 @@ class User:
             self.max_consecutive_check=self.info["max_consecutive"]
             self.data=Data([self.info["data"]["base"],self.info["data"]["addition"]],self.info["data"]["zero"])
             self.rob_info=self.info["rob"]
+            self.items=self.info["items"]
         else:
             self.info={
                 "id": self.id,
@@ -227,10 +249,10 @@ class User:
                     "last_rob": "1970-01-01 00:00:00",
                     "robbed": {},
                     "robbed_by": []
-                }
+                },
+                "items": {}
             }
             info[str(self.id)]=self.info
-            jsonDump(USER_PATH,info)
         return self.info
     
     def updateUserInfo(self):
@@ -257,7 +279,7 @@ class User:
         check_config=jsonLoad(CONFIG_PATH)
         #获取data量
         data=Data([0,0],zero=True)
-        result={"data":data,"thursday":False,"super":None,"rank":rank,"rankbonus":1,"basedata":data,"first":today.firstType()}
+        result={"data":data,"thursday":False,"super":None,"rank":rank,"rankbonus":1,"basedata":data,"first":today.firstType(),"items":[]}
         if now.weekday()+1==4:#周四
             if random.random()<=check_config["thursday"][0]-check_config["thursday"][1]*(rank-1):
                 result["thursday"]=True
@@ -294,6 +316,9 @@ class User:
         self.info["total"]+=1
         self.updateUserInfo()
         today.log(self.id,data)
+        reward=self.gacha()
+        if reward:
+            result["items"].append(reward)
         return result
 
     def rob(self,target:int):
@@ -403,6 +428,108 @@ class User:
                 target_user.updateUserInfo()
                 log(target,"rob","-",rob_data,self.rob_info["last_rob"])
                 return f"( +{rob_data.display} / -{delta_rate*100:.2f}%) 抢劫成功，{target_user.nickname} 被你抢走了 {rob_data.display}！\n成功率减少了 {delta_rate*100:.2f}%，当前：{self.rob_info["rate"]*100:.2f}%"
+
+    def gacha(self):
+        """抽取一个物品"""
+        check_config=jsonLoad(CONFIG_PATH)
+        items=check_config["items"]
+        result={}
+        r=random.random()
+        p=0
+        while r>0 and p<len(items)-1:
+            r-=items[p]["probability"]
+            p+=1
+        if r<0:
+            result=items[p]
+            if str(result["id"]) in self.items:
+                self.items[str(result["id"])]["count"]+=1
+            else:
+                self.items[str(result["id"])]={
+                    "name": result["name"],
+                    "count": 1
+                }
+            self.info["items"]=self.items
+            self.updateUserInfo()
+        return result
+    
+    def getLogs(self,lines:int=-1):
+        """获取用户的data变动日志，lines为获取的记录条数，-1为全部"""
+        log_path_list=pathlib.Path.iterdir(LOG_PATH)
+        log_path_list=[f for f in log_path_list if f.is_file() and f.name.startswith("log_")]
+        logs=[]
+        for l in log_path_list:
+            with open(l,encoding="utf-8") as f:
+                data=json.load(f)
+            for i in data:
+                if i["id"]==self.id:
+                    logs.append(i)
+        if lines!=-1:
+            logs=logs[-lines:]
+        return logs
+    
+    def getLogsByDate(self,date:list):
+        """根据日期获取用户的data变动日志，date为[y,m,d]"""
+        date_str=f"{date[0]:04d}-{date[1]:02d}-{date[2]:02d}"
+        log_path=LOG_PATH/f"log_{date_str}.json"
+        logs=[]
+        if log_path.is_file():
+            with open(log_path,encoding="utf-8") as f:
+                data=json.load(f)
+            for i in data:
+                if i["id"]==self.id:
+                    logs.append(i)
+        return logs
+
+    def getCheckInfo(self,day:list):
+        """获取用户的签到信息，只能获取一天的
+        提供[y,m,d]的列表，返回[bool,h:m:s,rank]#是否签到，签到时间，签到排名"""
+        check_info=jsonLoad(TIME_PATH)
+        result=[False,"00:00:00",0]
+        day_str=f"{day[0]:04d}-{day[1]:02d}-{day[2]:02d}"
+        if day_str in check_info:
+            for i in check_info[day_str]:
+                if i[0]==self.id:
+                    result=[True,i[1],check_info[day_str].index(i)+1]
+                    break
+        return result
+    
+    def getRobInfo(self):
+        robtimes_ranks={}
+        robbedtimes_ranks={}
+        rob_gain_data_ranks={}
+        rob_give_data_ranks={}
+        #统计数据
+        user_info=jsonLoad(USER_PATH)
+        for uid in user_info:
+            user=User(int(uid))
+            if not uid in robtimes_ranks:
+                robtimes_ranks[uid]=[0,0,uid,user.nickname]
+            for rob_user in user.rob_info["robbed"]:
+                robtimes_ranks[uid][0]+=user.rob_info["robbed"][rob_user]["success_times"]
+                robtimes_ranks[uid][1]+=user.rob_info["robbed"][rob_user]["fail_times"]
+                if not rob_user in robbedtimes_ranks:
+                    robbedtimes_ranks[rob_user]=[0,0,rob_user,user_info[rob_user]["nickname"]]
+                robbedtimes_ranks[rob_user][0]+=user.rob_info["robbed"][rob_user]["success_times"]
+                robbedtimes_ranks[rob_user][1]+=user.rob_info["robbed"][rob_user]["fail_times"]
+                #初始化
+                if not uid in rob_gain_data_ranks:
+                    rob_gain_data_ranks[uid]=[Data([0,0],True),Data([0,0],True),uid,user.nickname]
+                if not uid in rob_give_data_ranks:
+                    rob_give_data_ranks[uid]=[Data([0,0],True),Data([0,0],True),uid,user.nickname]
+                if not rob_user in rob_gain_data_ranks:
+                    rob_gain_data_ranks[rob_user]=[Data([0,0],True),Data([0,0],True),rob_user,user_info[rob_user]["nickname"]]
+                if not rob_user in rob_give_data_ranks:
+                    rob_give_data_ranks[rob_user]=[Data([0,0],True),Data([0,0],True),rob_user,user_info[rob_user]["nickname"]]
+                #user成功，user的gain[0]+data，robuser的give[0]+data
+                success_data=Data([user.rob_info["robbed"][rob_user]["success_data"]["base"],user.rob_info["robbed"][rob_user]["success_data"]["addition"]],user.rob_info["robbed"][rob_user]["success_data"]["zero"])
+                rob_gain_data_ranks[uid][0]=plus(rob_gain_data_ranks[uid][0],success_data)
+                rob_give_data_ranks[rob_user][0]=plus(rob_give_data_ranks[rob_user][0],success_data)
+                #user失败，user的give[1]+data，robuser的gain[1]+data
+                fail_data=Data([user.rob_info["robbed"][rob_user]["fail_data"]["base"],user.rob_info["robbed"][rob_user]["fail_data"]["addition"]],user.rob_info["robbed"][rob_user]["fail_data"]["zero"])
+                rob_give_data_ranks[uid][1]=plus(rob_give_data_ranks[uid][1],fail_data)
+                rob_gain_data_ranks[rob_user][1]=plus(rob_gain_data_ranks[rob_user][1],fail_data)
+        
+        return robtimes_ranks,robbedtimes_ranks,rob_gain_data_ranks,rob_give_data_ranks#抢劫次数[成功，失败]，被抢次数[成功，失败]，抢到的Data[主动抢到，被送的]，失去的Data[被抢走，主动送出]
 
 def generateRank(ranks:list,target,length:int=10) -> list[str,bool]:
     """
