@@ -8,5 +8,6 @@
     "checkin": ["checkin","签到"],
     "rob": ["rob","抢劫"],
     "finaltest": ["finaltest","期末刷题"],
-    "library": ["library","ZJNUlibrary"]
+    "library": ["library","ZJNUlibrary"],
+    "pluginapi": ["pluginapi","插件API"]
 }

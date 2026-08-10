@@ -4,6 +4,7 @@ import datetime
 import pathlib
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageChops
+from zoneinfo import ZoneInfo
 
 from .tools import *
 
@@ -250,42 +251,42 @@ def paint_progress(ratio, text1,text2,
 
 def paint(user: User,save_path):
     ###前置信息处理
-    user_info=jsonLoad(USER_PATH)
     robtimes_ranks,robbedtimes_ranks,rob_gain_data_ranks,rob_give_data_ranks=user.getRobInfo()#抢劫次数[成功，失败]，被抢次数[成功，失败]，抢到的Data[主动抢到，被送的]，失去的Data[被抢走，主动送出]
-    robtimes=robtimes_ranks[str(user.id)][0]+robtimes_ranks[str(user.id)][1]#抢劫次数
-    robbedtimes=robbedtimes_ranks[str(user.id)][0]+robbedtimes_ranks[str(user.id)][1]#被抢劫次数
+    robtimes=robtimes_ranks[user.id][0]+robtimes_ranks[user.id][1]#抢劫次数
+    robbedtimes=robbedtimes_ranks[user.id][0]+robbedtimes_ranks[user.id][1]#被抢劫次数
     rob_most=["",0]
-    for rob_user in user.rob_info["robbed"]:
-        times=user.rob_info["robbed"][rob_user]["success_times"]+user.rob_info["robbed"][rob_user]["fail_times"]
+    for rob_user in user.robbed:
+        times=user.robbed[rob_user]["success_times"]+user.robbed[rob_user]["fail_times"]
         if times>rob_most[1]:
             rob_most=[rob_user,times]#你最喜欢抢谁
     robbed_most=["",0]
-    for rob_user in user.rob_info["robbed_by"]:
-        times=user_info[str(rob_user)]["rob"]["robbed"][str(user.id)]["success_times"]+user_info[str(rob_user)]["rob"]["robbed"][str(user.id)]["fail_times"]
+    for record in checkin_storage.get_rob_records_by_target(user.id):
+        times=record["success_times"]+record["fail_times"]
         if times>robbed_most[1]:
-            robbed_most=[str(rob_user),times]#最喜欢抢你的人
+            robbed_most=[record["user_id"],times]#最喜欢抢你的人
     total_check=user.total_check#总签到天数
     consecutive_check=user.consecutive_check#连续签到天数
     max_consecutive_check=user.max_consecutive_check#最大连续签到天数
     total_data=Data([0,0],True)#所有人data总和
-    for uid in user_info:
-        total_data=plus(total_data,Data([user_info[uid]["data"]["base"],user_info[uid]["data"]["addition"]],user_info[uid]["data"]["zero"]))
+    for data in checkin_storage.get_all_user_data():
+        total_data=plus(total_data,Data([data["base"],data["addition"]],data["zero"]))
     self_data=user.data#自己的data
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(ZoneInfo("Asia/Shanghai"))
     days = calendar.monthrange(now.year, now.month)[1]#本月天数
     month_checkinfo=[]#这个月的签到信息
     for day in range(1, days + 1):
         increase_data=Data([0,0],True)#增长的data
         decrease_data=Data([0,0],True)#减少的data
         date_str = f"{now.year}-{now.month:02d}-{day:02d}"
-        logs=user.getLogsByDate([now.year, now.month, day])
+        logs=user.getLogsByDate(datetime.date(now.year, now.month, day))
         for log in logs:
             if log["operate"] in ["rob","checkin","send"]:
+                tmp_data=Data([log["data"]["base"],log["data"]["addition"]],log["data"]["zero"])
                 if log["type"]=="+":
-                    increase_data=plus(increase_data,Data([log["data"]["base"],log["data"]["addition"]],log["data"]["zero"]))
+                    increase_data=plus(increase_data,tmp_data)
                 elif log["type"]=="-":
-                    decrease_data=plus(decrease_data,Data([log["data"]["base"],log["data"]["addition"]],log["data"]["zero"]))
-        check_info=user.getCheckInfo([now.year, now.month, day])
+                    decrease_data=plus(decrease_data,tmp_data)
+        check_info=user.getCheckInfo(datetime.date(now.year,now.month,day))
         month_checkinfo.append([date_str,increase_data,decrease_data,check_info])#日期，这天增加的data，这天减少的data，这天的签到信息（是否签到，签到时间，排名）
 
     first_weekday, days = calendar.monthrange(now.year, now.month)
@@ -374,11 +375,10 @@ def paint(user: User,save_path):
     ddays = (now.date() - first_day).days
     month_check_days = sum(1 for info in month_checkinfo if info[3][0])
     
-    uid_str = str(user.id)
-    rob_gain0 = rob_gain_data_ranks[uid_str][0] if uid_str in rob_gain_data_ranks else Data([0,0], True)#0主动1被动
-    rob_gain1 = rob_gain_data_ranks[uid_str][1] if uid_str in rob_gain_data_ranks else Data([0,0], True)
-    rob_give0 = rob_give_data_ranks[uid_str][0] if uid_str in rob_give_data_ranks else Data([0,0], True)
-    rob_give1 = rob_give_data_ranks[uid_str][1] if uid_str in rob_give_data_ranks else Data([0,0], True)
+    rob_gain0 = rob_gain_data_ranks[user.id][0] if user.id in rob_gain_data_ranks else Data([0,0], True)#0主动1被动
+    rob_gain1 = rob_gain_data_ranks[user.id][1] if user.id in rob_gain_data_ranks else Data([0,0], True)
+    rob_give0 = rob_give_data_ranks[user.id][0] if user.id in rob_give_data_ranks else Data([0,0], True)
+    rob_give1 = rob_give_data_ranks[user.id][1] if user.id in rob_give_data_ranks else Data([0,0], True)
 
     #每行信息进度
     ratio_1 = total_check / ddays if ddays > 0 else 0.0

@@ -1,0 +1,11 @@
+{
+    "display_name": "API",
+    "help": {
+        "text": "Bot的API接口插件，可通过网络请求获取bot内部数据",
+        "image": []
+    },
+    "state": true,
+    "filter_mode": "blacklist",
+    "whitelist": [],
+    "blacklist": []
+}

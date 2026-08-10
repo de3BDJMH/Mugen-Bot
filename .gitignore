@@ -174,3 +174,4 @@ data/wordcloud/output/*
 
 data/library/password.json
 data/library/cookies.json
+.env.api

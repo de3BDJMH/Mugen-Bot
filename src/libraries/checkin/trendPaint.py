@@ -5,6 +5,7 @@ import numpy as np
 from matplotlib.font_manager import FontProperties
 import pathlib
 import matplotlib.colors as mcolors
+from zoneinfo import ZoneInfo
 
 from .tools import User, Data, plus, substract
 
