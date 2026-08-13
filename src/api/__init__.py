@@ -7,6 +7,7 @@ from .routers.bot import router as bot_router
 from .routers.checkin import router as checkin_router
 from .routers.charcounter import router as charcounter_router
 from .routers.wordcloud import router as wordcloud_router
+from .routers.watchice import router as watchice_router
 
 
 def setup_api():
@@ -19,3 +20,4 @@ def setup_api():
     app.include_router(checkin_router,dependencies=[Depends(require_internal_api_key)])
     app.include_router(charcounter_router,dependencies=[Depends(require_internal_api_key)])
     app.include_router(wordcloud_router,dependencies=[Depends(require_internal_api_key)])
+    app.include_router(watchice_router)

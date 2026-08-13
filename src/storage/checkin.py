@@ -330,7 +330,7 @@ def get_user_logs(user_id:int,lines:int=-1):
     if lines==-1:
         cursor.execute(
             """
-            SELECT user_id,operation,change_type,related_user_id,
+            SELECT id,operation,change_type,related_user_id,
                    data_base,data_addition,data_zero,
                    item_id,item_count,created_at
             FROM logs

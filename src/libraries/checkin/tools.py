@@ -297,7 +297,9 @@ class User:
                         "count":1
                     }
                 checkin_storage.add_user_item(self.id,result["id"],result["name"],1)
-                log(user_id=self.id,operation="item",change_type="+",created_at=datetime.datetime.now(ZoneInfo("Asia/Shanghai")),item_id=result["id"],item_count=1)
+                break
+        if result:
+            log(user_id=self.id,operation="item",change_type="+",created_at=datetime.datetime.now(ZoneInfo("Asia/Shanghai")),item_id=result["id"],item_count=1)
         return result
     
     def getLogs(self,lines:int=-1):

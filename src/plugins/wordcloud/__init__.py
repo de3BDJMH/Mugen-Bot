@@ -182,16 +182,18 @@ async def wch(matcher:Matcher,bot:Bot,event:GroupMessageEvent):
     group.save_msg_words(msg,event.user_id)
 
 TARGET_USER = 2404164262
-SEND_TIME = "18:00"
 MESSAGE = "无限，该续座啦～"
 
 # 定时任务
 @scheduler.scheduled_job(
     "cron",
-    hour=int(SEND_TIME.split(":")[0]),
-    minute=int(SEND_TIME.split(":")[1]),
+    hour=18,
+    minute="0,5,10",
     id="daily_private_msg"
 )
 async def daily_task():
-    bot = get_bot()  # 获取当前机器人
-    await bot.send_private_msg(user_id=TARGET_USER, message=MESSAGE)
+    bot=get_bot()
+    await bot.send_private_msg(
+        user_id=TARGET_USER,
+        message=MESSAGE
+    )

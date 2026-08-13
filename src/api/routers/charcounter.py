@@ -128,7 +128,7 @@ def get_daily_statistics(start:datetime.date|None=Query(default=None,description
         raise HTTPException(status_code=500,detail="字符统计数据库发生异常")
 
     return DailyStatisticsResponse(
-        generated_at=datetime.datetime.now(ZoneInfo("Asia/Shanghai")).astimezone(),
+        generated_at=datetime.datetime.now().astimezone(),
         period={"start":start,"end":end},
         daily=daily,
     )
@@ -152,7 +152,7 @@ def get_all_time_statistics_api():
         raise HTTPException(status_code=500,detail="字符统计数据库发生异常")
 
     return AllTimeStatisticsResponse(
-        generated_at=datetime.datetime.now(ZoneInfo("Asia/Shanghai")).astimezone(),
+        generated_at=datetime.datetime.now().astimezone(),
         summary=summary,
         ranking_scope="all_time",
         characters=characters,
