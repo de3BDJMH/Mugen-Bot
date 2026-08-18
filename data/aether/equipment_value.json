@@ -1,0 +1,956 @@
+{
+    "withering_javelin": {
+        "max_hp": [
+            -500,
+            20,
+            -20
+        ],
+        "atk": [
+            330,
+            13,
+            -13
+        ]
+    },
+    "guardian_shield_axe": {
+        "atk": [
+            330,
+            13,
+            -13
+        ],
+        "damage_reduction": [
+            0.15,
+            0.01,
+            -0.01
+        ]
+    },
+    "aggregated_element_hoop": {
+        "atk": [
+            250,
+            10,
+            -10
+        ]
+    },
+    "silver_knight_lance": {
+        "max_hp": [
+            500,
+            20,
+            -20
+        ],
+        "atk": [
+            320,
+            13,
+            -13
+        ]
+    },
+    "yan_blade": {
+        "atk": [
+            360,
+            14,
+            -14
+        ],
+        "spe": [
+            -5,
+            2,
+            -2
+        ]
+    },
+    "frost_rapier": {
+        "atk": [
+            330,
+            13,
+            -13
+        ]
+    },
+    "windcarve_dart": {
+        "atk": [
+            300,
+            12,
+            -12
+        ],
+        "spe": [
+            28,
+            2,
+            -2
+        ]
+    },
+    "mei_lei_tachi": {
+        "atk": [
+            300,
+            12,
+            -12
+        ],
+        "spe": [
+            20,
+            2,
+            -2
+        ]
+    },
+    "element_hoop": {
+        "atk": [
+            90,
+            5,
+            -5
+        ]
+    },
+    "sanctum_blade": {
+        "atk": [
+            155,
+            8,
+            -8
+        ],
+        "spe": [
+            8,
+            1,
+            -1
+        ]
+    },
+    "thunder_root_staff": {
+        "atk": [
+            168,
+            10,
+            -10
+        ],
+        "spe": [
+            18,
+            2,
+            -2
+        ]
+    },
+    "aberrant_terra_maul": {
+        "atk": [
+            240,
+            10,
+            -10
+        ]
+    },
+    "church_water_rod": {
+        "max_hp": [
+            500,
+            50,
+            -50
+        ],
+        "atk": [
+            150,
+            15,
+            -15
+        ]
+    },
+    "abyssal_void_scythe": {
+        "atk": [
+            210,
+            10,
+            -10
+        ]
+    },
+    "scorching_vine_blade": {
+        "atk": [
+            178,
+            10,
+            -10
+        ],
+        "spe": [
+            8,
+            2,
+            -2
+        ]
+    },
+    "livestone_ember_blade": {
+        "atk": [
+            165,
+            8,
+            -8
+        ]
+    },
+    "livestone_tide_staff": {
+        "atk": [
+            160,
+            8,
+            -8
+        ]
+    },
+    "livestone_gale_dagger": {
+        "atk": [
+            168,
+            8,
+            -8
+        ]
+    },
+    "livestone_radiance_rod": {
+        "atk": [
+            160,
+            8,
+            -8
+        ]
+    },
+    "livestone_thunder_lance": {
+        "atk": [
+            170,
+            8,
+            -8
+        ]
+    },
+    "blazing_vine_sword": {
+        "atk": [
+            155,
+            8,
+            -8
+        ]
+    },
+    "corrupted_staff": {
+        "atk": [
+            125,
+            5,
+            -5
+        ]
+    },
+    "galewind_bow": {
+        "atk": [
+            105,
+            5,
+            -5
+        ],
+        "spe": [
+            22,
+            2,
+            -2
+        ]
+    },
+    "stormspore_staff": {
+        "atk": [
+            145,
+            8,
+            -8
+        ],
+        "spe": [
+            15,
+            2,
+            -2
+        ]
+    },
+    "ember_blade": {
+        "atk": [
+            120,
+            8,
+            -8
+        ]
+    },
+    "stonecrusher_mace": {
+        "atk": [
+            160,
+            20,
+            -20
+        ],
+        "spe": [
+            -8,
+            1,
+            -1
+        ]
+    },
+    "heavy_sf_bone": {
+        "atk": [
+            100,
+            30,
+            -30
+        ]
+    },
+    "thunder_vine_rod": {
+        "atk": [
+            112,
+            8,
+            -8
+        ]
+    },
+    "eroded_blade": {
+        "atk": [
+            110,
+            10,
+            -10
+        ],
+        "spe": [
+            8,
+            1,
+            -1
+        ]
+    },
+    "dragon_knight_sword": {
+        "atk": [
+            100,
+            10,
+            -10
+        ],
+        "damage_reduction": [
+            0.08,
+            0.02,
+            -0.02
+        ]
+    },
+    "starter_lightning_blade": {
+        "atk": [
+            50,
+            5,
+            -5
+        ],
+        "spe": [
+            6,
+            2,
+            -2
+        ]
+    },
+    "starter_wind_bow": {
+        "atk": [
+            30,
+            5,
+            -5
+        ],
+        "spe": [
+            15,
+            5,
+            -5
+        ]
+    },
+    "starter_light_sword": {
+        "atk": [
+            40,
+            5,
+            -5
+        ]
+    },
+    "starter_earth_hammer": {
+        "atk": [
+            80,
+            5,
+            -5
+        ]
+    },
+    "canyon_survey_top": {
+        "max_hp": [
+            900,
+            45,
+            -45
+        ],
+        "damage_reduction": [
+            0.26,
+            0.02,
+            -0.02
+        ]
+    },
+    "cognition_armor_top": {
+        "max_hp": [
+            1300,
+            50,
+            -50
+        ],
+        "damage_reduction": [
+            0.29,
+            0.02,
+            -0.02
+        ]
+    },
+    "cognition_dress_top": {
+        "max_hp": [
+            850,
+            40,
+            -40
+        ],
+        "damage_reduction": [
+            0.25,
+            0.02,
+            -0.02
+        ]
+    },
+    "straw_rain_cape": {
+        "max_hp": [
+            210,
+            40,
+            -40
+        ],
+        "damage_reduction": [
+            0.17,
+            0.02,
+            -0.02
+        ]
+    },
+    "bark_plate_top": {
+        "max_hp": [
+            750,
+            50,
+            -50
+        ]
+    },
+    "aberrant_carapace_top": {
+        "max_hp": [
+            900,
+            30,
+            -30
+        ],
+        "damage_reduction": [
+            0.29,
+            0.02,
+            -0.02
+        ]
+    },
+    "abyssal_weave": {
+        "max_hp": [
+            300,
+            25,
+            -25
+        ],
+        "damage_reduction": [
+            0.18,
+            0.02,
+            -0.02
+        ]
+    },
+    "crystal_eroded_top": {
+        "max_hp": [
+            650,
+            30,
+            -30
+        ],
+        "spe": [
+            0,
+            1,
+            -1
+        ],
+        "damage_reduction": [
+            0.28,
+            0.02,
+            -0.02
+        ]
+    },
+    "eroded_plate": {
+        "max_hp": [
+            520,
+            25,
+            -25
+        ],
+        "spe": [
+            -10,
+            1,
+            -1
+        ],
+        "damage_reduction": [
+            0.26,
+            0.02,
+            -0.02
+        ]
+    },
+    "withered_bark_armor": {
+        "max_hp": [
+            380,
+            25,
+            -25
+        ],
+        "damage_reduction": [
+            0.22,
+            0.02,
+            -0.02
+        ]
+    },
+    "off_map_survey_bottom": {
+        "max_hp": [
+            850,
+            45,
+            -45
+        ],
+        "spe": [
+            10,
+            2,
+            -2
+        ],
+        "damage_reduction": [
+            0.2,
+            0.02,
+            -0.02
+        ]
+    },
+    "canyon_survey_bottom": {
+        "max_hp": [
+            600,
+            30,
+            -30
+        ],
+        "damage_reduction": [
+            0.19,
+            0.02,
+            -0.02
+        ]
+    },
+    "cognition_dress_bottom": {
+        "max_hp": [
+            600,
+            30,
+            -30
+        ],
+        "damage_reduction": [
+            0.19,
+            0.02,
+            -0.02
+        ]
+    },
+    "cognition_armor_bottom": {
+        "max_hp": [
+            950,
+            40,
+            -40
+        ],
+        "damage_reduction": [
+            0.2,
+            0.02,
+            -0.02
+        ]
+    },
+    "bark_plate_bottom": {
+        "max_hp": [
+            550,
+            40,
+            -40
+        ]
+    },
+    "aberrant_carapace_bottom": {
+        "max_hp": [
+            700,
+            25,
+            -25
+        ],
+        "damage_reduction": [
+            0.2,
+            0.02,
+            -0.01
+        ]
+    },
+    "abyss_pants": {
+        "max_hp": [
+            400,
+            20,
+            -20
+        ],
+        "spe": [
+            -20,
+            2,
+            -2
+        ],
+        "damage_reduction": [
+            0.15,
+            0.02,
+            -0.02
+        ]
+    },
+    "crystal_eroded_bottom": {
+        "max_hp": [
+            480,
+            25,
+            -25
+        ],
+        "spe": [
+            0,
+            1,
+            -1
+        ],
+        "damage_reduction": [
+            0.2,
+            0.02,
+            -0.02
+        ]
+    },
+    "eroded_greaves": {
+        "max_hp": [
+            380,
+            20,
+            -20
+        ],
+        "spe": [
+            -6,
+            1,
+            -1
+        ],
+        "damage_reduction": [
+            0.18,
+            0.02,
+            -0.02
+        ]
+    },
+    "withered_bark_greaves": {
+        "max_hp": [
+            310,
+            20,
+            -20
+        ],
+        "damage_reduction": [
+            0.16,
+            0.01,
+            -0.01
+        ]
+    },
+    "devotee_gloves": {
+        "max_hp": [
+            -1500,
+            200,
+            -200
+        ],
+        "atk": [
+            200,
+            20,
+            -20
+        ]
+    },
+    "canyon_survey_gloves": {
+        "max_hp": [
+            300,
+            20,
+            -20
+        ],
+        "atk": [
+            80,
+            8,
+            -8
+        ],
+        "crit_rate": [
+            0.05,
+            0.01,
+            -0.01
+        ],
+        "damage_reduction": [
+            0.08,
+            0.01,
+            -0.01
+        ]
+    },
+    "cognition_dress_gloves": {
+        "max_hp": [
+            450,
+            25,
+            -25
+        ],
+        "crit_rate": [
+            0.1,
+            0.01,
+            -0.01
+        ],
+        "damage_reduction": [
+            0.08,
+            0.01,
+            -0.01
+        ]
+    },
+    "cognition_armor_gloves": {
+        "max_hp": [
+            600,
+            30,
+            -30
+        ],
+        "atk": [
+            50,
+            6,
+            -6
+        ],
+        "damage_reduction": [
+            0.12,
+            0.01,
+            -0.01
+        ]
+    },
+    "bark_plate_gloves": {
+        "atk": [
+            35,
+            5,
+            -5
+        ]
+    },
+    "aberrant_carapace_gloves": {
+        "max_hp": [
+            450,
+            20,
+            -20
+        ],
+        "atk": [
+            25,
+            3,
+            -3
+        ],
+        "damage_reduction": [
+            0.13,
+            0.01,
+            -0.01
+        ]
+    },
+    "eroded_gauntlets": {
+        "max_hp": [
+            280,
+            15,
+            -15
+        ],
+        "atk": [
+            25,
+            3,
+            -3
+        ],
+        "damage_reduction": [
+            0.1,
+            0.01,
+            -0.01
+        ]
+    },
+    "ancient_magic_arm": {
+        "max_hp": [
+            100,
+            10,
+            -10
+        ],
+        "damage_reduction": [
+            0.07,
+            0.01,
+            -0.01
+        ]
+    },
+    "withered_bark_gloves": {
+        "atk": [
+            22,
+            3,
+            -3
+        ],
+        "damage_reduction": [
+            0.09,
+            0.01,
+            -0.01
+        ]
+    },
+    "old_gloves": {
+        "max_hp": [
+            20,
+            3,
+            -3
+        ],
+        "damage_reduction": [
+            0.05,
+            0.01,
+            -0.01
+        ]
+    },
+    "canyon_survey_shoes": {
+        "max_hp": [
+            150,
+            15,
+            -15
+        ],
+        "spe": [
+            30,
+            3,
+            -3
+        ],
+        "damage_reduction": [
+            0.04,
+            0.01,
+            -0.01
+        ]
+    },
+    "cognition_dress_shoes": {
+        "max_hp": [
+            100,
+            12,
+            -12
+        ],
+        "spe": [
+            30,
+            3,
+            -3
+        ]
+    },
+    "cognition_armor_shoes": {
+        "max_hp": [
+            150,
+            15,
+            -15
+        ],
+        "spe": [
+            20,
+            2,
+            -2
+        ],
+        "damage_reduction": [
+            0.04,
+            0.01,
+            -0.01
+        ]
+    },
+    "bark_plate_shoes": {
+        "spe": [
+            25,
+            3,
+            -3
+        ]
+    },
+    "aberrant_carapace_shoes": {
+        "max_hp": [
+            180,
+            15,
+            -15
+        ],
+        "spe": [
+            20,
+            2,
+            -2
+        ]
+    },
+    "darkwalker_boots": {
+        "max_hp": [
+            60,
+            10,
+            -10
+        ],
+        "spe": [
+            18,
+            2,
+            -2
+        ],
+        "evasion_rate": [
+            0.08,
+            0.01,
+            -0.01
+        ]
+    },
+    "withered_bark_shoes": {
+        "max_hp": [
+            100,
+            10,
+            -10
+        ],
+        "spe": [
+            13,
+            2,
+            -2
+        ]
+    },
+    "dragon_knight_shoes": {
+        "max_hp": [
+            100,
+            10,
+            -10
+        ],
+        "spe": [
+            8,
+            1,
+            -1
+        ],
+        "damage_reduction": [
+            0.07,
+            0.01,
+            -0.01
+        ]
+    },
+    "old_boots": {
+        "max_hp": [
+            10,
+            2,
+            -2
+        ],
+        "spe": [
+            10,
+            2,
+            -2
+        ]
+    },
+    "cognition_core": {
+        "max_hp": [
+            500,
+            25,
+            -25
+        ],
+        "damage_reduction": [
+            0.06,
+            0.01,
+            -0.01
+        ]
+    },
+    "floating_pendant": {
+        "spe": [
+            12,
+            2,
+            -2
+        ]
+    },
+    "heart_of_corruption": {
+        "atk": [
+            30,
+            3,
+            -3
+        ],
+        "crit_rate": [
+            0.12,
+            0.01,
+            -0.01
+        ]
+    },
+    "cognition_lens": {
+        "atk": [
+            35,
+            6,
+            -6
+        ],
+        "crit_rate": [
+            0.1,
+            0.01,
+            -0.01
+        ]
+    },
+    "erosion_crystal": {
+        "atk": [
+            15,
+            2,
+            -2
+        ],
+        "crit_rate": [
+            0.08,
+            0.01,
+            -0.01
+        ]
+    },
+    "earth_amulet": {
+        "max_hp": [
+            180,
+            20,
+            -20
+        ],
+        "atk": [
+            22,
+            3,
+            -3
+        ]
+    },
+    "wolf_tooth": {
+        "crit_rate": [
+            0.1,
+            0.02,
+            -0.02
+        ]
+    },
+    "forest_amulet": {
+        "max_hp": [
+            160,
+            15,
+            -15
+        ],
+        "atk": [
+            20,
+            3,
+            -3
+        ]
+    },
+    "scavenger_badge": {
+        "spe": [
+            5,
+            5,
+            -5
+        ],
+        "crit_rate": [
+            0.05,
+            0.05,
+            -0.05
+        ],
+        "damage_reduction": [
+            0.05,
+            0.05,
+            -0.05
+        ]
+    }
+}

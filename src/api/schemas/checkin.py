@@ -78,6 +78,7 @@ class LogRecord(BaseModel):
     created_at:datetime.datetime=Field(description="日志产生时间")
     data:LogData|None=None
     item:LogItem|None=None
+    detail:str|None=None
 
 class UserLogsResponse(BaseModel):
     """用户日志查询结果"""

@@ -61,6 +61,7 @@ def init_database():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             operation TEXT NOT NULL,
+            detail TEXT,
             change_type TEXT,
             related_user_id INTEGER,
             data_base INTEGER,
@@ -77,6 +78,19 @@ def init_database():
         CREATE INDEX IF NOT EXISTS idx_logs_user_created
         ON logs(user_id,created_at);
     """)
+    cursor.execute("PRAGMA table_info(logs)")
+    columns=[
+        row[1]
+        for row in cursor.fetchall()
+    ]
+
+    if "detail" not in columns:
+        cursor.execute(
+            """
+            ALTER TABLE logs
+            ADD COLUMN detail TEXT
+            """
+        )
 
     conn.commit()
     conn.close()
@@ -261,7 +275,8 @@ def add_log(
     created_at:datetime.datetime,
     related_user_id:int|None=None,
     item_id:int|None=None,
-    item_count:int|None=None
+    item_count:int|None=None,
+    detail:str|None=None
 ):
     """添加一条签到系统日志记录"""
     conn=sqlite3.connect(DATA_PATH)
@@ -278,9 +293,10 @@ def add_log(
             data_zero,
             item_id,
             item_count,
-            created_at
+            created_at,
+            detail
         )
-        VALUES(?,?,?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?)
         """,
         (
             user_id,
@@ -292,7 +308,8 @@ def add_log(
             data_zero,
             item_id,
             item_count,
-            created_at.isoformat(timespec="seconds")
+            created_at.isoformat(timespec="seconds"),
+            detail
         )
     )
     conn.commit()
@@ -305,7 +322,8 @@ def _log_row_to_dict(row):
         "operate":row[1],
         "type":row[2],
         "related_user_id":row[3],
-        "time":datetime.datetime.fromisoformat(row[9]).strftime("%Y-%m-%d %H:%M:%S")
+        "time":datetime.datetime.fromisoformat(row[9]).strftime("%Y-%m-%d %H:%M:%S"),
+        "detail":row[10],
     }
 
     if row[4] is not None:
@@ -331,8 +349,8 @@ def get_user_logs(user_id:int,lines:int=-1):
         cursor.execute(
             """
             SELECT id,operation,change_type,related_user_id,
-                   data_base,data_addition,data_zero,
-                   item_id,item_count,created_at
+                data_base,data_addition,data_zero,
+                item_id,item_count,created_at,detail
             FROM logs
             WHERE user_id=?
             ORDER BY created_at ASC
@@ -344,8 +362,8 @@ def get_user_logs(user_id:int,lines:int=-1):
         cursor.execute(
             """
             SELECT id,operation,change_type,related_user_id,
-                   data_base,data_addition,data_zero,
-                   item_id,item_count,created_at
+                data_base,data_addition,data_zero,
+                item_id,item_count,created_at,detail
             FROM logs
             WHERE user_id=?
             ORDER BY created_at DESC
@@ -371,8 +389,8 @@ def get_user_logs_by_date(user_id:int,date:datetime.date):
     cursor.execute(
         """
         SELECT id,operation,change_type,related_user_id,
-               data_base,data_addition,data_zero,
-               item_id,item_count,created_at
+            data_base,data_addition,data_zero,
+            item_id,item_count,created_at,detail
         FROM logs
         WHERE user_id=?
         AND created_at>=?

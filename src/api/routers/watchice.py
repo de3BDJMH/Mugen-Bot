@@ -78,7 +78,7 @@ def get_image_content(
 
     return FileResponse(
         result["path"],
-        media_type=result["mime_type"]
+        media_type=result["image"]["mime_type"]
     )
 
 @router.post(
@@ -261,3 +261,203 @@ def delete_rating(
         )
 
     return result
+
+@router.get(
+    "/images/random",
+    response_model=WatchiceRandomImageList,
+    summary="随机获取可见图片"
+)
+def get_random_images(
+    count: int = Query(
+        default=1,
+        ge=1,
+        le=10
+    ),
+    member_slug: str | None = Query(
+        default=None,
+        min_length=1,
+        max_length=100
+    ),
+    exclude_ids: list[int] | None = Query(
+        default=None
+    ),
+    x_mugen_viewer_qq: str | None = Header(
+        default=None,
+        alias="X-Mugen-Viewer-QQ"
+    )
+):
+    """
+    随机返回当前用户有权查看的图片。
+
+    - count：本次希望返回的图片数量
+    - member_slug：只从指定分类中选择
+    - exclude_ids：尽量避开最近看过的图片
+    """
+
+    viewer_qq = _parse_viewer_qq(
+        x_mugen_viewer_qq
+    )
+
+    result = service.get_random_images(
+        viewer_qq=viewer_qq,
+        member_slug=member_slug,
+        exclude_ids=exclude_ids,
+        count=count
+    )
+
+    if not result["images"]:
+        # 分类不存在、无权访问和没有图片统一返回 404，
+        # 防止探测受限分类。
+        raise HTTPException(
+            status_code=404,
+            detail="No visible image found"
+        )
+
+    return result
+
+@router.get(
+    "/admin/members",
+    response_model=list[WatchiceAdminMember],
+    summary="管理员获取members列表"
+)
+def get_admin_members(x_mugen_viewer_qq:str|None=Header(default=None)):
+    viewer_qq=_parse_viewer_qq(x_mugen_viewer_qq)
+
+    members=service.get_admin_members(viewer_qq)
+    if members is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin Required"
+        )
+
+    return members
+
+@router.put(
+    "/admin/members/{slug}/access",
+    summary="设置群友权限"
+)
+def set_member_access(
+    slug:str,
+    body:MemberAccessRequest,
+    x_mugen_viewer_qq:str|None=Header(
+        default=None,
+        alias="X-Mugen-Viewer-QQ"
+    )
+):
+    viewer_qq=_parse_viewer_qq(x_mugen_viewer_qq)
+
+    try:
+        result=service.set_member_access(viewer_qq,slug,body.visibility,body.allowed_qqs)
+        if not result:
+            raise HTTPException(
+                status_code=403,
+                detail="Admin Required"
+            )
+    except ValueError as e:
+        if str(e)=="member_not_found":
+            raise HTTPException(
+                status_code=404,
+                detail="Member not found"
+            )
+        raise HTTPException(
+            status_code=404,
+            detail="Value Error"
+        )
+
+    return result
+
+@router.put(
+    "/admin/images/{image_id}/access",
+    summary="设置图片权限"
+)
+def set_image_access(
+    image_id:int,
+    body:ImageAccessRequest,
+    x_mugen_viewer_qq:str|None=Header(
+        default=None,
+        alias="X-Mugen-Viewer-QQ"
+    )
+):
+    viewer_qq=_parse_viewer_qq(x_mugen_viewer_qq)
+
+    try:
+        result=service.set_image_access(
+            viewer_qq,
+            image_id,
+            body.visibility,
+            body.allowed_qqs
+        )
+
+        if not result:
+            raise HTTPException(
+                status_code=403,
+                detail="Admin required"
+            )
+
+    except ValueError as e:
+        if str(e)=="image_not_found":
+            raise HTTPException(
+                status_code=404,
+                detail="Image not found"
+            )
+        raise
+
+    return {
+        "success":True
+    }
+
+@router.get(
+    "/admin/images/{image_id}/access",
+    response_model=ImageAccessResponse,
+    summary="获取图片权限"
+)
+def get_image_access(
+    image_id:int,
+    x_mugen_viewer_qq:str|None=Header(
+        default=None,
+        alias="X-Mugen-Viewer-QQ"
+    )
+):
+    viewer_qq=_parse_viewer_qq(x_mugen_viewer_qq)
+
+    try:
+        result=service.get_image_access(
+            viewer_qq,
+            image_id
+        )
+    except PermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin required"
+        )
+
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Image not found"
+        )
+
+    return result
+
+@router.get("/images/{image_id}/preview")
+def get_image_preview(
+    image_id: int,
+    x_mugen_viewer_qq: str | None = Header(default=None)
+):
+    viewer_qq = None
+
+    if x_mugen_viewer_qq and x_mugen_viewer_qq.isdigit():
+        viewer_qq = int(x_mugen_viewer_qq)
+
+    result = service.get_image_preview(image_id, viewer_qq)
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    return FileResponse(
+        result["path"],
+        media_type=result["mime_type"],
+        headers={
+            "Cache-Control": "private, max-age=86400"
+        }
+    )

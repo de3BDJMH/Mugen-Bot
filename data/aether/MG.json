@@ -1,0 +1,11 @@
+{
+  "display_name": "Aether",
+  "help": {
+    "text": "雷渊助手，可以自动打本",
+    "image": []
+  },
+  "state": true,
+  "filter_mode": "whitelist",
+  "whitelist": [640447991],
+  "blacklist": []
+}

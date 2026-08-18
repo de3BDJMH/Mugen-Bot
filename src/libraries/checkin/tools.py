@@ -20,7 +20,7 @@ ROB_CONFIG_PATH=DATA_PATH.parent/"rob"/"config.json"
 OUT_PATH=DATA_PATH/"out"
 
 
-def log(user_id:int,operation:str,change_type:str,created_at:datetime.datetime,data:Data|None=None,item_id:int|None=None,item_count:int|None=None,related_user_id:int|None=None):
+def log(user_id:int,operation:str,change_type:str,created_at:datetime.datetime,data:Data|None=None,item_id:int|None=None,item_count:int|None=None,related_user_id:int|None=None,detail:str|None=None):
     """记录Data或物品变化"""
 
     checkin_storage.add_log(
@@ -33,7 +33,8 @@ def log(user_id:int,operation:str,change_type:str,created_at:datetime.datetime,d
         data_zero=data.is_zero if data else None,
         item_id=item_id,
         item_count=item_count,
-        created_at=created_at
+        created_at=created_at,
+        detail=detail
     )
 
 class CheckDay:

@@ -18,6 +18,7 @@ import pathlib
 
 from ...libraries.tools import *
 from ...libraries.watchice.paint import distibution as paintdis
+from ...services import watchice as services
 
 from .config import Config
 
@@ -99,47 +100,47 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
         return
     
     arg=args.extract_plain_text().strip()
-    img_id=-1
+    user_id=event.user_id
+    img_id=-1#legacy_id
     if " " in arg:
         try:
-            target=get_member(arg.split(" ")[0])
+            target=services.get_member_by_alias(arg.split(" ")[0])
             img_id=int(arg.split(" ")[1].strip())
-        except:
-            target=get_member(arg)
+        except (ValueError,IndexError):
+            target=services.get_member_by_alias(arg)
     else:
-        target=get_member(arg)
+        target=services.get_member_by_alias(arg)
     if target:
-        path=IMG_PATH[target]
+        image_ids=services.get_all_images(target,user_id)#旧id到新id的映射表
     else:
         return
-    if target=="icy" and not event.group_id in [558248216,837222085,791163286,640447991]:
-        return
-    imgs=[os.path.join(path,file) for file in os.listdir(path)]
+    imgs=[services.get_image_content(image_ids[legacy_id],user_id) for legacy_id in image_ids]
     if imgs:
-        #await watch.finish(MessageSegment.image(random.choice(imgs)))#想要关闭全随机就把这行注释掉
-        img_ids=os.listdir(path)
+        img_ids=[i["image"]["legacy_id"] for i in imgs]
         if img_id<=0:
-            img_path=random.choice(imgs)
-            ctime=os.path.getmtime(img_path)
-            ctime=datetime.datetime.fromtimestamp(ctime).strftime("%Y-%m-%d %H:%M:%S")
-            await watch.finish(MessageSegment.image(img_path)+f"\n图片ID: {img_path.split(os.sep)[-1].split('.')[0]}\n上传时间: {ctime}")
-        elif max([int(img_ids[n].split(".")[0]) for n in range(len(img_ids))])<img_id:
+            img=random.choice(imgs)
+            img_path=img["path"]
+            upload_time=datetime.datetime.fromisoformat(img["image"]["uploaded_at"]).strftime("%Y.%m.%d %H:%M:%S")
+            uploader=img["image"]["uploader_qq"]
+            uploader="Unknown" if uploader is None else uploader
+            await watch.finish(MessageSegment.image(img_path)+f"\n图片ID: {img["image"]["legacy_id"]}#{img["image"]["image_id"]}\n上传时间: {upload_time}\n    ——by {uploader}")
+        elif max(img_ids)<img_id:
             await watch.finish("还没有这么多图片哦")
-        elif not str(img_id) in [file.split(".")[0] for file in img_ids]:
-            await watch.finish("该编号的图片已被删除")
+        elif not img_id in img_ids:
+            await watch.finish("该编号的图片已被删除或不可查看")
         else:
-            for i in img_ids:
-                if i.split(".")[0]==str(img_id):
-                    ctime=os.path.getmtime(os.path.join(path,i))
-                    ctime=datetime.datetime.fromtimestamp(ctime).strftime("%Y-%m-%d %H:%M:%S")
-                    await watch.finish(MessageSegment.image(os.path.join(path,i))+f"\n图片ID: {img_id}\n上传时间: {ctime}")
+            for i in imgs:
+                if i["image"]["legacy_id"]==img_id:
+                    img_path=i["path"]
+                    upload_time=datetime.datetime.fromisoformat(i["image"]["uploaded_at"]).strftime("%Y.%m.%d %H:%M:%S")
+                    uploader=i["image"]["uploader_qq"]
+                    uploader="Unknown" if uploader is None else uploader
+                    await watch.finish(MessageSegment.image(os.path.join(img_path,i))+f"\n图片ID: {img_id}#{i["image"]["image_id"]}\n上传时间: {upload_time}\n    ——by {uploader}")
     else:
         await watch.finish("Ta还没有图片哦，试试上传一张吧~")
 
 @upload.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
-    # if not event.group_id in WHITELIST:
-    #     return
+async def handle_function(event:GroupMessageEvent,args:Message=CommandArg(),state:T_State=None):
     
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -148,21 +149,14 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
         return
     
     arg=args.extract_plain_text()
-    target=get_member(arg)
-    if target:
-        que=list(config.state.keys())
-        if que:
-            que_id=que[-1]+1
-            config.state[que_id]=[True,IMG_PATH[target],event.get_user_id()]
-        else:
-            config.state[0]=[True,IMG_PATH[target],event.get_user_id()]
-    else:
+    target=services.get_member_by_alias(arg)
+    if not target:
         await upload.finish("还没有这个群友哦")
 
+    state["target"]=target
+
 @upload.got("img",prompt="请发送图片")
-async def get_img(event:GroupMessageEvent,img:Message=Arg()):
-    # if not event.group_id in WHITELIST:
-    #     return
+async def get_img(event:GroupMessageEvent,img:Message=Arg(),state:T_State=None):
     
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -170,106 +164,77 @@ async def get_img(event:GroupMessageEvent,img:Message=Arg()):
     if not plugin.getGroupPluginState(event):
         return
     
-    bot=get_bot()
     new=img.get("image")
-    #que_id=list(config.state.keys())[-1]#备用方案
-    for id in config.state:
-        if config.state[id][2]==event.get_user_id() and config.state[id][0]:
-            que_id=id
-            config.state[id][0]=False
-            break
-    else:
-        await upload.finish("上传失败，请重新尝试")
-    if new:
-        imgfile=new[0].data["file"]
-        imgdld=await bot.call_api("get_image",file=imgfile)
-        imgdld=imgdld["file"]
-        if not IMG_ID.exists():
-            with open(IMG_ID,"w",encoding="utf-8") as f:
-                json.dump({},f)
-        with open(IMG_ID,encoding="utf-8") as f:
-            img_ids=json.load(f)
-        target=config.state[que_id][1].name
-        if target in img_ids:
-            img_ids[target]+=1
-        else:
-            img_ids[target]=1
-        with open(IMG_ID,"w",encoding="utf-8") as f:
-            json.dump(img_ids,f)
-        img_id=img_ids[target]
-        shutil.move(imgdld,os.path.join(config.state[que_id][1],f"{img_id}{imgdld[-4:]}"))
-        #del config.state[que_id]
-        await upload.finish(f"({target}:{img_id})上传成功~")
-    else:
+    if not new:
         await upload.finish("目前只支持上传图片哦")
+
+    bot=get_bot()
+    target=state["target"]
+    imgfile=new[0].data["file"]
+    imgdld=await bot.call_api("get_image",file=imgfile)
+    imgdld=pathlib.Path(imgdld["file"])
+    image=services.upload_image(target,imgdld,event.user_id)
+    await upload.finish(
+        f"({target}:{image['legacy_id']}#{image['image_id']})上传成功~"
+    )
 
 @addalias.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
-    # if not event.group_id in WHITELIST:
-    #     return
-    
+
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
         return
     if not plugin.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text().split(" ")
+    arg=args.extract_plain_text().split()
     if len(arg)<2:
         await addalias.finish("请提供原有别名和新增别名")
-    target=get_member(arg[0])
+    target=services.get_member_by_alias(arg[0])
+    new_aliases=arg[1:]
     if target:
-        for new_alias in arg[1:]:
-            new_alias=new_alias.strip()
-            for m in MEMBER_ALIAS:
-                if new_alias in MEMBER_ALIAS[m]:
-                    await addalias.finish("新别名和其他群友已有别名重复了哦，请换一个")
-        with open(MEMBER_ALIAS_PATH,encoding="utf-8") as f:
-            member_alias=json.load(f)
-        member_alias[target]+=arg[1:]
-        with open(MEMBER_ALIAS_PATH,"w",encoding="utf-8") as f:
-            json.dump(member_alias,f)
-        reload_alias()
+        alias_set=services.get_alias_set()
+        for new_alias in new_aliases:
+            for m,ma in alias_set.items():
+                if new_alias in ma:
+                    await addalias.finish(f"新别名 {new_alias} 已被 {m} 占用了哦，请换一个")
+        aliases=services.get_member_aliases(target)
+        aliases+=new_aliases
+        aliases=list(set(aliases))
+        services.set_member_aliases(target,aliases)
         await addalias.finish("添加成功")
     else:
         await addalias.finish("这个别名不存在")
 
 @delalias.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
-    # if not event.group_id in WHITELIST:
-    #     return
-    
+
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
         return
     if not plugin.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text().split(" ")
+    arg=args.extract_plain_text().split()
     if len(arg)<2:
         await delalias.finish("请提供原有别名和需要删的别名")
-    target=get_member(arg[0])
+    target=services.get_member_by_alias(arg[0])
     if target:
+        aliases=services.get_member_aliases(target)
         for new_alias in arg[1:]:
             new_alias=new_alias.strip()
-            if not new_alias in MEMBER_ALIAS[target]:
-                await addalias.finish("不存在需要删除的别名")
-        with open(MEMBER_ALIAS_PATH,encoding="utf-8") as f:
-            member_alias=json.load(f)
-        for a in member_alias[target].copy():
+            if not new_alias in aliases:
+                await delalias.finish(f"需要删除的别名 {new_alias} 不存在")
+        for a in aliases.copy():
             if a in arg[1:]:
-                member_alias[target].remove(a)
-        with open(MEMBER_ALIAS_PATH,"w",encoding="utf-8") as f:
-            json.dump(member_alias,f)
-        reload_alias()
-        await addalias.finish("删除成功")
+                aliases.remove(a)
+        services.set_member_aliases(target,aliases)
+        await delalias.finish("删除成功")
     else:
-        await addalias.finish("不存在这个群友")
+        await delalias.finish("不存在这个群友")
 
 @checkalias.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
-    # if not event.group_id in WHITELIST:
-    #     return
     
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -278,112 +243,102 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
         return
     
     arg=args.extract_plain_text().strip()
-    target=get_member(arg)
+    target=services.get_member_by_alias(arg)
     if target:
-        await checkalias.finish(f"{"，".join(MEMBER_ALIAS[target])}")
+        await checkalias.finish("，".join(services.get_member_aliases(target)))
     else:
         await checkalias.finish("还没有这个群友哦")
 
 @addmember.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
-    # if not event.group_id in WHITELIST:
-    #     return
-    
+
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
         return
     if not plugin.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text().split(" ")
+    arg=args.extract_plain_text().split()
     if len(arg)<1 or not arg[0]:
         await addmember.finish("需要提供群友名称，可在后面用空格分隔多个别名")
     target=arg[0]
     for c in arg[0]:
         if (not "a"<=c<="z") and (not "0"<=c<="9"):
-            await addmember.finish("需要全为小写字母或数字（尽可能有辨识性），可在别名内添加中文别名")
-    for m in MEMBER_ALIAS:
-        if target in MEMBER_ALIAS[m]:
-            await addalias.finish("这个名字和其他群友已有别名重复了哦，请换一个")
-    with open(MEMBER_ALIAS_PATH,encoding="utf-8") as f:
-        member_alias=json.load(f)
-    member_alias[target]=[target]
-    if len(arg)>1:
-        member_alias[target]+=arg[1:]
-    with open(MEMBER_ALIAS_PATH,"w",encoding="utf-8") as f:
-        json.dump(member_alias,f)
-    reload_alias()
-    await addalias.finish("旅行伙伴加入~")
+            await addmember.finish("需要全为小写字母或数字（尽可能有辨识性），可在别名内添加中文别名，所有别名都不可以包含空格")
+    aliases=list(dict.fromkeys(arg))
+    alias_set=services.get_alias_set()
+    for alias in aliases:
+        for m,ma in alias_set.items():
+            if alias in ma:
+                await addmember.finish(f"别名 {alias} 已被 {m} 占用了哦，请换一个")
+    services.create_member(target,aliases)
+    await addmember.finish("旅行伙伴加入~")
 
 @delmember.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
-    # if not event.group_id in WHITELIST:
-    #     return
-    
+
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
         return
     if not plugin.getGroupPluginState(event):
         return
     
-    if not int(event.get_user_id()) in OPS:
-        await delmember.finish("无权限")    
-    arg=args.extract_plain_text().split(" ")
+    # if not int(event.get_user_id()) in OPS:
+    #     await delmember.finish("无权限")    
+    #现在权限由services处理
+    arg=args.extract_plain_text().split()
     if len(arg)<1 or not arg[0]:
-        await addmember.finish("需要提供群友别名")
-    target=get_member(arg[0])
+        await delmember.finish("需要提供群友别名")
+    target=services.get_member_by_alias(arg[0])
     if target:
-        if not target in MEMBER_ALIAS:
-            await delmember.finish("不存在该群友")
-        with open(MEMBER_ALIAS_PATH,encoding="utf-8") as f:
-            member_alias=json.load(f)
-        del member_alias[target]
-        with open(MEMBER_ALIAS_PATH,"w",encoding="utf-8") as f:
-            json.dump(member_alias,f)
-        reload_alias()
+        target_state=services.get_member_state(target)
+        if target_state is None or not target_state["enabled"]:
+            await delmember.finish("该群友不存在或已被删除")
+        result=services.set_member_enabled(event.user_id,target,False)
+        if not result:
+            await delmember.finish("无权限")
         await delmember.finish("删除成功")
     else:
         await delmember.finish("不存在这个群友")
 
 @delimg.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
-    # if not event.group_id in WHITELIST:
-    #     return
-    
+
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
         return
     if not plugin.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text().split(" ")
+    arg=args.extract_plain_text().split()
     if len(arg)<2:
-        await delimg.finish("需要提供别名和图片id")
+        await delimg.finish("需要提供别名和图片id，你可以在id前添加#表示使用全局id")
+    target=services.get_member_by_alias(arg[0])
+    id_text=arg[1].strip()
     try:
-        target=get_member(arg[0])
-        img_id=int(arg[1].strip())
+        if id_text.startswith("#"):
+            id_type="global"
+            img_id=int(id_text[1:])
+        else:
+            id_type="single"
+            img_id=int(id_text)
     except:
-        await delimg.finish("需要提供别名和图片id")
+        await delimg.finish("需要提供别名和图片id，你可以在id前添加#表示使用全局id")
     if target:
-        path=IMG_PATH[target]
-        img_ids=os.listdir(path)
-        if not IMG_ID.exists():
-            with open(IMG_ID,"w",encoding="utf-8") as f:
-                json.dump({},f)
-        with open(IMG_ID,encoding="utf-8") as f:
-            ids=json.load(f)
-        if not str(img_id) in [file.split(".")[0] for file in img_ids]:
+        img_ids=services.get_all_images(target,event.user_id)
+        if id_type=="single":#局部id转为全局id
+            if not img_id in img_ids:
+                await delimg.finish("该编号图片不存在或已被删除")
+            img_id=img_ids[img_id]
+        if not img_id in img_ids.values():
             await delimg.finish("该编号图片不存在或已被删除")
-        # if not int(event.get_user_id()) in OPS and img_id!=max([int(img_ids[n].split(".")[0]) for n in range(len(img_ids))]):
-        #     await delimg.finish(f"仅支持删除最新上传的图（当前：{max([int(img_ids[n].split(".")[0]) for n in range(len(img_ids))])}）")
-        if not int(event.get_user_id()) in OPS and img_id!=ids[target]:
-            await delimg.finish(f"仅支持删除最新上传的图（当前：{ids[target]}）")
-        for i in img_ids:
-            if i.split(".")[0]==str(img_id):
-                os.remove(os.path.join(path,i))
-                await delimg.finish("删除成功")
+        latest_img=services.get_latest_image(target)
+        if not services.is_admin(event.user_id) and img_id!=latest_img["image_id"]:
+            await delimg.finish(f"仅支持删除最新上传的图（当前：{latest_img["image_id"]}）")
+        services.set_image_state(img_id,"deleted")
+        await delimg.finish("删除成功")
     else:
-        await delimg.finish("需要提供别名和图片id")
+        await delimg.finish("需要提供别名和图片id，你可以在id前添加#表示使用全局id")
 
 @watchhelp.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
@@ -415,82 +370,28 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
 
 @memberlist.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
-    # if not event.group_id in WHITELIST:
-    #     return
-    
+
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
         return
     if not plugin.getGroupPluginState(event):
         return
-    
-    if not IMG_ID.exists():
-        with open(IMG_ID,"w",encoding="utf-8") as f:
-            json.dump({},f)
-    with open(IMG_ID,encoding="utf-8") as f:
-        img_ids=json.load(f)
+
+    members=services.get_members(event.user_id)#
+    if not members:
+        await checkdistribution.finish("当前没有可查看的群友")
     msgs=[]
-    for m in MEMBER_ALIAS:
-        if m=="icy" and not event.group_id in [558248216,837222085,791163286,640447991,640447991]:
-            continue
+    for m in members:
         msgs.append({
                         "type": "node",
                         "data": {
                             "name": "プラナ",
                             "uin": str(event.self_id),
-                            "content": f"ID: {m}\n别名: {"，".join(MEMBER_ALIAS[m])}\n当前图片数量: {img_ids[m] if m in img_ids else 0}"
+                            "content": f"ID: {m["slug"]}\n别名: {"，".join(m["aliases"])}\n当前图片数量: {m["image_count"]}"
                         }
                     }
                 )
     await bot.call_api("send_group_forward_msg",group_id=event.group_id,messages=msgs)
-
-@updatealias.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
-    
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
-    if not event.group_id in WHITELIST:
-        return
-    if event.get_user_id()!="2404164262":
-        await updatealias.finish("无权限")
-    else:
-        reload_alias()
-        await updatealias.finish("更新完毕")
-
-@checkque.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
-    
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
-    if not event.group_id in WHITELIST:
-        return
-    if event.get_user_id()!="2404164262":
-        await updatealias.finish("无权限")
-    msgs=[]
-    for id in config.state:
-        msgs.append(
-            ({
-                    "type": "node",
-                    "data": {
-                        "name": "プラナ",
-                        "uin": str(event.self_id),
-                        "content": f"ID: {id}\n    上传对象: {config.state[id][1].split('\\')[-1]}\n    上传者: {config.state[id][2]}\n    当前状态: {config.state[id][0]}\n"
-                    }
-                }
-            )
-        )
-    if msgs:
-        await bot.call_api("send_group_forward_msg",group_id=event.group_id,messages=msgs)
-    else:
-        await checkque.finish("当前没有人上传图片")
 
 @checkdistribution.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
@@ -501,14 +402,11 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
     if not plugin.getGroupPluginState(event):
         return
     
-    if not IMG_ID.exists():
-        with open(IMG_ID,"w",encoding="utf-8") as f:
-            json.dump({},f)
-    with open(IMG_ID,encoding="utf-8") as f:
-        dc=json.load(f)
+    members=services.get_members(event.user_id)
+    dc={}
+    for m in members:
+        dc[m["slug"]]=m["image_count"]
     path=DATA_PATH/"out"/"out.png"
-    if not event.group_id in [558248216,837222085,791163286,640447991,640447991]:
-        del dc["icy"]
-    paintdis(dc,MEMBER_ALIAS,path)
+    paintdis(dc,services.get_alias_set(),path)
     await checkdistribution.finish(MessageSegment.image(path))
     

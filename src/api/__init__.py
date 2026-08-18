@@ -20,4 +20,4 @@ def setup_api():
     app.include_router(checkin_router,dependencies=[Depends(require_internal_api_key)])
     app.include_router(charcounter_router,dependencies=[Depends(require_internal_api_key)])
     app.include_router(wordcloud_router,dependencies=[Depends(require_internal_api_key)])
-    app.include_router(watchice_router)
+    app.include_router(watchice_router,dependencies=[Depends(require_internal_api_key)])

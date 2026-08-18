@@ -9,5 +9,6 @@
     "rob": ["rob","抢劫"],
     "finaltest": ["finaltest","期末刷题"],
     "library": ["library","ZJNUlibrary"],
-    "pluginapi": ["pluginapi","插件API"]
+    "pluginapi": ["pluginapi","插件API"],
+    "aether": ["aether","雷渊"]
 }

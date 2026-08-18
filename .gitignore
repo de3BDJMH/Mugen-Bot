@@ -164,6 +164,7 @@ data/watchice/out/*
 !data/watchice/out/.gitkeep
 data/watchice/img/*
 !data/watchice/img/.gitkeep
+data/watchice/_previews
 
 data/wordcloud/database/group/*
 !data/wordcloud/database/group/.gitkeep
@@ -175,3 +176,5 @@ data/wordcloud/output/*
 data/library/password.json
 data/library/cookies.json
 .env.api
+
+data/aether/*.pkl

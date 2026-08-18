@@ -1,4 +1,5 @@
 from pydantic import BaseModel,Field
+from typing import Literal
 import datetime
 
 
@@ -56,3 +57,28 @@ class RatingSummary(BaseModel):
 class CommunityResponse(BaseModel):
     rating:RatingSummary
     comments:CommentListResponse
+
+class WatchiceRandomImageList(BaseModel):
+    requested_count:int
+    count:int
+    images:list[WatchiceImage]
+
+class WatchiceAdminMember(BaseModel):
+    slug:str
+    visibility:str
+    aliases:list[str]
+    image_count:int
+    allowed_qqs:list[int]
+
+class MemberAccessRequest(BaseModel):
+    visibility:Literal["public","authenticated","allowlist"]
+    allowed_qqs:list[int]
+
+class ImageAccessRequest(BaseModel):
+    visibility:Literal["inherit","authenticated","allowlist"]
+    allowed_qqs:list[int]
+
+class ImageAccessResponse(BaseModel):
+    image_id:int
+    visibility:Literal["inherit","authenticated","allowlist"]
+    allowed_qqs:list[int]

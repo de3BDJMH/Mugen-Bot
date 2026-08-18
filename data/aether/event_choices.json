@@ -1,0 +1,32 @@
+{
+  "cognition_garden_difficulty_select": {
+    "choice_index": 3,
+    "choice_name": "极难",
+    "event_name": "认知棱镜的诘问"
+  },
+  "rlc_clean_road": {
+    "choice_index": 1,
+    "choice_name": "离开道路",
+    "event_name": "过分干净的巡逻道"
+  },
+  "rlc_cut_report": {
+    "choice_index": 1,
+    "choice_name": "在结论旁留下反证",
+    "event_name": "只剩结论的报告"
+  },
+  "rlc_extra_footstep": {
+    "choice_index": 0,
+    "choice_name": "沿着多余的足迹追过去",
+    "event_name": "多出来的一串脚步"
+  },
+  "rlc_packed_tent": {
+    "choice_index": 0,
+    "choice_name": "检查帐篷夹层",
+    "event_name": "收拾整齐的空帐篷"
+  },
+  "rlc_returned_leaf": {
+    "choice_index": 1,
+    "choice_name": "用容器封存",
+    "event_name": "回到掌心的红叶"
+  }
+}

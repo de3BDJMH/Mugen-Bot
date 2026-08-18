@@ -246,7 +246,8 @@ def _convert_log(log:dict)->dict:
             "%Y-%m-%d %H:%M:%S"
         ),
         "data":log.get("data"),
-        "item":log.get("item")
+        "item":log.get("item"),
+        "detail":log.get("detail"),
     }
 
     return result
