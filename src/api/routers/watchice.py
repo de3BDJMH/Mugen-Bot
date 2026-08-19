@@ -1,6 +1,10 @@
 from fastapi import APIRouter,Header,HTTPException,Query
 from fastapi.responses import FileResponse
+from fastapi import UploadFile,File
 
+import tempfile
+import shutil
+from pathlib import Path
 from typing import Literal
 
 from src.api.schemas.watchice import *
@@ -461,3 +465,66 @@ def get_image_preview(
             "Cache-Control": "private, max-age=86400"
         }
     )
+
+@router.post("/members/{slug}/images",summary="上传图片")
+async def upload_image(
+    slug:str,
+    file:UploadFile=File(...),
+    x_mugen_viewer_qq:str|None=Header(default=None,alias="X-Mugen-Viewer-QQ")
+):
+    viewer_qq=_parse_viewer_qq(x_mugen_viewer_qq)
+    if viewer_qq is None:
+        raise HTTPException(status_code=401,detail="Login required")
+
+    tmp_path=None
+
+    try:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp_path=Path(tmp.name)
+            size=0
+
+            while chunk:=await file.read(1024*1024):
+                size+=len(chunk)
+
+                if size>service.MAX_UPLOAD_SIZE:
+                    raise HTTPException(status_code=413,detail="File too large")
+
+                tmp.write(chunk)
+
+        try:
+            return service.upload_image(slug,tmp_path,viewer_qq)
+        except ValueError as e:
+            if str(e)=="member_not_found":
+                raise HTTPException(status_code=404,detail="Member not found")
+            if str(e)=="file_too_large":
+                raise HTTPException(status_code=413,detail="File too large")
+            if str(e)=="duplicate_image":
+                raise HTTPException(status_code=409,detail="Duplicate image")
+            if str(e)=="image_too_large":
+                raise HTTPException(status_code=400,detail="Image dimensions too large")
+            if str(e)=="invalid_image":
+                raise HTTPException(status_code=400,detail="Invalid image")
+            raise
+    finally:
+        await file.close()
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+
+@router.delete("/images/{image_id}",summary="删除图片")
+def delete_image(
+    image_id:int,
+    x_mugen_viewer_qq:str|None=Header(default=None,alias="X-Mugen-Viewer-QQ")
+):
+    viewer_qq=_parse_viewer_qq(x_mugen_viewer_qq)
+    if viewer_qq is None:
+        raise HTTPException(status_code=401,detail="Login required")
+
+    try:
+        result=service.delete_image(viewer_qq,image_id)
+    except PermissionError:
+        raise HTTPException(status_code=403,detail="Cannot delete this image")
+
+    if not result:
+        raise HTTPException(status_code=404,detail="Image not found")
+
+    return {"success":True}

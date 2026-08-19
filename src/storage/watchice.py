@@ -142,6 +142,8 @@ def init_database():
         -- 根据群友查其 active 图片，因此提前建立索引
         CREATE INDEX IF NOT EXISTS idx_images_member
         ON images(member_slug,status);
+        CREATE INDEX IF NOT EXISTS idx_images_member_sha256
+        ON images(member_slug,sha256,status);
     """)
 
     conn.commit()
@@ -346,6 +348,7 @@ def get_image_metadata(file:pathlib.Path)->dict|None:
 
             width,height=image.size
             is_animated=bool(getattr(image,"is_animated",False))
+            image.verify()
     except (UnidentifiedImageError,OSError):
         return None
 
@@ -976,13 +979,17 @@ def get_image(image_id:int)->dict|None:
         "status":row[13]
     }
 
+MAX_IMAGE_SIDE=12000
+MAX_IMAGE_PIXELS=50_000_000
 def save_image(slug:str,file:pathlib.Path,uploader_qq:int)->int:
     """保存新图片并创建数据库记录"""
     file=pathlib.Path(file)
     metadata=get_image_metadata(file)
     if metadata is None:
         raise ValueError("invalid_image")
-
+    if metadata["width"]>MAX_IMAGE_SIDE or metadata["height"]>MAX_IMAGE_SIDE or metadata["width"]*metadata["height"]>MAX_IMAGE_PIXELS:
+        raise ValueError("image_too_large")
+    
     target_dir=IMG_PATH/slug
     target_dir.mkdir(parents=True,exist_ok=True)
 
@@ -992,6 +999,21 @@ def save_image(slug:str,file:pathlib.Path,uploader_qq:int)->int:
 
     try:
         cursor.execute("BEGIN IMMEDIATE")
+
+        cursor.execute(
+            """
+            SELECT image_id
+            FROM images
+            WHERE member_slug=?
+            AND sha256=?
+            AND status='active'
+            LIMIT 1
+            """,
+            (slug,metadata["sha256"])
+        )
+
+        if cursor.fetchone() is not None:
+            raise ValueError("duplicate_image")
 
         cursor.execute(
             """

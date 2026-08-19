@@ -153,8 +153,8 @@ DUNGEON_LAYOUT_RULES = {
             "boss_treasure": 0,
             "branch": 0,
         },
-        "min_score": None,
-        "max_attempts": 1,
+        "min_score": 40,
+        "max_attempts": 10,
         "accept_last_on_exhausted": True,
     },
     "deep": {
@@ -169,8 +169,8 @@ DUNGEON_LAYOUT_RULES = {
             "boss_treasure": 0,
             "branch": 0,
         },
-        "min_score": None,
-        "max_attempts": 1,
+        "min_score": 22,
+        "max_attempts": 20,
         "accept_last_on_exhausted": True,
     },
     "withered_forest": {
@@ -185,8 +185,8 @@ DUNGEON_LAYOUT_RULES = {
             "boss_treasure": 0,
             "branch": 0,
         },
-        "min_score": None,
-        "max_attempts": 1,
+        "min_score": 50,
+        "max_attempts": 20,
         "accept_last_on_exhausted": True,
     },
     "living_stone": {
@@ -201,8 +201,8 @@ DUNGEON_LAYOUT_RULES = {
             "boss_treasure": 0,
             "branch": 0,
         },
-        "min_score": None,
-        "max_attempts": 1,
+        "min_score": 38,
+        "max_attempts": 25,
         "accept_last_on_exhausted": True,
     },
     "cognition_garden": {
@@ -296,7 +296,7 @@ DUNGEON_PRESETS = {
     },
     #活石
     "living_stone_extreme": {
-        "name": "枯萎密林 · 极难",
+        "name": "活石矿脉 · 极难",
         "preset_id": "living_stone",
         "difficulty": "极难",
         "party": (
@@ -334,3 +334,5 @@ DUNGEON_PRESETS = {
         "layout_rule": "red_leaf_canyon",
     },
 }
+
+NTFY_TOPIC = "de3BDJMH-Aether"

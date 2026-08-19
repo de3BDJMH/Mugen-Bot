@@ -1,71 +1,170 @@
 {
   "presets": {
-    "cognition_garden": {
+    "beginner_extreme": {
       "battle_counts": {
-        "0": 5
+        "3": 1,
+        "4": 5,
+        "5": 1
       },
       "compositions": {
-        "boss=1|boss_treasure=1|camp=1|event=1": 5
-      },
-      "difficulty": "普通",
-      "layouts": {
-        "event|camp|boss|boss_treasure": 5
-      },
-      "name": "认知晶庭",
-      "preset_id": "cognition_garden",
-      "total": 5,
-      "updated_at": 1787030489
-    },
-    "red_leaf_extreme": {
-      "battle_counts": {
-        "1": 3,
-        "2": 43,
-        "3": 3
-      },
-      "compositions": {
-        "battle=1|branch=1|camp=1|elite=1|event=1|shop=1|treasure=1": 1,
-        "battle=1|branch=1|camp=1|elite=1|event=2|shop=1": 1,
-        "battle=1|branch=1|elite=1|event=2|shop=1|treasure=1": 1,
-        "battle=2|branch=1|camp=1|elite=1|event=1|shop=1": 19,
-        "battle=2|branch=1|camp=1|elite=1|shop=1|treasure=1": 3,
-        "battle=2|branch=1|camp=2|elite=1|shop=1": 1,
-        "battle=2|branch=1|elite=1|event=1|shop=1|treasure=1": 16,
-        "battle=2|branch=1|elite=1|event=2|shop=1": 3,
-        "battle=2|branch=1|elite=1|shop=1|treasure=2": 1,
-        "battle=3|branch=1|elite=1|event=1|shop=1": 2,
-        "battle=3|branch=1|elite=1|shop=1|treasure=1": 1
+        "battle=3|boss=1|boss_treasure=1|camp=3|elite=1|event=2|treasure=2": 1,
+        "battle=4|boss=1|boss_treasure=1|camp=2|elite=1|event=2|treasure=2": 2,
+        "battle=4|boss=1|boss_treasure=1|camp=2|elite=1|event=3|treasure=1": 2,
+        "battle=4|boss=1|boss_treasure=1|camp=3|elite=1|event=1|treasure=2": 1,
+        "battle=5|boss=1|boss_treasure=1|camp=2|elite=1|event=1|treasure=2": 1
       },
       "difficulty": "极难",
       "layouts": {
-        "battle|battle|battle|event|elite|shop|branch": 1,
-        "battle|battle|camp|event|elite|shop|branch": 4,
-        "battle|battle|camp|treasure|elite|shop|branch": 1,
-        "battle|battle|event|camp|elite|shop|branch": 5,
-        "battle|battle|event|treasure|elite|shop|branch": 3,
-        "battle|battle|treasure|battle|elite|shop|branch": 1,
-        "battle|battle|treasure|event|elite|shop|branch": 4,
+        "battle|battle|event|battle|camp|elite|treasure|event|event|battle|camp|boss|boss_treasure": 1,
+        "battle|battle|event|treasure|treasure|elite|camp|battle|event|battle|camp|boss|boss_treasure": 1,
+        "battle|camp|battle|treasure|event|elite|treasure|camp|battle|battle|camp|boss|boss_treasure": 1,
+        "battle|event|battle|event|camp|elite|treasure|event|battle|battle|camp|boss|boss_treasure": 1,
+        "battle|event|battle|treasure|treasure|elite|event|battle|camp|battle|camp|boss|boss_treasure": 1,
+        "battle|event|camp|treasure|battle|elite|battle|treasure|battle|battle|camp|boss|boss_treasure": 1,
+        "battle|event|treasure|camp|treasure|elite|battle|event|camp|battle|camp|boss|boss_treasure": 1
+      },
+      "name": "侵蚀废墟 · 极难",
+      "preset_id": "beginner",
+      "total": 7,
+      "updated_at": 1787070151
+    },
+    "cognition_garden": {
+      "battle_counts": {
+        "0": 11
+      },
+      "compositions": {
+        "boss=1|boss_treasure=1|camp=1|event=1": 11
+      },
+      "difficulty": "普通",
+      "layouts": {
+        "event|camp|boss|boss_treasure": 11
+      },
+      "name": "认知晶庭",
+      "preset_id": "cognition_garden",
+      "total": 11,
+      "updated_at": 1787111525
+    },
+    "deep_extreme": {
+      "battle_counts": {
+        "2": 2,
+        "3": 2
+      },
+      "compositions": {
+        "battle=2|branch=1|camp=1|elite=1|event=1|shop=1|treasure=1": 1,
+        "battle=2|branch=1|camp=2|elite=1|event=1|shop=1": 1,
+        "battle=3|branch=1|camp=1|elite=1|event=1|shop=1": 2
+      },
+      "difficulty": "极难",
+      "layouts": {
+        "battle|battle|battle|event|camp|elite|shop|branch": 1,
+        "battle|battle|camp|event|battle|elite|shop|branch": 1,
+        "battle|battle|treasure|event|camp|elite|shop|branch": 1,
+        "battle|camp|event|battle|camp|elite|shop|branch": 1
+      },
+      "name": "侵蚀废墟深处 · 极难",
+      "preset_id": "deep",
+      "total": 4,
+      "updated_at": 1787071571
+    },
+    "living_stone_extreme": {
+      "battle_counts": {
+        "3": 3,
+        "4": 1
+      },
+      "compositions": {
+        "battle=3|boss=1|boss_treasure=1|camp=2|elite=1|event=2|shop=1|treasure=2": 1,
+        "battle=3|boss=1|boss_treasure=1|camp=3|elite=1|event=1|shop=2|treasure=1": 2,
+        "battle=4|boss=1|boss_treasure=1|camp=2|elite=1|event=1|shop=1|treasure=2": 1
+      },
+      "difficulty": "极难",
+      "layouts": {
+        "battle|battle|camp|treasure|event|elite|shop|shop|camp|battle|camp|boss|boss_treasure": 1,
+        "battle|camp|battle|treasure|event|elite|shop|treasure|event|battle|camp|boss|boss_treasure": 1,
+        "battle|camp|treasure|battle|camp|elite|shop|shop|event|battle|camp|boss|boss_treasure": 1,
+        "battle|treasure|camp|battle|event|elite|shop|treasure|battle|battle|camp|boss|boss_treasure": 1
+      },
+      "name": "活石矿脉 · 极难",
+      "preset_id": "living_stone",
+      "total": 4,
+      "updated_at": 1787070384
+    },
+    "red_leaf_extreme": {
+      "battle_counts": {
+        "1": 12,
+        "2": 73,
+        "3": 12
+      },
+      "compositions": {
+        "battle=1|branch=1|camp=1|elite=1|event=1|shop=1|treasure=1": 8,
+        "battle=1|branch=1|camp=1|elite=1|event=2|shop=1": 3,
+        "battle=1|branch=1|elite=1|event=2|shop=1|treasure=1": 1,
+        "battle=2|branch=1|camp=1|elite=1|event=1|shop=1": 33,
+        "battle=2|branch=1|camp=1|elite=1|shop=1|treasure=1": 5,
+        "battle=2|branch=1|camp=2|elite=1|shop=1": 1,
+        "battle=2|branch=1|elite=1|event=1|shop=1|treasure=1": 25,
+        "battle=2|branch=1|elite=1|event=2|shop=1": 8,
+        "battle=2|branch=1|elite=1|shop=1|treasure=2": 1,
+        "battle=3|branch=1|elite=1|event=1|shop=1": 10,
+        "battle=3|branch=1|elite=1|shop=1|treasure=1": 2
+      },
+      "difficulty": "极难",
+      "layouts": {
+        "battle|battle|battle|event|elite|shop|branch": 4,
+        "battle|battle|camp|event|elite|shop|branch": 5,
+        "battle|battle|camp|treasure|elite|shop|branch": 2,
+        "battle|battle|event|battle|elite|shop|branch": 3,
+        "battle|battle|event|camp|elite|shop|branch": 8,
+        "battle|battle|event|event|elite|shop|branch": 3,
+        "battle|battle|event|treasure|elite|shop|branch": 4,
+        "battle|battle|treasure|battle|elite|shop|branch": 2,
+        "battle|battle|treasure|event|elite|shop|branch": 6,
         "battle|camp|battle|camp|elite|shop|branch": 1,
-        "battle|camp|battle|event|elite|shop|branch": 1,
-        "battle|camp|battle|treasure|elite|shop|branch": 2,
-        "battle|camp|event|battle|elite|shop|branch": 3,
-        "battle|event|battle|battle|elite|shop|branch": 1,
-        "battle|event|battle|camp|elite|shop|branch": 4,
+        "battle|camp|battle|event|elite|shop|branch": 2,
+        "battle|camp|battle|treasure|elite|shop|branch": 3,
+        "battle|camp|event|battle|elite|shop|branch": 9,
+        "battle|camp|event|treasure|elite|shop|branch": 2,
+        "battle|camp|treasure|event|elite|shop|branch": 1,
+        "battle|event|battle|battle|elite|shop|branch": 3,
+        "battle|event|battle|camp|elite|shop|branch": 6,
         "battle|event|battle|event|elite|shop|branch": 2,
-        "battle|event|battle|treasure|elite|shop|branch": 2,
-        "battle|event|camp|battle|elite|shop|branch": 2,
-        "battle|event|camp|event|elite|shop|branch": 1,
-        "battle|event|camp|treasure|elite|shop|branch": 1,
-        "battle|event|event|battle|elite|shop|branch": 1,
-        "battle|event|treasure|battle|elite|shop|branch": 4,
+        "battle|event|battle|treasure|elite|shop|branch": 5,
+        "battle|event|camp|battle|elite|shop|branch": 3,
+        "battle|event|camp|event|elite|shop|branch": 3,
+        "battle|event|camp|treasure|elite|shop|branch": 2,
+        "battle|event|event|battle|elite|shop|branch": 3,
+        "battle|event|treasure|battle|elite|shop|branch": 6,
+        "battle|event|treasure|camp|elite|shop|branch": 1,
         "battle|treasure|battle|event|elite|shop|branch": 1,
         "battle|treasure|battle|treasure|elite|shop|branch": 1,
-        "battle|treasure|event|battle|elite|shop|branch": 2,
+        "battle|treasure|camp|event|elite|shop|branch": 1,
+        "battle|treasure|event|battle|elite|shop|branch": 3,
+        "battle|treasure|event|camp|elite|shop|branch": 1,
         "battle|treasure|event|event|elite|shop|branch": 1
       },
       "name": "红叶山谷 · 极难",
       "preset_id": "red_leaf_canyon",
-      "total": 49,
-      "updated_at": 1787002359
+      "total": 97,
+      "updated_at": 1787100699
+    },
+    "withered_forest_extreme": {
+      "battle_counts": {
+        "3": 1,
+        "4": 2
+      },
+      "compositions": {
+        "battle=3|boss=1|boss_treasure=1|camp=2|elite=1|event=2|shop=2|treasure=1": 1,
+        "battle=4|boss=1|boss_treasure=1|camp=1|elite=1|event=2|shop=2|treasure=1": 2
+      },
+      "difficulty": "极难",
+      "layouts": {
+        "battle|battle|event|battle|event|elite|shop|treasure|shop|battle|camp|boss|boss_treasure": 1,
+        "battle|event|battle|event|treasure|elite|shop|shop|battle|battle|camp|boss|boss_treasure": 1,
+        "battle|treasure|camp|event|event|elite|shop|battle|shop|battle|camp|boss|boss_treasure": 1
+      },
+      "name": "枯萎密林 · 极难",
+      "preset_id": "withered_forest",
+      "total": 3,
+      "updated_at": 1787071350
     }
   },
   "version": 1

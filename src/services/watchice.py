@@ -95,10 +95,33 @@ def get_image_content(image_id:int,viewer_qq:int|None)->dict|None:
         "image": result["image"],
     }
 
+MAX_UPLOAD_SIZE=20*1024*1024
+
 def upload_image(slug:str,file:Path,uploader_qq:int)->dict:
     """上传图片"""
+    if not storage.can_view_member(slug,uploader_qq,is_admin(uploader_qq)):
+        raise ValueError("member_not_found")
+
+    if file.stat().st_size>MAX_UPLOAD_SIZE:
+        raise ValueError("file_too_large")
+
     image_id=storage.save_image(slug,file,uploader_qq)
-    return storage.get_image(image_id)
+    image=storage.get_image(image_id)
+    if image is None:
+        raise RuntimeError("image_save_failed")
+    return image
+
+def delete_image(user_id:int,image_id:int)->bool:
+    """删除图片，管理员可删除任意图片，普通用户只能删除自己上传的图片"""
+    image=storage.get_image(image_id)
+    if image is None or image["status"]!="active":
+        return False
+
+    if not is_admin(user_id) and image["uploader_qq"]!=user_id:
+        raise PermissionError("cannot_delete_image")
+
+    storage.set_image_state(image_id,"deleted")
+    return True
 
 def add_comment(image_id:int,user_id:int,content:str)->dict|None:
     """发表评论"""

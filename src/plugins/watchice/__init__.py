@@ -135,7 +135,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
                     upload_time=datetime.datetime.fromisoformat(i["image"]["uploaded_at"]).strftime("%Y.%m.%d %H:%M:%S")
                     uploader=i["image"]["uploader_qq"]
                     uploader="Unknown" if uploader is None else uploader
-                    await watch.finish(MessageSegment.image(os.path.join(img_path,i))+f"\n图片ID: {img_id}#{i["image"]["image_id"]}\n上传时间: {upload_time}\n    ——by {uploader}")
+                    await watch.finish(MessageSegment.image(img_path)+f"\n图片ID: {img_id}#{i["image"]["image_id"]}\n上传时间: {upload_time}\n    ——by {uploader}")
     else:
         await watch.finish("Ta还没有图片哦，试试上传一张吧~")
 
@@ -332,10 +332,12 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
             img_id=img_ids[img_id]
         if not img_id in img_ids.values():
             await delimg.finish("该编号图片不存在或已被删除")
-        latest_img=services.get_latest_image(target)
-        if not services.is_admin(event.user_id) and img_id!=latest_img["image_id"]:
-            await delimg.finish(f"仅支持删除最新上传的图（当前：{latest_img["image_id"]}）")
-        services.set_image_state(img_id,"deleted")
+        try:
+            result=services.delete_image(event.user_id,img_id)
+        except PermissionError:
+            await delimg.finish("你只能删除自己上传的图片")
+        if not result:
+            await delimg.finish("该编号图片不存在或已被删除")
         await delimg.finish("删除成功")
     else:
         await delimg.finish("需要提供别名和图片id，你可以在id前添加#表示使用全局id")
@@ -365,7 +367,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
                           +"    删除群友      “删除群友 <群友别名>”\n"
                           +"\n"
                           +"注：\n"
-                          +"    非管理只能删除最后一张上传的图片\n"
+                          +"    非管理只能删除自己上传上传的图片\n"
                           +"    上传时请注意隐私，所有人可见")
 
 @memberlist.handle()

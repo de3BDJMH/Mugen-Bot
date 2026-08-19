@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import getpass
 import json
 import os
@@ -7,6 +9,7 @@ import threading
 import time
 from dataclasses import dataclass
 from typing import Any, Callable, Literal
+from urllib.parse import quote
 
 import requests
 
@@ -21,7 +24,7 @@ BASE_URL = "https://chiyuki.diving-fish.com/api/aether"
 WEB_URL = "https://chiyuki.diving-fish.com/aether/"
 REQUEST_TIMEOUT = 10
 PARTY_ACTION_DELAY = 0.5
-DUNGEON_REROLL_DELAY = 0.5
+DUNGEON_REROLL_DELAY = 2.0
 BATTLE_FINISH_BUFFER = 3
 
 VISIBILITY_NAMES = {
@@ -58,7 +61,6 @@ NODE_SYMBOLS = {
 API_ENDPOINTS = {
     "login": "/login",
     "status": "/status",
-    "status_toggle_lock": "/status/toggle_lock",
     "preset_apply": "/status/presets/apply",
     "dungeon_search": "/dungeon/search",
     "dungeon_disband": "/dungeon/disband",
@@ -81,7 +83,6 @@ API_ENDPOINTS = {
     "shop_buy": "/dungeon/node/shop/buy",
     "shop_leave": "/dungeon/node/shop/leave",
     "branch_choose": "/dungeon/node/branch/choose",
-    "refine_info": "/refine/info",
 }
 
 
@@ -362,6 +363,11 @@ class AetherClient:
         self.dungeon_id: Any | None = None
         self.last_search_result: dict[str, Any] | None = None
 
+        # 给上层通知系统保留最近一次底层错误。
+        # 不只 print 到服务器控制台，否则手机收到“推进失败”时不知道原因。
+        self.last_error: str | None = None
+        self.last_error_at: float = 0.0
+
         if cookie_file is None:
             data_dir = pathlib.Path(cfg.AETHER_DATA_DIR)
             data_dir.mkdir(parents=True, exist_ok=True)
@@ -375,6 +381,35 @@ class AetherClient:
         except KeyError as exc:
             raise KeyError(f"未知 API endpoint：{endpoint_name}") from exc
 
+    def clear_last_error(self) -> None:
+        self.last_error = None
+        self.last_error_at = 0.0
+
+    def _set_last_error(self, message: str) -> None:
+        # ntfy 没必要收到整页 HTML / 巨型 JSON，限制长度即可。
+        message = str(message).strip()
+        if len(message) > 1200:
+            message = message[:1200] + "…"
+        self.last_error = message
+        self.last_error_at = time.time()
+
+    @staticmethod
+    def _extract_error_body(response: requests.Response) -> str:
+        """优先提取 API JSON 的 message/detail，否则退回 response.text。"""
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = None
+
+        if isinstance(payload, dict):
+            for key in ("message", "detail", "error"):
+                value = payload.get(key)
+                if value not in (None, ""):
+                    return str(value)
+
+        body = response.text.strip()
+        return body or "<empty response>"
+
     def _request(
         self,
         method: str,
@@ -384,7 +419,13 @@ class AetherClient:
         timeout: float = REQUEST_TIMEOUT,
         **kwargs: Any,
     ) -> requests.Response | None:
-        """统一处理请求异常和非 2xx 响应。"""
+        """统一处理请求异常和非 2xx 响应，并保存错误给上层通知。"""
+        # 当前请求开始时先清空本账号旧错误，避免把历史错误误报成当前节点错误。
+        self.clear_last_error()
+
+        endpoint = API_ENDPOINTS.get(endpoint_name, endpoint_name)
+        request_label = f"{method.upper()} {endpoint}"
+
         try:
             response = self.session.request(
                 method,
@@ -393,10 +434,17 @@ class AetherClient:
                 **kwargs,
             )
         except requests.RequestException as exc:
+            detail = f"{request_label} -> 网络异常：{exc}"
+            self._set_last_error(detail)
             print(f"{error_message}：网络异常：{exc}")
             return None
 
         if not response.ok:
+            body = self._extract_error_body(response)
+            detail = (
+                f"{request_label} -> HTTP {response.status_code}: {body}"
+            )
+            self._set_last_error(detail)
             print(
                 f"{error_message}：状态码 {response.status_code}，"
                 f"响应内容：{response.text}"
@@ -405,15 +453,29 @@ class AetherClient:
 
         return response
 
-    @staticmethod
-    def _response_json(response: requests.Response, *, context: str) -> dict[str, Any] | None:
+    def _response_json(
+        self,
+        response: requests.Response,
+        *,
+        context: str,
+    ) -> dict[str, Any] | None:
         try:
             data = response.json()
         except ValueError:
+            detail = (
+                f"{context}：服务器返回的不是合法 JSON："
+                f"{response.text[:800]}"
+            )
+            self._set_last_error(detail)
             print(f"{context}：服务器返回的不是合法 JSON：{response.text}")
             return None
 
         if not isinstance(data, dict):
+            detail = (
+                f"{context}：服务器返回的数据结构异常："
+                f"{type(data).__name__}"
+            )
+            self._set_last_error(detail)
             print(f"{context}：服务器返回的数据结构异常：{type(data).__name__}")
             return None
         return data
@@ -1067,6 +1129,169 @@ class AetherClient:
 
 
 # =========================
+# ntfy 运行通知
+# =========================
+
+
+def _ntfy_setting(
+    config_name: str,
+    env_name: str,
+    default: str | None = None,
+) -> str | None:
+    """优先读取环境变量，其次读取 config.py；未配置则返回默认值。"""
+    env_value = os.getenv(env_name)
+    if env_value is not None:
+        value = env_value.strip()
+        return value or default
+
+    raw = getattr(cfg, config_name, default)
+    if raw is None:
+        return default
+
+    value = str(raw).strip()
+    return value or default
+
+
+class NtfyNotifier:
+    """给 Aether 运行过程发送独立 ntfy 推送。
+
+    只要 NTFY_TOPIC / AETHER_NTFY_TOPIC 没配置，就完全禁用。
+    推送使用 daemon thread，不阻塞地下城主流程。
+    """
+
+    def __init__(self, preset: DungeonPreset):
+        self.preset = preset
+        self.topic = _ntfy_setting(
+            "NTFY_TOPIC",
+            "AETHER_NTFY_TOPIC",
+        )
+        self.server = (
+            _ntfy_setting(
+                "NTFY_SERVER",
+                "AETHER_NTFY_SERVER",
+                "https://ntfy.sh",
+            )
+            or "https://ntfy.sh"
+        ).rstrip("/")
+        self.token = _ntfy_setting(
+            "NTFY_TOKEN",
+            "AETHER_NTFY_TOKEN",
+        )
+
+    @property
+    def enabled(self) -> bool:
+        return bool(self.topic)
+
+    def _publish_sync(
+        self,
+        message: str,
+        *,
+        priority: str,
+        tags: str,
+    ) -> None:
+        if not self.topic:
+            return
+
+        topic = quote(self.topic, safe="")
+        url = f"{self.server}/{topic}"
+
+        # Title 故意只用 ASCII，避免 requests 对非 ASCII HTTP header
+        # 的编码兼容问题；中文信息全部放在 body。
+        headers = {
+            "Title": "Aether",
+            "Priority": priority,
+            "Tags": tags,
+        }
+
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
+
+        try:
+            response = requests.post(
+                url,
+                data=message.encode("utf-8"),
+                headers=headers,
+                timeout=5,
+            )
+        except requests.RequestException as exc:
+            print(f"ntfy 推送失败：{exc}")
+            return
+
+        if response.status_code >= 400:
+            body = response.text[:300]
+            print(
+                f"ntfy 推送失败：HTTP {response.status_code}，"
+                f"响应：{body}"
+            )
+
+    def publish(
+        self,
+        message: str,
+        *,
+        priority: str = "default",
+        tags: str = "computer",
+    ) -> None:
+        """异步发送一条推送，不让通知网络延迟拖慢打本。"""
+        if not self.enabled:
+            return
+
+        thread = threading.Thread(
+            target=self._publish_sync,
+            kwargs={
+                "message": message,
+                "priority": priority,
+                "tags": tags,
+            },
+            name="aether-ntfy",
+            daemon=True,
+        )
+        thread.start()
+
+    def node_completed(
+        self,
+        *,
+        node_index: Any,
+        node_name: Any,
+    ) -> None:
+        if isinstance(node_index, int):
+            display_index = node_index + 1
+            prefix = f"节点 {display_index}"
+        else:
+            prefix = "当前节点"
+
+        self.publish(
+            f"{self.preset.label}\n"
+            f"✓ {prefix}：{node_name} 已完成",
+            priority="low",
+            tags="heavy_check_mark",
+        )
+
+    def error(self, message: str) -> None:
+        self.publish(
+            f"{self.preset.label}\n"
+            f"{message}",
+            priority="high",
+            tags="warning",
+        )
+
+    def paused(self, message: str) -> None:
+        self.publish(
+            f"{self.preset.label}\n"
+            f"{message}",
+            priority="default",
+            tags="pause_button",
+        )
+
+    def completed(self) -> None:
+        self.publish(
+            f"{self.preset.label}\n"
+            "地下城探索完毕",
+            priority="default",
+            tags="tada",
+        )
+
+
+# =========================
 # 地下城布局统计
 # =========================
 
@@ -1460,6 +1685,7 @@ class DungeonRunner:
         self.strategy = strategy or DungeonStrategy()
         self.hooks = hooks or RuntimeHooks()
         self.fast_mode = fast_mode
+        self.notifier = NtfyNotifier(preset)
 
         # 快速模式第一次遇到战斗时才查询三个账号的真实库存。
         # 后续每成功使用一张就在内存里 -1，避免每场战斗都请求三个
@@ -1469,11 +1695,13 @@ class DungeonRunner:
     def run(self, *, resume: bool = False) -> bool:
         dungeon = self.captain.get_current_dungeon()
         if dungeon is None:
+            self.notifier.error("读取当前地下城失败，探索未开始")
             return False
 
         dungeon_data = dungeon.get("data")
         if not isinstance(dungeon_data, dict):
             print("当前地下城数据结构异常")
+            self.notifier.error("当前地下城数据结构异常，探索停止")
             return False
 
         status = dungeon_data.get("status")
@@ -1481,6 +1709,9 @@ class DungeonRunner:
         if resume:
             if status != "exploring":
                 print(f"无法恢复：当前地下城状态不是 exploring，而是 {status!r}")
+                self.notifier.error(
+                    f"无法恢复地下城：当前状态为 {status!r}"
+                )
                 return False
             print(
                 f"恢复进行中的地下城："
@@ -1489,10 +1720,17 @@ class DungeonRunner:
             )
         else:
             if not self.captain.enter_dungeon():
+                self.notifier.error(
+                    self._append_error_detail(
+                        "进入地下城失败",
+                        self.captain.last_error,
+                    )
+                )
                 return False
 
         node = self.captain.get_current_node()
         if node is None:
+            self.notifier.error("读取首个节点失败，探索停止")
             return False
 
         while True:
@@ -1502,35 +1740,88 @@ class DungeonRunner:
                 print("收到停止请求，已在安全节点暂停")
                 self.hooks.state("stopped")
                 self.hooks.emit("Aether：已在安全节点暂停，地下城进度保留。")
+                self.notifier.paused("已在安全节点暂停，地下城进度保留")
                 return False
 
             # 兼容旧响应：如果当前节点响应里直接带 completion_reason，也视为结束。
             if "completion_reason" in node:
                 print("地下城已完成")
                 self.hooks.state("completed")
+                self.notifier.completed()
                 return True
 
             sanity = node.get("sanity")
             if isinstance(sanity, (int, float)) and sanity <= 1:
                 print("san 值过低，强行撤离")
                 self.captain.retreat_dungeon()
+                self.notifier.error(
+                    f"san 值过低（{sanity}），已强行撤离"
+                )
                 return False
 
+            # 一个节点作为一个独立错误上下文。
+            # 这样后面若失败，ntfy 只带本节点产生的新错误，不会串到旧请求。
+            self._clear_party_errors()
+
+            data = node.get("data")
+            if isinstance(data, dict):
+                node_type = data.get("node_type")
+                node_name = NODE_NAMES.get(node_type, node_type)
+                node_index = data.get("index")
+            else:
+                node_name = "未知节点"
+                node_index = None
+
             if not self._handle_node(node):
+                if isinstance(node_index, int):
+                    display_index = node_index + 1
+                    where = f"节点 {display_index}：{node_name}"
+                else:
+                    where = str(node_name)
+                self.notifier.error(
+                    self._append_error_detail(
+                        f"{where} 处理失败，探索停止",
+                        self._latest_client_error(),
+                    )
+                )
                 return False
 
             next_result = self.captain.next_node()
             if next_result is None:
+                if isinstance(node_index, int):
+                    display_index = node_index + 1
+                    where = f"节点 {display_index}：{node_name}"
+                else:
+                    where = str(node_name)
+                self.notifier.error(
+                    self._append_error_detail(
+                        f"{where} 已处理，但推进下一节点失败",
+                        self._latest_client_error(),
+                    )
+                )
                 return False
+
+            # 只有 /node/next 成功后才认为这个节点真正“推进完成”。
+            self.notifier.node_completed(
+                node_index=node_index,
+                node_name=node_name,
+            )
 
             # 当前前端协议：/node/next 顶层 settlement 表示进入结算。
             if next_result.get("settlement"):
                 print("地下城已完成")
+                self.notifier.completed()
                 return True
 
             # 非结算状态下，重新 GET /dungeon/node 获取真正的下一节点详情。
             node = self.captain.get_current_node()
             if node is None:
+                self.notifier.error(
+                    self._append_error_detail(
+                        "上一节点已推进，但读取下一节点失败，探索停止",
+                        self._latest_client_error(),
+                    )
+                )
                 return False
 
     def _handle_node(self, node: dict[str, Any]) -> bool:
@@ -1564,6 +1855,21 @@ class DungeonRunner:
 
         print(f"遇到未知节点类型：{node_type!r}，停止自动探索")
         return False
+
+    def _clear_party_errors(self) -> None:
+        for member in self.party:
+            member.clear_last_error()
+
+    def _latest_client_error(self) -> str | None:
+        """返回当前节点处理中最近产生的底层客户端错误。"""
+        return get_latest_client_error(self.party)
+
+    @staticmethod
+    def _append_error_detail(
+        message: str,
+        detail: str | None,
+    ) -> str:
+        return append_error_detail(message, detail)
 
     def _load_accel_ticket_counts(self) -> dict[str, int]:
         """第一次快速战斗时读取整队加速券库存。
@@ -1995,6 +2301,35 @@ def login_all_accounts(
         clients.append(client)
 
     return clients
+
+
+def get_latest_client_error(
+    clients: list[AetherClient],
+) -> str | None:
+    """返回一组客户端中最近发生的底层错误。"""
+    failed = [
+        client
+        for client in clients
+        if client.last_error
+    ]
+    if not failed:
+        return None
+
+    client = max(
+        failed,
+        key=lambda item: item.last_error_at,
+    )
+    return f"{client.username}: {client.last_error}"
+
+
+def append_error_detail(
+    message: str,
+    detail: str | None,
+) -> str:
+    """给面向用户的错误消息追加底层 HTTP / JSON 详情。"""
+    if not detail:
+        return message
+    return f"{message}\n错误详情：{detail}"
 
 
 def create_party(
@@ -2470,6 +2805,7 @@ def execute_preset(
 ) -> bool:
     """执行一个且仅一个地下城预设。"""
     hooks = hooks or RuntimeHooks()
+    notifier = NtfyNotifier(preset)
     hooks.state(
         "starting",
         preset_key=preset.key,
@@ -2487,6 +2823,7 @@ def execute_preset(
 
     party = select_party(clients, preset.party)
     if party is None:
+        notifier.error("队伍配置异常，无法开始")
         return False
 
     if resume:
@@ -2494,6 +2831,12 @@ def execute_preset(
     else:
         if not create_party(party, preset, hooks):
             print("地下城创建/组队出现故障")
+            notifier.error(
+                append_error_detail(
+                    "地下城创建/组队出现故障",
+                    get_latest_client_error(party),
+                )
+            )
             return False
 
     runner = DungeonRunner(

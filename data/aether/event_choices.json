@@ -4,6 +4,11 @@
     "choice_name": "极难",
     "event_name": "认知棱镜的诘问"
   },
+  "ls_breathing_wall": {
+    "choice_index": 0,
+    "choice_name": "立刻穿过缝隙",
+    "event_name": "会呼吸的矿壁"
+  },
   "rlc_clean_road": {
     "choice_index": 1,
     "choice_name": "离开道路",
@@ -13,6 +18,11 @@
     "choice_index": 1,
     "choice_name": "在结论旁留下反证",
     "event_name": "只剩结论的报告"
+  },
+  "rlc_erased_survey_post": {
+    "choice_index": 1,
+    "choice_name": "拔掉测绘桩",
+    "event_name": "被抹去的测绘桩"
   },
   "rlc_extra_footstep": {
     "choice_index": 0,
@@ -28,5 +38,10 @@
     "choice_index": 1,
     "choice_name": "用容器封存",
     "event_name": "回到掌心的红叶"
+  },
+  "rlc_seven_vein_sap": {
+    "choice_index": 1,
+    "choice_name": "采集汁液",
+    "event_name": "第七道叶脉"
   }
 }
