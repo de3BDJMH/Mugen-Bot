@@ -9,6 +9,16 @@
     "choice_name": "立刻穿过缝隙",
     "event_name": "会呼吸的矿壁"
   },
+  "ls_missing_miner_lamp": {
+    "choice_index": 0,
+    "choice_name": "进入侧道",
+    "event_name": "失踪矿工的灯"
+  },
+  "ls_shedding_layer": {
+    "choice_index": 0,
+    "choice_name": "收集剥落外壳",
+    "event_name": "活石剥落层"
+  },
   "rlc_clean_road": {
     "choice_index": 1,
     "choice_name": "离开道路",
@@ -43,5 +53,10 @@
     "choice_index": 1,
     "choice_name": "采集汁液",
     "event_name": "第七道叶脉"
+  },
+  "rlc_warm_ashes": {
+    "choice_index": 0,
+    "choice_name": "取出根须",
+    "event_name": "尚有余温的灰烬"
   }
 }

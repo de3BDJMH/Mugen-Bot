@@ -90,8 +90,6 @@ OPS=[2404164262,2421372100]
 
 @watch.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
-    # if not event.group_id in WHITELIST:
-    #     return
 
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -104,40 +102,46 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
     img_id=-1#legacy_id
     if " " in arg:
         try:
-            target=services.get_member_by_alias(arg.split(" ")[0])
-            img_id=int(arg.split(" ")[1].strip())
+            target=services.get_member_by_alias(arg.split()[0])
+            img_id=int(arg.split()[1].strip())
         except (ValueError,IndexError):
             target=services.get_member_by_alias(arg)
     else:
         target=services.get_member_by_alias(arg)
-    if target:
-        image_ids=services.get_all_images(target,user_id)#旧id到新id的映射表
-    else:
+    #哪个傻逼这么写的，卡死了
+    ## 哪个傻逼注释掉的，跑都跑不起来了
+    # if target:
+    #     image_ids=services.get_all_images(target,user_id)#旧id到新id的映射表
+    # else:
+    #     return
+    # imgs=[services.get_image_content(image_ids[legacy_id],user_id) for legacy_id in image_ids]
+    if not target:
         return
-    imgs=[services.get_image_content(image_ids[legacy_id],user_id) for legacy_id in image_ids]
-    if imgs:
-        img_ids=[i["image"]["legacy_id"] for i in imgs]
-        if img_id<=0:
-            img=random.choice(imgs)
-            img_path=img["path"]
-            upload_time=datetime.datetime.fromisoformat(img["image"]["uploaded_at"]).strftime("%Y.%m.%d %H:%M:%S")
-            uploader=img["image"]["uploader_qq"]
-            uploader="Unknown" if uploader is None else uploader
-            await watch.finish(MessageSegment.image(img_path)+f"\n图片ID: {img["image"]["legacy_id"]}#{img["image"]["image_id"]}\n上传时间: {upload_time}\n    ——by {uploader}")
-        elif max(img_ids)<img_id:
+    if img_id<=0:#随机
+        result=services.get_random_images(user_id,target,count=1)
+        if result["count"]==0:
+            await watch.finish("Ta还没有图片哦，试试上传一张吧~")
+        img=services.get_image_content(result["images"][0]["image_id"],user_id)
+        img_path=img["path"]
+        upload_time=datetime.datetime.fromisoformat(img["image"]["uploaded_at"]).strftime("%Y.%m.%d %H:%M:%S")
+        uploader=img["image"]["uploader_qq"]
+        uploader="Unknown" if uploader is None else uploader
+        await watch.finish(MessageSegment.image(img_path)+f"\n图片ID: {img["image"]["legacy_id"]}#{img["image"]["image_id"]}\n上传时间: {upload_time}\n    ——by {uploader}")
+    else:#指定id
+        image_ids=services.get_all_images(target,user_id)
+        if not image_ids:
+            await watch.finish("Ta还没有图片哦，试试上传一张吧~")
+        if max(image_ids.keys())<img_id:
             await watch.finish("还没有这么多图片哦")
-        elif not img_id in img_ids:
+        elif not img_id in image_ids:
             await watch.finish("该编号的图片已被删除或不可查看")
-        else:
-            for i in imgs:
-                if i["image"]["legacy_id"]==img_id:
-                    img_path=i["path"]
-                    upload_time=datetime.datetime.fromisoformat(i["image"]["uploaded_at"]).strftime("%Y.%m.%d %H:%M:%S")
-                    uploader=i["image"]["uploader_qq"]
-                    uploader="Unknown" if uploader is None else uploader
-                    await watch.finish(MessageSegment.image(img_path)+f"\n图片ID: {img_id}#{i["image"]["image_id"]}\n上传时间: {upload_time}\n    ——by {uploader}")
-    else:
-        await watch.finish("Ta还没有图片哦，试试上传一张吧~")
+        img_id=image_ids[img_id]#转为全局id
+        img=services.get_image_content(img_id,user_id)
+        img_path=img["path"]
+        upload_time=datetime.datetime.fromisoformat(img["image"]["uploaded_at"]).strftime("%Y.%m.%d %H:%M:%S")
+        uploader=img["image"]["uploader_qq"]
+        uploader="Unknown" if uploader is None else uploader
+        await watch.finish(MessageSegment.image(img_path)+f"\n图片ID: {img["image"]["legacy_id"]}#{img["image"]["image_id"]}\n上传时间: {upload_time}\n    ——by {uploader}")
 
 @upload.handle()
 async def handle_function(event:GroupMessageEvent,args:Message=CommandArg(),state:T_State=None):

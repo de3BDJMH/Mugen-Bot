@@ -288,6 +288,9 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
         except:
             lines=-100
     logs=user.getLogs(lines)
+    for log in logs.copy():
+        if not "data" in log:
+            logs.remove(log)
     if not logs:
         await datatrend.finish("你的Data还没有被动过呢...")
     if len(logs)<10:

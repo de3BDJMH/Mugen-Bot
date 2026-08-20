@@ -52,6 +52,11 @@ def get_images(
         sort
     )
 
+def get_all_visible_images_info(viewer_qq:int|None)->list[dict]:
+    """获取当前用户所有可见图片基础信息，不分页"""
+    image_ids=get_all_visible_image_ids(viewer_qq)
+    return storage.get_images_by_ids(image_ids)
+
 def get_all_images(slug:str,viewer_qq:int|None)->dict[int,int]|None:
     """获取所有可见指定群友图片列表"""
     return storage.get_all_visible_images(slug,viewer_qq,is_admin(viewer_qq))
@@ -458,3 +463,20 @@ def get_member_aliases(slug:str)->list[str]:
 def set_member_aliases(slug:str,aliases:list[str]):
     """设置群友别名"""
     return storage.set_member_aliases(slug,aliases)
+
+def get_all_visible_image_ids(viewer_qq:int|None)->list[int]:
+    """获取当前用户可见的所有图片ID"""
+    #遇到效率问题用这个注释掉的函数
+    # return storage.get_all_visible_image_ids(
+    #     viewer_qq,
+    #     is_admin(viewer_qq)
+    # )
+    image_ids=[]
+
+    for member in get_members(viewer_qq):
+        images=get_all_images(member["slug"],viewer_qq)
+
+        if images:
+            image_ids.extend(images.values())
+
+    return image_ids

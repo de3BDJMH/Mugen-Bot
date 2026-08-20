@@ -848,6 +848,41 @@ def get_visible_images(
         "images":images
     }
 
+def get_images_by_ids(image_ids:list[int])->list[dict]:
+    """批量获取图片基础信息，不分页"""
+    if not image_ids:
+        return []
+
+    conn=_connect()
+    cursor=conn.cursor()
+    placeholders=",".join("?" for _ in image_ids)
+
+    cursor.execute(
+        f"""
+        SELECT image_id,member_slug,mime_type,width,height,is_animated,uploaded_at
+        FROM images
+        WHERE image_id IN ({placeholders})
+        ORDER BY image_id
+        """,
+        image_ids
+    )
+
+    images=[
+        {
+            "image_id":row[0],
+            "member_slug":row[1],
+            "mime_type":row[2],
+            "width":row[3],
+            "height":row[4],
+            "is_animated":bool(row[5]),
+            "uploaded_at":row[6]
+        }
+        for row in cursor.fetchall()
+    ]
+
+    conn.close()
+    return images
+
 def get_all_visible_images(slug:str,viewer_qq:int|None,is_admin:bool=False)->dict[int,int]|None:
     """获取该用户可见的所有该群友图片"""
     if not can_view_member(slug,viewer_qq,is_admin):
@@ -1761,3 +1796,77 @@ def set_member_aliases(slug:str,aliases:list[str]):
 
     finally:
         conn.close()
+
+def get_all_visible_image_ids(viewer_qq:int|None,is_admin:bool=False)->list[int]:
+    """获取当前用户可见的所有active图片ID"""
+    conn=_connect()
+    cursor=conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT i.image_id
+        FROM images AS i
+        JOIN members AS m
+        ON m.slug=i.member_slug
+        WHERE i.status='active'
+        AND m.enabled=1
+        AND (
+            ?=1
+            OR (
+                (
+                    m.visibility='public'
+                    OR (
+                        m.visibility='authenticated'
+                        AND ? IS NOT NULL
+                    )
+                    OR (
+                        m.visibility='allowlist'
+                        AND ? IS NOT NULL
+                        AND EXISTS(
+                            SELECT 1
+                            FROM member_allowed_users AS mau
+                            WHERE mau.member_slug=m.slug
+                            AND mau.user_qq=?
+                        )
+                    )
+                )
+                AND
+                (
+                    i.visibility='inherit'
+                    OR (
+                        i.visibility='authenticated'
+                        AND ? IS NOT NULL
+                    )
+                    OR (
+                        i.visibility='allowlist'
+                        AND ? IS NOT NULL
+                        AND EXISTS(
+                            SELECT 1
+                            FROM image_allowed_users AS iau
+                            WHERE iau.image_id=i.image_id
+                            AND iau.user_qq=?
+                        )
+                    )
+                )
+            )
+        )
+        ORDER BY i.image_id
+        """,
+        (
+            is_admin,
+            viewer_qq,
+            viewer_qq,
+            viewer_qq,
+            viewer_qq,
+            viewer_qq,
+            viewer_qq
+        )
+    )
+
+    image_ids=[
+        row[0]
+        for row in cursor.fetchall()
+    ]
+
+    conn.close()
+    return image_ids

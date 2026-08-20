@@ -1,0 +1,5 @@
+{
+  "enabled":true,
+  "single_cost":{"base":10,"addition":8,"zero":false},
+  "ten_cost":{"base":20,"addition":1,"zero":false}
+}

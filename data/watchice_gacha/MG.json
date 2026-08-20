@@ -1,0 +1,11 @@
+{
+  "display_name": "看群友抽卡",
+  "help": {
+    "text": "",
+    "image": []
+  },
+  "state": true,
+  "filter_mode": "blacklist",
+  "whitelist": [],
+  "blacklist": []
+}

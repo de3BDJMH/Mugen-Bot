@@ -816,3 +816,102 @@ def update_user_nickname(user_id:int,nickname:str)->None:
 
     conn.commit()
     conn.close()
+
+###
+#给抽卡用的
+###
+def get_user_data_conn(conn:sqlite3.Connection,user_id:int,schema:str="main")->dict|None:
+    """使用指定连接获取用户Data"""
+    if schema not in ("main","checkin"):
+        raise ValueError("invalid_schema")
+
+    cursor=conn.cursor()
+    cursor.execute(
+        f"""
+        SELECT data_base,data_addition,data_zero
+        FROM {schema}.users
+        WHERE user_id=?
+        """,
+        (user_id,)
+    )
+
+    row=cursor.fetchone()
+
+    if row is None:
+        return None
+
+    return {
+        "base":row[0],
+        "addition":row[1],
+        "zero":bool(row[2])
+    }
+
+def update_user_data_conn(conn:sqlite3.Connection,user_id:int,data_base:int,data_addition:float,data_zero:bool,schema:str="main")->None:
+    """使用指定连接更新用户Data"""
+    if schema not in ("main","checkin"):
+        raise ValueError("invalid_schema")
+
+    cursor=conn.cursor()
+    cursor.execute(
+        f"""
+        UPDATE {schema}.users
+        SET data_base=?,data_addition=?,data_zero=?
+        WHERE user_id=?
+        """,
+        (data_base,data_addition,data_zero,user_id)
+    )
+
+    if cursor.rowcount==0:
+        raise ValueError("user_not_found")
+
+def add_log_conn(
+    conn:sqlite3.Connection,
+    user_id:int,
+    operation:str,
+    change_type:str,
+    data_base:int|None,
+    data_addition:float|None,
+    data_zero:bool|None,
+    created_at:datetime.datetime,
+    related_user_id:int|None=None,
+    item_id:int|None=None,
+    item_count:int|None=None,
+    detail:str|None=None,
+    schema:str="main"
+)->None:
+    """使用指定连接添加日志"""
+    if schema not in ("main","checkin"):
+        raise ValueError("invalid_schema")
+
+    cursor=conn.cursor()
+    cursor.execute(
+        f"""
+        INSERT INTO {schema}.logs(
+            user_id,
+            operation,
+            change_type,
+            related_user_id,
+            data_base,
+            data_addition,
+            data_zero,
+            item_id,
+            item_count,
+            created_at,
+            detail
+        )
+        VALUES(?,?,?,?,?,?,?,?,?,?,?)
+        """,
+        (
+            user_id,
+            operation,
+            change_type,
+            related_user_id,
+            data_base,
+            data_addition,
+            data_zero,
+            item_id,
+            item_count,
+            created_at.isoformat(timespec="seconds"),
+            detail
+        )
+    )
