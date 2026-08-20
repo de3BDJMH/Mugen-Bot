@@ -27,15 +27,12 @@ def draw_images(user_id:int,count:int)->list[int]:
 
     return [random.choice(pool) for _ in range(count)]
 
-def get_cost(count:int)->dict:
+def get_cost(config:dict,count:int)->dict:
     """获取抽卡价格"""
-    config=get_config()
-
     if count==1:
         return config["single_cost"]
     if count==10:
         return config["ten_cost"]
-
     raise ValueError("invalid_count")
 
 def draw(user_id:int,request_id:str,count:int)->dict:
@@ -43,11 +40,6 @@ def draw(user_id:int,request_id:str,count:int)->dict:
     if count not in (1,10):
         raise ValueError("invalid_count")
 
-    config=get_config()
-    if not config["enabled"]:
-        raise ValueError("gacha_disabled")
-
-    cost=get_cost(count)
     conn=storage._connect()
 
     try:
@@ -70,6 +62,12 @@ def draw(user_id:int,request_id:str,count:int)->dict:
                 **old_draw,
                 "items":items
             }
+
+        config=get_config()
+        if not config["enabled"]:
+            raise ValueError("gacha_disabled")
+    
+        cost=get_cost(config,count)
 
         image_ids=draw_images(user_id,count)
         now=datetime.datetime.now().replace(microsecond=0)

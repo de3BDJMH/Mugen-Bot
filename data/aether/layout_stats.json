@@ -132,22 +132,22 @@
     "red_leaf_extreme": {
       "battle_counts": {
         "1": 32,
-        "2": 157,
-        "3": 27
+        "2": 160,
+        "3": 28
       },
       "compositions": {
         "battle=1|branch=1|camp=1|elite=1|event=1|shop=1|treasure=1": 18,
         "battle=1|branch=1|camp=1|elite=1|event=2|shop=1": 8,
         "battle=1|branch=1|elite=1|event=1|shop=1|treasure=2": 1,
         "battle=1|branch=1|elite=1|event=2|shop=1|treasure=1": 5,
-        "battle=2|branch=1|camp=1|elite=1|event=1|shop=1": 67,
+        "battle=2|branch=1|camp=1|elite=1|event=1|shop=1": 68,
         "battle=2|branch=1|camp=1|elite=1|shop=1|treasure=1": 19,
         "battle=2|branch=1|camp=2|elite=1|shop=1": 1,
-        "battle=2|branch=1|elite=1|event=1|shop=1|treasure=1": 55,
-        "battle=2|branch=1|elite=1|event=2|shop=1": 13,
+        "battle=2|branch=1|elite=1|event=1|shop=1|treasure=1": 56,
+        "battle=2|branch=1|elite=1|event=2|shop=1": 14,
         "battle=2|branch=1|elite=1|shop=1|treasure=2": 2,
         "battle=3|branch=1|camp=1|elite=1|shop=1": 2,
-        "battle=3|branch=1|elite=1|event=1|shop=1": 18,
+        "battle=3|branch=1|elite=1|event=1|shop=1": 19,
         "battle=3|branch=1|elite=1|shop=1|treasure=1": 7
       },
       "difficulty": "极难",
@@ -163,7 +163,7 @@
         "battle|battle|event|treasure|elite|shop|branch": 11,
         "battle|battle|treasure|battle|elite|shop|branch": 5,
         "battle|battle|treasure|camp|elite|shop|branch": 3,
-        "battle|battle|treasure|event|elite|shop|branch": 11,
+        "battle|battle|treasure|event|elite|shop|branch": 12,
         "battle|camp|battle|camp|elite|shop|branch": 1,
         "battle|camp|battle|event|elite|shop|branch": 6,
         "battle|camp|battle|treasure|elite|shop|branch": 4,
@@ -172,11 +172,11 @@
         "battle|camp|event|treasure|elite|shop|branch": 7,
         "battle|camp|treasure|battle|elite|shop|branch": 3,
         "battle|camp|treasure|event|elite|shop|branch": 1,
-        "battle|event|battle|battle|elite|shop|branch": 4,
+        "battle|event|battle|battle|elite|shop|branch": 5,
         "battle|event|battle|camp|elite|shop|branch": 16,
-        "battle|event|battle|event|elite|shop|branch": 4,
+        "battle|event|battle|event|elite|shop|branch": 5,
         "battle|event|battle|treasure|elite|shop|branch": 12,
-        "battle|event|camp|battle|elite|shop|branch": 10,
+        "battle|event|camp|battle|elite|shop|branch": 11,
         "battle|event|camp|event|elite|shop|branch": 5,
         "battle|event|camp|treasure|elite|shop|branch": 5,
         "battle|event|event|battle|elite|shop|branch": 4,
@@ -195,8 +195,8 @@
       },
       "name": "红叶山谷 · 极难",
       "preset_id": "red_leaf_canyon",
-      "total": 216,
-      "updated_at": 1787247850
+      "total": 220,
+      "updated_at": 1787249350
     },
     "withered_forest_extreme": {
       "battle_counts": {

@@ -393,3 +393,23 @@ def test_empty_pool_no_write(gacha_db,monkeypatch):
         "SELECT COUNT(*) FROM logs WHERE operation='gacha'"
     ).fetchone()[0]==0
     conn.close()
+
+def test_idempotent_request_works_after_disabled(gacha_db,monkeypatch):
+    config={
+        "enabled":True,
+        "single_cost":{"base":10,"addition":8,"zero":False},
+        "ten_cost":{"base":20,"addition":1,"zero":False}
+    }
+
+    monkeypatch.setattr(gacha_service,"get_config",lambda:config)
+
+    first=gacha_service.draw(123,"disabled-retry-test",1)
+
+    config["enabled"]=False
+
+    second=gacha_service.draw(123,"disabled-retry-test",1)
+
+    assert second==first
+
+    with pytest.raises(ValueError,match="gacha_disabled"):
+        gacha_service.draw(123,"new-request-after-disabled",1)
