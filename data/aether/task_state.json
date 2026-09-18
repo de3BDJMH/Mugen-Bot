@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "saved_at": 1789680898.6603851,
-  "run_id": "20260918-000645-cdfc3bcb",
-  "plan_key": "all-daily-weekday",
-  "plan_name": "每日（工作日）",
+  "saved_at": 1789754049.8986552,
+  "run_id": "20260919-002353-1923689c",
+  "plan_key": "all-daily-weekend",
+  "plan_name": "每日（周末）",
   "run_mode": "save",
-  "started_at": 1789661205.5841477,
-  "finished_at": 1789680898.641883,
-  "archived_at": 1789680898.6497767,
-  "result": "completed",
-  "last_message": "批量任务结束",
+  "started_at": 1789748633.5644524,
+  "finished_at": null,
+  "archived_at": null,
+  "result": "unfinished",
+  "last_message": "角色池已加载：Mugen，Nozomi，Sasaki Miyo，Yume，de3BDJMH",
   "blocked_characters": [],
   "failure_streaks": {
     "de3BDJMH": 0,
@@ -47,7 +47,7 @@
         },
         {
           "index": 4,
-          "node_type": "battle"
+          "node_type": "treasure"
         },
         {
           "index": 5,
@@ -55,7 +55,7 @@
         },
         {
           "index": 6,
-          "node_type": "treasure"
+          "node_type": "battle"
         },
         {
           "index": 7,
@@ -82,9 +82,9 @@
           "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "DJ74pHYYHcSPVRfDwlAbYTWE",
-      "started_at": 1789661209.3873234,
-      "finished_at": 1789661682.5130856,
+      "dungeon_id": "7jqHTCOh1WVZBkOMZ6UXHtpC",
+      "started_at": 1789748637.1227007,
+      "finished_at": 1789749114.6667757,
       "error": null,
       "owned_snapshot": [
         "de3BDJMH",
@@ -117,11 +117,11 @@
         },
         {
           "index": 1,
-          "node_type": "battle"
+          "node_type": "treasure"
         },
         {
           "index": 2,
-          "node_type": "camp"
+          "node_type": "battle"
         },
         {
           "index": 3,
@@ -149,19 +149,19 @@
         },
         {
           "index": 9,
-          "node_type": "camp"
+          "node_type": "event"
         },
         {
           "index": 10,
-          "node_type": "treasure"
+          "node_type": "battle"
         },
         {
           "index": 11,
-          "node_type": "treasure"
+          "node_type": "camp"
         },
         {
           "index": 12,
-          "node_type": "treasure"
+          "node_type": "event"
         },
         {
           "index": 13,
@@ -180,9 +180,9 @@
           "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "ZmGQfQ3RJfv9WzXfT1mbzyYg",
-      "started_at": 1789661682.522527,
-      "finished_at": 1789662267.9061117,
+      "dungeon_id": "Vttx3of4RDwPhr6ezVxENpVB",
+      "started_at": 1789749114.6770582,
+      "finished_at": 1789749741.0180833,
       "error": null,
       "owned_snapshot": [
         "de3BDJMH",
@@ -219,11 +219,11 @@
         },
         {
           "index": 2,
-          "node_type": "event"
+          "node_type": "treasure"
         },
         {
           "index": 3,
-          "node_type": "treasure"
+          "node_type": "event"
         },
         {
           "index": 4,
@@ -239,11 +239,11 @@
         },
         {
           "index": 7,
-          "node_type": "battle"
+          "node_type": "event"
         },
         {
           "index": 8,
-          "node_type": "camp"
+          "node_type": "shop"
         },
         {
           "index": 9,
@@ -262,9 +262,9 @@
           "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "VScRuYVSRp6OWW3Xnt3Xy3py",
-      "started_at": 1789662267.9123263,
-      "finished_at": 1789662776.0739043,
+      "dungeon_id": "dlI1VMG3XhBqLPYBVkAlDBIK",
+      "started_at": 1789749741.026912,
+      "finished_at": 1789750260.037482,
       "error": null,
       "owned_snapshot": [
         "de3BDJMH",
@@ -288,8 +288,8 @@
       "skip_camp_wait": true,
       "status": "success",
       "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 12,
+      "node_name": "事件",
+      "node_index": 8,
       "nodes": [
         {
           "index": 0,
@@ -297,19 +297,19 @@
         },
         {
           "index": 1,
-          "node_type": "treasure"
-        },
-        {
-          "index": 2,
           "node_type": "event"
         },
         {
-          "index": 3,
+          "index": 2,
           "node_type": "camp"
         },
         {
-          "index": 4,
+          "index": 3,
           "node_type": "battle"
+        },
+        {
+          "index": 4,
+          "node_type": "treasure"
         },
         {
           "index": 5,
@@ -321,11 +321,11 @@
         },
         {
           "index": 7,
-          "node_type": "treasure"
+          "node_type": "event"
         },
         {
           "index": 8,
-          "node_type": "shop"
+          "node_type": "event"
         },
         {
           "index": 9,
@@ -344,9 +344,9 @@
           "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "Nl0kGWcjV2iYJeNGoTahPVvS",
-      "started_at": 1789662776.0814254,
-      "finished_at": 1789663250.7072628,
+      "dungeon_id": "i4g3JoXR6msIE2r6F8LVHlM5",
+      "started_at": 1789750260.0434914,
+      "finished_at": 1789750533.317919,
       "error": null,
       "owned_snapshot": [
         "de3BDJMH",
@@ -379,7 +379,7 @@
         },
         {
           "index": 1,
-          "node_type": "event"
+          "node_type": "battle"
         },
         {
           "index": 2,
@@ -387,7 +387,7 @@
         },
         {
           "index": 3,
-          "node_type": "battle"
+          "node_type": "event"
         },
         {
           "index": 4,
@@ -403,11 +403,11 @@
         },
         {
           "index": 7,
-          "node_type": "treasure"
+          "node_type": "event"
         },
         {
           "index": 8,
-          "node_type": "battle"
+          "node_type": "camp"
         },
         {
           "index": 9,
@@ -430,9 +430,9 @@
           "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "KgGdU5x1A3lVLf9k4dSs9iAw",
-      "started_at": 1789663250.7312558,
-      "finished_at": 1789664876.5299385,
+      "dungeon_id": "BJBAXoieTaR95HH3izXwpZBt",
+      "started_at": 1789750533.3299356,
+      "finished_at": 1789751963.8983476,
       "error": null,
       "owned_snapshot": [
         "Sasaki Miyo",
@@ -465,11 +465,11 @@
         },
         {
           "index": 1,
-          "node_type": "battle"
+          "node_type": "event"
         },
         {
           "index": 2,
-          "node_type": "treasure"
+          "node_type": "battle"
         },
         {
           "index": 3,
@@ -489,15 +489,15 @@
         },
         {
           "index": 7,
-          "node_type": "camp"
+          "node_type": "event"
         },
         {
           "index": 8,
-          "node_type": "event"
+          "node_type": "battle"
         },
         {
           "index": 9,
-          "node_type": "event"
+          "node_type": "shop"
         },
         {
           "index": 10,
@@ -516,9 +516,9 @@
           "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "g0qNJyn7m7LKCKH3CzJlnjrq",
-      "started_at": 1789664876.5504832,
-      "finished_at": 1789666278.528801,
+      "dungeon_id": "yOSqfF3QkCWuzEWx7Gp5qp1M",
+      "started_at": 1789751963.9049273,
+      "finished_at": 1789753642.8502815,
       "error": null,
       "owned_snapshot": [
         "Sasaki Miyo",
@@ -540,10 +540,10 @@
       "preset_key": "red_leaf_extreme",
       "acceleration": "auto",
       "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
+      "status": "running",
+      "phase": "battle",
+      "node_name": "战斗",
+      "node_index": 3,
       "nodes": [
         {
           "index": 0,
@@ -551,11 +551,11 @@
         },
         {
           "index": 1,
-          "node_type": "camp"
+          "node_type": "battle"
         },
         {
           "index": 2,
-          "node_type": "battle"
+          "node_type": "treasure"
         },
         {
           "index": 3,
@@ -572,39 +572,11 @@
         {
           "index": 6,
           "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "event"
-        },
-        {
-          "index": 8,
-          "node_type": "battle"
-        },
-        {
-          "index": 9,
-          "node_type": "camp"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "GCAnQm99Gwyyof3jAdP9odDJ",
-      "started_at": 1789666278.5392141,
-      "finished_at": 1789667820.5541596,
+      "dungeon_id": "cIMTZoccfT3eeRMNSVs3DdCa",
+      "started_at": 1789753642.856161,
+      "finished_at": null,
       "error": null,
       "owned_snapshot": [
         "Sasaki Miyo",
@@ -626,71 +598,14 @@
       "preset_key": "red_leaf_extreme",
       "acceleration": "auto",
       "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "battle"
-        },
-        {
-          "index": 2,
-          "node_type": "battle"
-        },
-        {
-          "index": 3,
-          "node_type": "treasure"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "battle"
-        },
-        {
-          "index": 8,
-          "node_type": "camp"
-        },
-        {
-          "index": 9,
-          "node_type": "event"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "EXKo52nJh2zLb8K5K9xMcmVs",
-      "started_at": 1789667820.5730946,
-      "finished_at": 1789669565.8088303,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
       "error": null,
       "owned_snapshot": [
         "Sasaki Miyo",
@@ -703,7 +618,7 @@
         "de3BDJMH"
       ],
       "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
+      "runtime_party_ready": false,
       "holds_resource_lock": false,
       "lock_reason": null
     },
@@ -712,71 +627,14 @@
       "preset_key": "red_leaf_extreme",
       "acceleration": "auto",
       "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "battle"
-        },
-        {
-          "index": 2,
-          "node_type": "event"
-        },
-        {
-          "index": 3,
-          "node_type": "battle"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "camp"
-        },
-        {
-          "index": 8,
-          "node_type": "battle"
-        },
-        {
-          "index": 9,
-          "node_type": "treasure"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "IKO1d7VQGYl587FZVWxbT9wA",
-      "started_at": 1789669565.8147311,
-      "finished_at": 1789671096.89971,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
       "error": null,
       "owned_snapshot": [
         "Sasaki Miyo",
@@ -789,7 +647,7 @@
         "de3BDJMH"
       ],
       "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
+      "runtime_party_ready": false,
       "holds_resource_lock": false,
       "lock_reason": null
     },
@@ -798,71 +656,14 @@
       "preset_key": "red_leaf_extreme",
       "acceleration": "auto",
       "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "battle"
-        },
-        {
-          "index": 2,
-          "node_type": "battle"
-        },
-        {
-          "index": 3,
-          "node_type": "treasure"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "shop"
-        },
-        {
-          "index": 8,
-          "node_type": "event"
-        },
-        {
-          "index": 9,
-          "node_type": "treasure"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "sf13lGiKJZPnC61Q6KJrdD3a",
-      "started_at": 1789671096.9062803,
-      "finished_at": 1789672454.923103,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
       "error": null,
       "owned_snapshot": [
         "Sasaki Miyo",
@@ -875,7 +676,7 @@
         "de3BDJMH"
       ],
       "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
+      "runtime_party_ready": false,
       "holds_resource_lock": false,
       "lock_reason": null
     },
@@ -884,71 +685,14 @@
       "preset_key": "red_leaf_extreme",
       "acceleration": "auto",
       "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "battle"
-        },
-        {
-          "index": 2,
-          "node_type": "battle"
-        },
-        {
-          "index": 3,
-          "node_type": "event"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "event"
-        },
-        {
-          "index": 8,
-          "node_type": "battle"
-        },
-        {
-          "index": 9,
-          "node_type": "shop"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "usGqCdyXyo46T6LBRNW5k0vg",
-      "started_at": 1789672454.931602,
-      "finished_at": 1789674058.8024738,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
       "error": null,
       "owned_snapshot": [
         "Sasaki Miyo",
@@ -961,7 +705,7 @@
         "de3BDJMH"
       ],
       "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
+      "runtime_party_ready": false,
       "holds_resource_lock": false,
       "lock_reason": null
     },
@@ -970,71 +714,14 @@
       "preset_key": "red_leaf_extreme",
       "acceleration": "auto",
       "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "battle"
-        },
-        {
-          "index": 2,
-          "node_type": "camp"
-        },
-        {
-          "index": 3,
-          "node_type": "battle"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "battle"
-        },
-        {
-          "index": 8,
-          "node_type": "battle"
-        },
-        {
-          "index": 9,
-          "node_type": "camp"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "DGY5f1ARNcgh1XVDR71G9prE",
-      "started_at": 1789674058.812467,
-      "finished_at": 1789676077.789845,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
       "error": null,
       "owned_snapshot": [
         "Sasaki Miyo",
@@ -1047,7 +734,7 @@
         "de3BDJMH"
       ],
       "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
+      "runtime_party_ready": false,
       "holds_resource_lock": false,
       "lock_reason": null
     },
@@ -1056,71 +743,14 @@
       "preset_key": "red_leaf_extreme",
       "acceleration": "auto",
       "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "battle"
-        },
-        {
-          "index": 2,
-          "node_type": "battle"
-        },
-        {
-          "index": 3,
-          "node_type": "event"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "treasure"
-        },
-        {
-          "index": 8,
-          "node_type": "battle"
-        },
-        {
-          "index": 9,
-          "node_type": "camp"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "492YSRPA69PXVaaih5f3PTV1",
-      "started_at": 1789676077.7968154,
-      "finished_at": 1789677618.921,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
       "error": null,
       "owned_snapshot": [
         "Sasaki Miyo",
@@ -1133,12 +763,244 @@
         "de3BDJMH"
       ],
       "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
+      "runtime_party_ready": false,
       "holds_resource_lock": false,
       "lock_reason": null
     },
     {
       "sequence": 14,
+      "preset_key": "red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "runtime_owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 15,
+      "preset_key": "red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "runtime_owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 16,
+      "preset_key": "red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "runtime_owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 17,
+      "preset_key": "red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "runtime_owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 18,
+      "preset_key": "red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "runtime_owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 19,
+      "preset_key": "red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "runtime_owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 20,
+      "preset_key": "red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "runtime_owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 21,
+      "preset_key": "red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "runtime_owned_snapshot": [
+        "Sasaki Miyo",
+        "Mugen",
+        "de3BDJMH"
+      ],
+      "preset_signature": "{\"captain\":\"Sasaki Miyo\",\"difficulty\":\"极难\",\"key\":\"red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Sasaki Miyo\",\"party\":[{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Sasaki Miyo\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"Mugen\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":1,\"username\":\"de3BDJMH\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 22,
       "preset_key": "小号beginner_extreme",
       "acceleration": "never",
       "skip_camp_wait": true,
@@ -1153,15 +1015,15 @@
         },
         {
           "index": 1,
-          "node_type": "event"
-        },
-        {
-          "index": 2,
           "node_type": "battle"
         },
         {
-          "index": 3,
+          "index": 2,
           "node_type": "event"
+        },
+        {
+          "index": 3,
+          "node_type": "battle"
         },
         {
           "index": 4,
@@ -1173,7 +1035,7 @@
         },
         {
           "index": 6,
-          "node_type": "battle"
+          "node_type": "event"
         },
         {
           "index": 7,
@@ -1200,9 +1062,9 @@
           "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "OcbGfhCTJdhOLCE4SUK10WA5",
-      "started_at": 1789661209.3933709,
-      "finished_at": 1789661815.4019866,
+      "dungeon_id": "GctVnRMNEGUkt0hd3Cte4FgJ",
+      "started_at": 1789748637.129091,
+      "finished_at": 1789749238.866362,
       "error": null,
       "owned_snapshot": [
         "Nozomi",
@@ -1218,7 +1080,7 @@
       "lock_reason": null
     },
     {
-      "sequence": 15,
+      "sequence": 23,
       "preset_key": "小号deep_extreme",
       "acceleration": "never",
       "skip_camp_wait": true,
@@ -1241,11 +1103,11 @@
         },
         {
           "index": 3,
-          "node_type": "camp"
+          "node_type": "battle"
         },
         {
           "index": 4,
-          "node_type": "battle"
+          "node_type": "camp"
         },
         {
           "index": 5,
@@ -1261,7 +1123,7 @@
         },
         {
           "index": 8,
-          "node_type": "battle"
+          "node_type": "event"
         },
         {
           "index": 9,
@@ -1269,7 +1131,7 @@
         },
         {
           "index": 10,
-          "node_type": "shop"
+          "node_type": "battle"
         },
         {
           "index": 11,
@@ -1277,7 +1139,7 @@
         },
         {
           "index": 12,
-          "node_type": "event"
+          "node_type": "shop"
         },
         {
           "index": 13,
@@ -1296,9 +1158,9 @@
           "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "KqqA9ZLYyFtsLaTpoOpP1f6Y",
-      "started_at": 1789661815.4137545,
-      "finished_at": 1789662443.0751045,
+      "dungeon_id": "HnyTdjZW9JnB8QQ9tBEcMySZ",
+      "started_at": 1789749238.8718562,
+      "finished_at": 1789749948.7328057,
       "error": null,
       "owned_snapshot": [
         "Nozomi",
@@ -1314,7 +1176,7 @@
       "lock_reason": null
     },
     {
-      "sequence": 16,
+      "sequence": 24,
       "preset_key": "小号withered_forest_extreme",
       "acceleration": "never",
       "skip_camp_wait": true,
@@ -1329,19 +1191,19 @@
         },
         {
           "index": 1,
-          "node_type": "battle"
+          "node_type": "treasure"
         },
         {
           "index": 2,
-          "node_type": "event"
+          "node_type": "battle"
         },
         {
           "index": 3,
-          "node_type": "camp"
+          "node_type": "event"
         },
         {
           "index": 4,
-          "node_type": "battle"
+          "node_type": "camp"
         },
         {
           "index": 5,
@@ -1353,11 +1215,11 @@
         },
         {
           "index": 7,
-          "node_type": "treasure"
+          "node_type": "battle"
         },
         {
           "index": 8,
-          "node_type": "event"
+          "node_type": "battle"
         },
         {
           "index": 9,
@@ -1376,9 +1238,9 @@
           "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "KAtyqX2KAoH4OsSMCM18NDCJ",
-      "started_at": 1789662443.0862854,
-      "finished_at": 1789662973.3745666,
+      "dungeon_id": "n9d4ia2mLm2OaZl73fOTCgzQ",
+      "started_at": 1789749948.7397308,
+      "finished_at": 1789750569.3536494,
       "error": null,
       "owned_snapshot": [
         "Nozomi",
@@ -1394,7 +1256,7 @@
       "lock_reason": null
     },
     {
-      "sequence": 17,
+      "sequence": 25,
       "preset_key": "小号living_stone_extreme",
       "acceleration": "never",
       "skip_camp_wait": true,
@@ -1409,19 +1271,19 @@
         },
         {
           "index": 1,
-          "node_type": "battle"
+          "node_type": "event"
         },
         {
           "index": 2,
-          "node_type": "event"
+          "node_type": "battle"
         },
         {
           "index": 3,
-          "node_type": "event"
+          "node_type": "treasure"
         },
         {
           "index": 4,
-          "node_type": "treasure"
+          "node_type": "event"
         },
         {
           "index": 5,
@@ -1437,7 +1299,7 @@
         },
         {
           "index": 8,
-          "node_type": "treasure"
+          "node_type": "shop"
         },
         {
           "index": 9,
@@ -1456,9 +1318,9 @@
           "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "EYzU19Wik5m5xqRjYyLKEL1o",
-      "started_at": 1789662973.3863482,
-      "finished_at": 1789663631.7372098,
+      "dungeon_id": "anCDkWAvYbqWRIiy4lxFXsC4",
+      "started_at": 1789750569.3596194,
+      "finished_at": 1789751253.0773003,
       "error": null,
       "owned_snapshot": [
         "Nozomi",
@@ -1469,678 +1331,6 @@
         "Yume"
       ],
       "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号living_stone_extreme\",\"layout_rule\":\"living_stone\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"living_stone\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
-      "holds_resource_lock": false,
-      "lock_reason": null
-    },
-    {
-      "sequence": 18,
-      "preset_key": "小号red_leaf_extreme",
-      "acceleration": "auto",
-      "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "event"
-        },
-        {
-          "index": 2,
-          "node_type": "battle"
-        },
-        {
-          "index": 3,
-          "node_type": "battle"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "battle"
-        },
-        {
-          "index": 8,
-          "node_type": "camp"
-        },
-        {
-          "index": 9,
-          "node_type": "treasure"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "Kwct0f2RddCdHiTp3XoU0uQX",
-      "started_at": 1789663631.7466826,
-      "finished_at": 1789665525.312907,
-      "error": null,
-      "owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "runtime_owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
-      "holds_resource_lock": false,
-      "lock_reason": null
-    },
-    {
-      "sequence": 19,
-      "preset_key": "小号red_leaf_extreme",
-      "acceleration": "auto",
-      "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "battle"
-        },
-        {
-          "index": 2,
-          "node_type": "treasure"
-        },
-        {
-          "index": 3,
-          "node_type": "battle"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "event"
-        },
-        {
-          "index": 8,
-          "node_type": "camp"
-        },
-        {
-          "index": 9,
-          "node_type": "treasure"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "7qPZhCtLhmDTNvNPav0KM74R",
-      "started_at": 1789665525.3232057,
-      "finished_at": 1789667405.1145632,
-      "error": null,
-      "owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "runtime_owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
-      "holds_resource_lock": false,
-      "lock_reason": null
-    },
-    {
-      "sequence": 20,
-      "preset_key": "小号red_leaf_extreme",
-      "acceleration": "auto",
-      "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "camp"
-        },
-        {
-          "index": 2,
-          "node_type": "battle"
-        },
-        {
-          "index": 3,
-          "node_type": "battle"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "camp"
-        },
-        {
-          "index": 8,
-          "node_type": "event"
-        },
-        {
-          "index": 9,
-          "node_type": "battle"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "jIzhXGwHdwQE76pp8RVFldQZ",
-      "started_at": 1789667405.135252,
-      "finished_at": 1789669332.684315,
-      "error": null,
-      "owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "runtime_owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
-      "holds_resource_lock": false,
-      "lock_reason": null
-    },
-    {
-      "sequence": 21,
-      "preset_key": "小号red_leaf_extreme",
-      "acceleration": "auto",
-      "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "event"
-        },
-        {
-          "index": 2,
-          "node_type": "battle"
-        },
-        {
-          "index": 3,
-          "node_type": "battle"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "event"
-        },
-        {
-          "index": 8,
-          "node_type": "battle"
-        },
-        {
-          "index": 9,
-          "node_type": "camp"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "uFS2fNdOC5patHxiGPAT70Sq",
-      "started_at": 1789669332.704649,
-      "finished_at": 1789671247.6245782,
-      "error": null,
-      "owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "runtime_owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
-      "holds_resource_lock": false,
-      "lock_reason": null
-    },
-    {
-      "sequence": 22,
-      "preset_key": "小号red_leaf_extreme",
-      "acceleration": "auto",
-      "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "battle"
-        },
-        {
-          "index": 2,
-          "node_type": "event"
-        },
-        {
-          "index": 3,
-          "node_type": "battle"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "shop"
-        },
-        {
-          "index": 8,
-          "node_type": "treasure"
-        },
-        {
-          "index": 9,
-          "node_type": "event"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "QU8ntUOYcLsrLUKvKqDJk7mX",
-      "started_at": 1789671247.6345973,
-      "finished_at": 1789672995.6500862,
-      "error": null,
-      "owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "runtime_owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
-      "holds_resource_lock": false,
-      "lock_reason": null
-    },
-    {
-      "sequence": 23,
-      "preset_key": "小号red_leaf_extreme",
-      "acceleration": "auto",
-      "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "battle"
-        },
-        {
-          "index": 2,
-          "node_type": "camp"
-        },
-        {
-          "index": 3,
-          "node_type": "battle"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "battle"
-        },
-        {
-          "index": 8,
-          "node_type": "event"
-        },
-        {
-          "index": 9,
-          "node_type": "shop"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "RgDXEVvekue548t7b6TXlHsh",
-      "started_at": 1789672995.661179,
-      "finished_at": 1789674872.859861,
-      "error": null,
-      "owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "runtime_owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
-      "holds_resource_lock": false,
-      "lock_reason": null
-    },
-    {
-      "sequence": 24,
-      "preset_key": "小号red_leaf_extreme",
-      "acceleration": "auto",
-      "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "camp"
-        },
-        {
-          "index": 2,
-          "node_type": "battle"
-        },
-        {
-          "index": 3,
-          "node_type": "battle"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "shop"
-        },
-        {
-          "index": 8,
-          "node_type": "treasure"
-        },
-        {
-          "index": 9,
-          "node_type": "camp"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "Vt2Psg1rSVGRiOldoa6zIbag",
-      "started_at": 1789674872.8683572,
-      "finished_at": 1789676663.6039934,
-      "error": null,
-      "owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "runtime_owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
-      "runtime_party_ready": true,
-      "holds_resource_lock": false,
-      "lock_reason": null
-    },
-    {
-      "sequence": 25,
-      "preset_key": "小号red_leaf_extreme",
-      "acceleration": "auto",
-      "skip_camp_wait": true,
-      "status": "success",
-      "phase": "completed",
-      "node_name": "Boss 宝箱",
-      "node_index": 13,
-      "nodes": [
-        {
-          "index": 0,
-          "node_type": "battle"
-        },
-        {
-          "index": 1,
-          "node_type": "battle"
-        },
-        {
-          "index": 2,
-          "node_type": "event"
-        },
-        {
-          "index": 3,
-          "node_type": "battle"
-        },
-        {
-          "index": 4,
-          "node_type": "elite"
-        },
-        {
-          "index": 5,
-          "node_type": "shop"
-        },
-        {
-          "index": 6,
-          "node_type": "branch"
-        },
-        {
-          "index": 7,
-          "node_type": "event"
-        },
-        {
-          "index": 8,
-          "node_type": "camp"
-        },
-        {
-          "index": 9,
-          "node_type": "event"
-        },
-        {
-          "index": 10,
-          "node_type": "battle"
-        },
-        {
-          "index": 11,
-          "node_type": "camp"
-        },
-        {
-          "index": 12,
-          "node_type": "boss"
-        },
-        {
-          "index": 13,
-          "node_type": "boss_treasure"
-        }
-      ],
-      "dungeon_id": "ko6KaaxgmasldvjTT0AuX7jb",
-      "started_at": 1789676663.6120405,
-      "finished_at": 1789678404.7814429,
-      "error": null,
-      "owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "runtime_owned_snapshot": [
-        "Nozomi",
-        "Yume"
-      ],
-      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
       "runtime_party_ready": true,
       "holds_resource_lock": false,
       "lock_reason": null
@@ -2161,11 +1351,11 @@
         },
         {
           "index": 1,
-          "node_type": "camp"
+          "node_type": "battle"
         },
         {
           "index": 2,
-          "node_type": "battle"
+          "node_type": "event"
         },
         {
           "index": 3,
@@ -2185,7 +1375,7 @@
         },
         {
           "index": 7,
-          "node_type": "event"
+          "node_type": "treasure"
         },
         {
           "index": 8,
@@ -2212,9 +1402,9 @@
           "node_type": "boss_treasure"
         }
       ],
-      "dungeon_id": "029M8rutgppf2K9ahvIw1uAQ",
-      "started_at": 1789678404.7893217,
-      "finished_at": 1789680898.625017,
+      "dungeon_id": "XBhxkIJ9Pjtqq9g5xU5fF81v",
+      "started_at": 1789751253.0856223,
+      "finished_at": 1789753252.1230783,
       "error": null,
       "owned_snapshot": [
         "Nozomi",
@@ -2226,6 +1416,467 @@
       ],
       "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
       "runtime_party_ready": true,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 27,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "running",
+      "phase": "battle",
+      "node_name": "精英",
+      "node_index": 4,
+      "nodes": [
+        {
+          "index": 0,
+          "node_type": "battle"
+        },
+        {
+          "index": 1,
+          "node_type": "battle"
+        },
+        {
+          "index": 2,
+          "node_type": "battle"
+        },
+        {
+          "index": 3,
+          "node_type": "camp"
+        },
+        {
+          "index": 4,
+          "node_type": "elite"
+        },
+        {
+          "index": 5,
+          "node_type": "shop"
+        },
+        {
+          "index": 6,
+          "node_type": "branch"
+        }
+      ],
+      "dungeon_id": "kPnlPHiMbQzHrNpFUcaZES1i",
+      "started_at": 1789753252.1309834,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": true,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 28,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 29,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 30,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 31,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 32,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 33,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 34,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 35,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 36,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 37,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 38,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 39,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 40,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 41,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
+      "holds_resource_lock": false,
+      "lock_reason": null
+    },
+    {
+      "sequence": 42,
+      "preset_key": "小号red_leaf_extreme",
+      "acceleration": "auto",
+      "skip_camp_wait": true,
+      "status": "pending",
+      "phase": "pending",
+      "node_name": null,
+      "node_index": null,
+      "nodes": [],
+      "dungeon_id": null,
+      "started_at": null,
+      "finished_at": null,
+      "error": null,
+      "owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "runtime_owned_snapshot": [
+        "Nozomi",
+        "Yume"
+      ],
+      "preset_signature": "{\"captain\":\"Nozomi\",\"difficulty\":\"极难\",\"key\":\"小号red_leaf_extreme\",\"layout_rule\":\"red_leaf_canyon\",\"opener\":\"Nozomi\",\"party\":[{\"kind\":\"friend\",\"leave_after_enter\":false,\"preset_index\":null,\"username\":\"de3BDJMH\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Nozomi\"},{\"kind\":\"owned\",\"leave_after_enter\":false,\"preset_index\":0,\"username\":\"Yume\"}],\"preset_id\":\"red_leaf_canyon\",\"visibility\":\"private\"}",
+      "runtime_party_ready": false,
       "holds_resource_lock": false,
       "lock_reason": null
     }
