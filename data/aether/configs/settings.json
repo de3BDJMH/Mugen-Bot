@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "camp_stay_time": 10,
+  "account_usernames": [
+    "de3BDJMH",
+    "Mugen",
+    "Sasaki Miyo"
+  ],
+  "command_superuser_only": true,
+  "acceleration_balanced_min_wait_seconds": 300,
+  "acceleration_ticket_reserve": 300,
+  "acceleration_rush_ignore_reserve": false,
+  "consecutive_failure_limit": 2,
+  "ntfy_topic": "de3BDJMH-Aether",
+  "ntfy_server": "https://ntfy.sh"
+}

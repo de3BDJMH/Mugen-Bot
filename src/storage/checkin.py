@@ -111,6 +111,18 @@ def add_checkin(user_id:int,checkin_at:datetime.datetime):
     conn.commit()
     conn.close()
 
+def add_makeupcheckin(user_id:int,checkin_at:datetime.datetime,check_date:datetime.date)->bool:
+    """
+    添加补签记录，返回是否添加成功
+    """
+    conn=sqlite3.connect(DATA_PATH)
+    cursor=conn.cursor()
+    cursor.execute("INSERT OR IGNORE INTO checkin_time (user_id,checkin_date,checkin_at) VALUES (?, ?, ?)",(user_id,check_date.isoformat(),checkin_at.isoformat()))
+    inserted=cursor.rowcount>0
+    conn.commit()
+    conn.close()
+    return inserted
+
 def get_all_checkin_data()->list[dict]:
     """
     获取所有签到数据

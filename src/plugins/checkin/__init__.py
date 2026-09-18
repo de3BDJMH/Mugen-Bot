@@ -2,7 +2,7 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command,on_message
 from nonebot.adapters import Message
-from nonebot.params import CommandArg,Arg,EventMessage
+from nonebot.params import CommandArg,Arg,EventMessage,ArgPlainText
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent,MessageEvent
 from nonebot import get_bot
@@ -20,6 +20,7 @@ from ...libraries.checkin import tools
 from ...libraries.checkin import trendPaint
 from ...libraries.checkin import infoPaint
 from ...storage import checkin as checkin_storage
+from ...services import checkin as checkin_service
 
 from .config import Config
 
@@ -55,25 +56,82 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
         user.updateUserInfo()
     if user.last_check==now.date():
         await checkin.finish("宝宝你今天已经签过到了哦——")
+    rating_before=f"{user.getRating()["rating"]:.2f}"
+    voltage_before=tools.getVoltageLevel(float(rating_before))
     result=user.check()
+    rating_after=f"{user.getRating()["rating"]:.2f}"
+    voltage_after=tools.getVoltageLevel(float(rating_after))
+    msg=""
+    if rating_before!=rating_after or voltage_before!=voltage_after:
+        if voltage_before==voltage_after:
+            msg+=f"[ {voltage_after} ]    {rating_before} -> {rating_after}\n"
+        elif rating_before==rating_after:
+            msg+=f"[ {voltage_before} ] -> [ {voltage_after} ]    {rating_after}\n"
+        else:
+            msg+=f"[ {voltage_before} ] -> [ {voltage_after} ]    {rating_before} -> {rating_after}\n"
     if result["first"]=="year":
-        msg=f"你是 {now.year}年 第 1 个签到的群友！\n"
+        msg+=f"( x{round(result["rankbonus"],2)} )  你是 {now.year}年 第 1 个签到的群友！\n"
     elif result["first"]=="month":
-        msg=f"你是 {now.month}月 第 1 个签到的群友！\n"
+        msg+=f"( x{round(result["rankbonus"],2)} )  你是 {now.month}月 第 1 个签到的群友！\n"
     else:
-        msg=f"你是今天第 {result["rank"]} 个签到的群友！\n"
-    msg+=f"你已经连续签到 {user.consecutive_check} 天啦~\n"
+        if result["rankbonus"]!=1:
+            msg+=f"( x{round(result["rankbonus"],2)} )  "
+        msg+=f"你是今天第 {result["rank"]} 个签到的群友！\n"
+    msg+=f"( x{round(result["consecutivebonus"],2)} )  你已经连续签到 {user.consecutive_check} 天啦~\n"
     if result["thursday"]:
         msg+=f"( +50MB )  今天是周四，Mugen决定送你 50MB ！\n"
     if result["super"] is not None:
         msg+=f"( +{result["super"].display} )  运气不错哇——你获得了 {result["super"].display} ！\n"
     msg+=f"( +{result["basedata"].display} )  签到获得了 {result["basedata"].display} 哦\n"
-    if result["rankbonus"]!=1:
-        msg+=f"( x{round(result["rankbonus"],2)} )  哇~是第{result['rank']}个签到的欸，Data x{round(result["rankbonus"],2)}\n"
     msg+=f"Data +{result["data"].display}"
     for i in result["items"]:
         msg+=f"\n获得了 {i["name"]} x1"
     await checkin.finish(msg)
+
+makeup=on_command("补签",aliases={"makeup","补签"})
+@makeup.handle()
+async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+    
+    if not MGPLUGIN.getPluginState():
+        return
+    if not MGPLUGIN.getGroupPluginState(event):
+        return
+    
+    user=tools.User(event.user_id)
+    now=datetime.datetime.now(ZoneInfo("Asia/Shanghai"))
+    if not user.nickname:
+        await makeup.finish("还没有你的信息呢，签到试试看吧？")
+    checklogs=checkin_storage.get_checkin_dates(user.id)
+    if not checklogs:
+        await makeup.finish("没有找到可以补签的日期呢")
+    yesterday=now.date()-datetime.timedelta(days=1)
+    if checklogs[-1]<yesterday:
+        checkdate=datetime.datetime.combine(yesterday,datetime.time(),ZoneInfo("Asia/Shanghai")).date()
+    else:
+        for i in range(len(checklogs)-1,0,-1):
+            if (checklogs[i]-checklogs[i-1]).days>1:
+                checkdate=checklogs[i]-datetime.timedelta(days=1)#补签日期
+                checkdate=datetime.datetime.combine(checkdate,datetime.time(),ZoneInfo("Asia/Shanghai"))
+                break
+        else:
+            await makeup.finish("没有找到可以补签的日期呢")
+    checkcost=tools.makeup_cost(now,checkdate,user.getRating()["rating"])
+    matcher.state["user_id"]=user.id
+    matcher.state["checkdate"]=checkdate
+    await makeup.send(f"补签 {checkdate.date()} 需要消耗 {checkcost.display}，回复ok确认")
+
+@makeup.got("confirm")
+async def _(matcher:Matcher,confirm:str=ArgPlainText()):
+    if confirm.lower()!="ok":
+        await makeup.finish("已取消")
+
+    user=tools.User(matcher.state["user_id"])
+    checkdate=matcher.state["checkdate"]
+
+    result=user.makeup_check(checkdate)
+    if not result["success"]:
+        await makeup.finish(result["msg"])
+    await makeup.finish("完成啦——")
 
 selfinfo=on_command("我的data",aliases={"/data","/info"})
 @selfinfo.handle()
@@ -264,6 +322,34 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
         msg+=f"\n你还没有Data哦~\n"
     
     await datarank.finish(msg.rstrip("\n"))
+
+ratingrank=on_command("rating排行榜",aliases={"rating排名","rating排行","rt排行榜","rt排名","rt排行"})
+@ratingrank.handle()
+async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+
+    if not MGPLUGIN.getPluginState():
+        return
+    if not MGPLUGIN.getGroupPluginState(event):
+        return
+    
+    ranks=[]
+    for user in checkin_storage.get_all_user_data():
+        rating=checkin_service.get_user_rating(user["user_id"])
+        if user["nickname"] and rating:
+            ranks.append([
+                user["user_id"],
+                user["nickname"],
+                f"[ {tools.getVoltageLevel(rating['rating'])} ] {rating['rating']:.2f}",
+                rating['rating']
+            ])
+    ranks.sort(key=lambda x:x[3],reverse=True)
+    ranks=[r[:3] for r in ranks]
+    msg,me=tools.generateRank(ranks,event.user_id)
+    msg=f"Rating排行榜：\n{msg}"
+    if not me:
+        msg+=f"\n你还没有数据哦~\n"
+    
+    await ratingrank.finish(msg.rstrip("\n"))
 
 datatrend=on_command("data趋势",aliases={"data变化","datatrend","/dt"})
 @datatrend.handle()

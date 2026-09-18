@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "default": {
+    "1": "never",
+    "2": "never",
+    "3": "legacy"
+  },
+  "characters": {},
+  "sanity": {
+    "lower": 13,
+    "upper": 15,
+    "buyers": [
+      "Nozomi",
+      "Yume"
+    ]
+  }
+}

@@ -1,0 +1,495 @@
+{
+  "version": 1,
+  "presets": {
+    "beginner_extreme": {
+      "name": "侵蚀废墟 · 极难",
+      "preset_id": "beginner",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "de3BDJMH",
+          "kind": "owned",
+          "preset_index": 1,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Mugen",
+          "kind": "owned",
+          "preset_index": 2,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Sasaki Miyo",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "beginner",
+      "opener": "de3BDJMH",
+      "captain": null,
+      "event_overrides": {}
+    },
+    "deep_extreme": {
+      "name": "侵蚀废墟深处 · 极难",
+      "preset_id": "deep",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "de3BDJMH",
+          "kind": "owned",
+          "preset_index": 1,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Mugen",
+          "kind": "owned",
+          "preset_index": 2,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Sasaki Miyo",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "deep",
+      "opener": "de3BDJMH",
+      "captain": null,
+      "event_overrides": {}
+    },
+    "withered_forest_extreme": {
+      "name": "枯萎密林 · 极难",
+      "preset_id": "withered_forest",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "de3BDJMH",
+          "kind": "owned",
+          "preset_index": 1,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Mugen",
+          "kind": "owned",
+          "preset_index": 2,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Sasaki Miyo",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "withered_forest",
+      "opener": "de3BDJMH",
+      "captain": null,
+      "event_overrides": {}
+    },
+    "living_stone_extreme": {
+      "name": "活石矿脉 · 极难",
+      "preset_id": "living_stone",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "de3BDJMH",
+          "kind": "owned",
+          "preset_index": 1,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Mugen",
+          "kind": "owned",
+          "preset_index": 2,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Sasaki Miyo",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "living_stone",
+      "opener": "de3BDJMH",
+      "captain": null,
+      "event_overrides": {}
+    },
+    "cognition_garden": {
+      "name": "认知晶庭",
+      "preset_id": "cognition_garden",
+      "difficulty": "普通",
+      "party": [
+        {
+          "username": "Sasaki Miyo",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        },
+        {
+          "username": "de3BDJMH",
+          "kind": "owned",
+          "preset_index": 1,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Mugen",
+          "kind": "owned",
+          "preset_index": 1,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "cognition_garden",
+      "opener": "Sasaki Miyo",
+      "captain": null,
+      "event_overrides": {}
+    },
+    "red_leaf_extreme": {
+      "name": "红叶山谷 · 极难",
+      "preset_id": "red_leaf_canyon",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "Sasaki Miyo",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Mugen",
+          "kind": "owned",
+          "preset_index": 1,
+          "leave_after_enter": false
+        },
+        {
+          "username": "de3BDJMH",
+          "kind": "owned",
+          "preset_index": 1,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "red_leaf_canyon",
+      "opener": "Sasaki Miyo",
+      "captain": null,
+      "event_overrides": {}
+    },
+    "小号beginner_extreme": {
+      "name": "侵蚀废墟 · 极难 · 小号",
+      "preset_id": "beginner",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "de3BDJMH",
+          "kind": "friend",
+          "preset_index": null,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Nozomi",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Yume",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "beginner",
+      "opener": "Nozomi",
+      "captain": null,
+      "event_overrides": {}
+    },
+    "小号deep_extreme": {
+      "name": "侵蚀废墟深处 · 极难 · 小号",
+      "preset_id": "deep",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "de3BDJMH",
+          "kind": "friend",
+          "preset_index": null,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Nozomi",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Yume",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "deep",
+      "opener": "Nozomi",
+      "captain": null,
+      "event_overrides": {}
+    },
+    "小号withered_forest_extreme": {
+      "name": "枯萎密林 · 极难 · 小号",
+      "preset_id": "withered_forest",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "de3BDJMH",
+          "kind": "friend",
+          "preset_index": null,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Nozomi",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Yume",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "withered_forest",
+      "opener": "Nozomi",
+      "captain": null,
+      "event_overrides": {}
+    },
+    "小号living_stone_extreme": {
+      "name": "活石矿脉 · 极难 · 小号",
+      "preset_id": "living_stone",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "de3BDJMH",
+          "kind": "friend",
+          "preset_index": null,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Nozomi",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Yume",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "living_stone",
+      "opener": "Nozomi",
+      "captain": null,
+      "event_overrides": {}
+    },
+    "小号red_leaf_extreme": {
+      "name": "红叶山谷 · 极难 · 小号",
+      "preset_id": "red_leaf_canyon",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "de3BDJMH",
+          "kind": "friend",
+          "preset_index": null,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Nozomi",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Yume",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "red_leaf_canyon",
+      "opener": "Nozomi",
+      "captain": null,
+      "event_overrides": {}
+    },
+    "snow_watch_hard": {
+      "name": "望雪台 · 困难（de3BDJMH）",
+      "preset_id": "snow_watch",
+      "difficulty": "困难",
+      "party": [
+        {
+          "username": "de3BDJMH",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        },
+        {
+          "username": "爱神",
+          "kind": "friend",
+          "preset_index": null,
+          "leave_after_enter": false
+        },
+        {
+          "username": "a",
+          "kind": "friend",
+          "preset_index": null,
+          "leave_after_enter": false
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "snow_watch",
+      "opener": "de3BDJMH",
+      "captain": null,
+      "event_overrides": {
+        "snow_watch_difficulty_select": 2
+      }
+    },
+    "snow_watch_11408": {
+      "name": "望雪台 (11408)",
+      "preset_id": "snow_watch",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "Sasaki Miyo",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Ilya",
+          "kind": "friend",
+          "preset_index": null,
+          "leave_after_enter": false
+        },
+        {
+          "username": "de3BDJMH",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": true
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "snow_watch",
+      "opener": "de3BDJMH",
+      "captain": "Sasaki Miyo",
+      "event_overrides": {
+        "snow_watch_difficulty_select": 0
+      }
+    },
+    "snow_watch_Nozomi": {
+      "name": "望雪台（小希）",
+      "preset_id": "snow_watch",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "Nozomi",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Ilya",
+          "kind": "friend",
+          "preset_index": null,
+          "leave_after_enter": false
+        },
+        {
+          "username": "de3BDJMH",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": true
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "snow_watch",
+      "opener": "de3BDJMH",
+      "captain": "Nozomi",
+      "event_overrides": {
+        "snow_watch_difficulty_select": 0
+      }
+    },
+    "snow_watch_Yume": {
+      "name": "望雪台（梦）",
+      "preset_id": "snow_watch",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "Yume",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Ilya",
+          "kind": "friend",
+          "preset_index": null,
+          "leave_after_enter": false
+        },
+        {
+          "username": "de3BDJMH",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": true
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "snow_watch",
+      "opener": "de3BDJMH",
+      "captain": "Yume",
+      "event_overrides": {
+        "snow_watch_difficulty_select": 0
+      }
+    },
+    "snow_watch_Mugen": {
+      "name": "望雪台（Mugen）",
+      "preset_id": "snow_watch",
+      "difficulty": "极难",
+      "party": [
+        {
+          "username": "Mugen",
+          "kind": "owned",
+          "preset_index": 1,
+          "leave_after_enter": false
+        },
+        {
+          "username": "Ilya",
+          "kind": "friend",
+          "preset_index": null,
+          "leave_after_enter": false
+        },
+        {
+          "username": "de3BDJMH",
+          "kind": "owned",
+          "preset_index": 0,
+          "leave_after_enter": true
+        }
+      ],
+      "visibility": "private",
+      "layout_rule": "snow_watch",
+      "opener": "de3BDJMH",
+      "captain": "Mugen",
+      "event_overrides": {
+        "snow_watch_difficulty_select": 0
+      }
+    }
+  }
+}

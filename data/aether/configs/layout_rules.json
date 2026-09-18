@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "rules": {
+    "beginner": {
+      "node_weights": {
+        "battle": 10,
+        "shop": 0,
+        "event": -2,
+        "camp": -4,
+        "treasure": 2,
+        "elite": 0,
+        "boss": 0,
+        "boss_treasure": 0,
+        "branch": 0
+      },
+      "min_score": 40,
+      "max_attempts": 10,
+      "accept_last_on_exhausted": true,
+      "name": "侵蚀废墟"
+    },
+    "deep": {
+      "node_weights": {
+        "battle": 10,
+        "shop": 0,
+        "event": -4,
+        "camp": -4,
+        "treasure": 2,
+        "elite": 0,
+        "boss": 0,
+        "boss_treasure": 0,
+        "branch": 0
+      },
+      "min_score": 22,
+      "max_attempts": 20,
+      "accept_last_on_exhausted": true,
+      "name": "侵蚀废墟深处"
+    },
+    "withered_forest": {
+      "node_weights": {
+        "battle": 10,
+        "shop": 0,
+        "event": 6,
+        "camp": -4,
+        "treasure": 2,
+        "elite": 0,
+        "boss": 0,
+        "boss_treasure": 0,
+        "branch": 0
+      },
+      "min_score": 50,
+      "max_attempts": 20,
+      "accept_last_on_exhausted": true,
+      "name": "枯萎密林"
+    },
+    "living_stone": {
+      "node_weights": {
+        "battle": 10,
+        "shop": 4,
+        "event": 2,
+        "camp": -2,
+        "treasure": 2,
+        "elite": 0,
+        "boss": 0,
+        "boss_treasure": 0,
+        "branch": 0
+      },
+      "min_score": 38,
+      "max_attempts": 25,
+      "accept_last_on_exhausted": true,
+      "name": "活石矿脉"
+    },
+    "living_stone_event": {
+      "node_weights": {
+        "battle": 0,
+        "shop": 0,
+        "event": 10,
+        "camp": 0,
+        "treasure": 0,
+        "elite": 0,
+        "boss": 0,
+        "boss_treasure": 0,
+        "branch": 0
+      },
+      "min_score": 30,
+      "max_attempts": 25,
+      "accept_last_on_exhausted": true,
+      "name": "活石事件"
+    },
+    "cognition_garden": {
+      "node_weights": {
+        "battle": 10,
+        "shop": 0,
+        "event": 0,
+        "camp": 0,
+        "treasure": 2,
+        "elite": 0,
+        "boss": 0,
+        "boss_treasure": 0,
+        "branch": 0
+      },
+      "min_score": 0,
+      "max_attempts": 1,
+      "accept_last_on_exhausted": true,
+      "name": "认知晶庭"
+    },
+    "red_leaf_canyon": {
+      "node_weights": {
+        "battle": 10,
+        "shop": 0,
+        "event": -4,
+        "camp": 0,
+        "treasure": 2,
+        "elite": 0,
+        "boss": 0,
+        "boss_treasure": 0,
+        "branch": 0
+      },
+      "min_score": 24,
+      "max_attempts": 50,
+      "accept_last_on_exhausted": true,
+      "name": "红叶山谷"
+    },
+    "snow_watch": {
+      "node_weights": {
+        "battle": 10,
+        "shop": 0,
+        "event": 0,
+        "camp": 0,
+        "treasure": 2,
+        "elite": 0,
+        "boss": 0,
+        "boss_treasure": 0,
+        "branch": 0
+      },
+      "min_score": 0,
+      "max_attempts": 1,
+      "accept_last_on_exhausted": true,
+      "name": "望雪台"
+    }
+  }
+}

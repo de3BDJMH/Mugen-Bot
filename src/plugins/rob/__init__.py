@@ -62,7 +62,20 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
         await rob.finish("他什么都没有呢...你好坏...")
     if robber.data.getBytes()==0:
         await rob.finish("你已经一无所有了...")
+    rating_before=f"{robber.getRating()["rating"]:.2f}"
+    voltage_before=tools.getVoltageLevel(float(rating_before))
     msg=robber.rob(robbed_user_id)
+    rating_after=f"{robber.getRating()["rating"]:.2f}"
+    voltage_after=tools.getVoltageLevel(float(rating_after))
+    rtmsg=""
+    if rating_before!=rating_after or voltage_before!=voltage_after:
+        if voltage_before==voltage_after:
+            rtmsg+=f"[ {voltage_after} ]    {rating_before} -> {rating_after}\n"
+        elif rating_before==rating_after:
+            rtmsg+=f"[ {voltage_before} ] -> [ {voltage_after} ]    {rating_after}\n"
+        else:
+            rtmsg+=f"[ {voltage_before} ] -> [ {voltage_after} ]    {rating_before} -> {rating_after}\n"
+    msg=rtmsg+msg
     await rob.send(msg)
 
 robrank=on_command("抢劫排行榜",aliases={"抢劫排行","抢劫排名"})

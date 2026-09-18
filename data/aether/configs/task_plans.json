@@ -1,0 +1,250 @@
+{
+  "version": 1,
+  "plans": {
+    "test": {
+      "name": "测试",
+      "tasks": [
+        {
+          "preset_key": "cognition_garden",
+          "count": 2,
+          "acceleration": "auto",
+          "skip_camp_wait": true
+        }
+      ]
+    },
+    "daily-weekday": {
+      "name": "每日（工作日）（仅大号）",
+      "tasks": [
+        {
+          "preset_key": "beginner_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "deep_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "withered_forest_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "living_stone_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "red_leaf_extreme",
+          "count": 9,
+          "acceleration": "auto",
+          "skip_camp_wait": true
+        }
+      ]
+    },
+    "daily-weekend": {
+      "name": "每日（周末）（仅大号）",
+      "tasks": [
+        {
+          "preset_key": "beginner_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "deep_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "withered_forest_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "living_stone_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "red_leaf_extreme",
+          "count": 17,
+          "acceleration": "auto",
+          "skip_camp_wait": true
+        }
+      ]
+    },
+    "all-daily-weekday": {
+      "name": "每日（工作日）",
+      "tasks": [
+        {
+          "preset_key": "beginner_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "deep_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "withered_forest_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "living_stone_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "red_leaf_extreme",
+          "count": 9,
+          "acceleration": "auto",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "小号beginner_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "小号deep_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "小号withered_forest_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "小号living_stone_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "小号red_leaf_extreme",
+          "count": 9,
+          "acceleration": "auto",
+          "skip_camp_wait": true
+        }
+      ]
+    },
+    "all-daily-weekend": {
+      "name": "每日（周末）",
+      "tasks": [
+        {
+          "preset_key": "beginner_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "deep_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "withered_forest_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "living_stone_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "red_leaf_extreme",
+          "count": 17,
+          "acceleration": "auto",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "小号beginner_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "小号deep_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "小号withered_forest_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "小号living_stone_extreme",
+          "count": 1,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "小号red_leaf_extreme",
+          "count": 17,
+          "acceleration": "auto",
+          "skip_camp_wait": true
+        }
+      ]
+    },
+    "望雪台（小号）": {
+      "name": "望雪台（小号）",
+      "tasks": [
+        {
+          "preset_key": "snow_watch_Nozomi",
+          "count": 4,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "snow_watch_Yume",
+          "count": 4,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        }
+      ]
+    },
+    "望雪台（Mugen、11408）": {
+      "name": "望雪台（Mugen、11408）",
+      "tasks": [
+        {
+          "preset_key": "snow_watch_Mugen",
+          "count": 4,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        },
+        {
+          "preset_key": "snow_watch_11408",
+          "count": 4,
+          "acceleration": "never",
+          "skip_camp_wait": true
+        }
+      ]
+    }
+  }
+}

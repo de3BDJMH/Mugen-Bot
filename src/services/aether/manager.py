@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import threading
 import time
@@ -9,8 +11,13 @@ from .core import (
     LayoutCandidate,
     RuntimeHooks,
     UnknownEvent,
+    load_dungeon_presets,
+    normalize_runtime_nodes,
+    reload_dungeon_presets,
     run_preset,
 )
+from src.storage.aether import AetherConfigError
+from .scheduler import AetherTaskScheduler
 
 Notifier = Callable[[str], Awaitable[None]]
 
@@ -24,6 +31,7 @@ class ManagerStatus:
     phase: str = "idle"
     node_name: str | None = None
     node_index: int | None = None
+    nodes: tuple[dict[str, Any], ...] = ()
     started_at: float | None = None
     last_message: str | None = None
     pending_kind: str | None = None
@@ -57,22 +65,27 @@ class AetherManager:
         self._pending_lock = threading.Lock()
 
         self._stop_requested = threading.Event()
+        self.scheduler = AetherTaskScheduler()
 
     @property
-    def running(self) -> bool:
+    def single_running(self) -> bool:
         task = self._task
         return bool(task and not task.done())
 
+    @property
+    def running(self) -> bool:
+        return self.single_running or self.scheduler.running
+
     def preset_items(self) -> list[tuple[str, str]]:
-        return [(key, preset.label) for key, preset in DUNGEON_PRESETS.items()]
+        return [(key,preset.label) for key,preset in load_dungeon_presets().items()]
 
     def resolve_preset(self, value: str) -> str | None:
         value = value.strip()
 
-        if value in DUNGEON_PRESETS:
-            return value
-
         items = self.preset_items()
+
+        if any(value==key for key,_ in items):
+            return value
 
         try:
             index = int(value)
@@ -100,6 +113,49 @@ class AetherManager:
 
         return "\n".join(lines)
 
+    def task_plan_menu(self) -> str:
+        return self.scheduler.plan_menu()
+
+    def resolve_task_plan(self, value: str) -> str | None:
+        return self.scheduler.resolve_plan(value)
+
+    def resolve_task_run_mode(self, value: str | None) -> str | None:
+        return self.scheduler.resolve_run_mode(value)
+
+    async def start_task_plan(
+        self,
+        plan_key: str,
+        notifier: Notifier,
+        *,
+        run_mode: str = "save",
+    ) -> tuple[bool, str]:
+        if self.running:
+            return False, "已有 Aether 任务正在运行。"
+
+        resolved_mode = self.scheduler.resolve_run_mode(run_mode)
+        if resolved_mode is None:
+            return False, f"未知批量运行模式：{run_mode}"
+
+        return await self.scheduler.start(
+            plan_key,
+            notifier,
+            run_mode=resolved_mode,
+        )
+
+    async def recover_task_plan(
+        self,
+        notifier: Notifier,
+    ) -> tuple[bool, str]:
+        if self.running:
+            return False, "已有 Aether 任务正在运行。"
+        return await self.scheduler.recover(notifier)
+
+    def retry_task(self, sequence: int) -> tuple[bool, str]:
+        return self.scheduler.retry_task(sequence)
+
+    def skip_task(self, sequence: int) -> tuple[bool, str]:
+        return self.scheduler.skip_task(sequence)
+
     async def start(
         self,
         preset_key: str,
@@ -110,7 +166,11 @@ class AetherManager:
         if self.running:
             return False, "已有 Aether 地下城任务正在运行。"
 
-        preset = DUNGEON_PRESETS.get(preset_key)
+        try:
+            presets=reload_dungeon_presets()
+        except (AetherConfigError,KeyError,TypeError,ValueError) as exc:
+            return False,f"Aether 地下城预设配置无效：{exc}"
+        preset=presets.get(preset_key)
         if preset is None:
             return False, f"不存在 Aether 预设：{preset_key}"
 
@@ -152,9 +212,9 @@ class AetherManager:
             )
 
             if result:
-                self._notify_from_loop("Aether 自动打本任务已结束：成功。")
+                self._notify_from_loop("Aether 自动打本任务已结束：成功。",kind="summary")
             elif self._stop_requested.is_set():
-                self._notify_from_loop("Aether 自动打本任务已按要求暂停。")
+                self._notify_from_loop("Aether 自动打本任务已按要求暂停。",kind="summary")
             else:
                 self._notify_from_loop(
                     "Aether 自动打本任务已停止。可发送 /aether 状态 查看最后状态。"
@@ -175,7 +235,7 @@ class AetherManager:
             choose_layout=self._wait_layout_decision,
             choose_unknown_event=self._wait_event_decision,
             request_password=self._wait_password,
-            notify=self._notify_from_thread,
+            notify=lambda message:self._notify_from_thread(message,kind="detail"),
             on_state=self._on_state,
             should_stop=self._stop_requested.is_set,
         )
@@ -197,6 +257,8 @@ class AetherManager:
                     self._status.node_index = int(data["node_index"])
                 except (TypeError, ValueError):
                     pass
+            if "nodes" in data:
+                self._status.nodes = normalize_runtime_nodes(data["nodes"])
 
             if phase == "waiting_layout":
                 self._status.pending_kind = "layout"
@@ -205,7 +267,7 @@ class AetherManager:
             elif phase in {"layout_accepted", "event_resolved", "completed", "stopped"}:
                 self._status.pending_kind = None
 
-    def _notify_from_thread(self, message: str) -> None:
+    def _notify_from_thread(self, message: str,*,kind:str="error") -> None:
         with self._status_lock:
             self._status.last_message = message
 
@@ -215,9 +277,9 @@ class AetherManager:
         if loop is None or notifier is None:
             return
 
-        asyncio.run_coroutine_threadsafe(self._safe_notify(message), loop)
+        asyncio.run_coroutine_threadsafe(self._safe_notify(message,kind=kind), loop)
 
-    def _notify_from_loop(self, message: str) -> None:
+    def _notify_from_loop(self, message: str,*,kind:str="error") -> None:
         with self._status_lock:
             self._status.last_message = message
 
@@ -225,9 +287,12 @@ class AetherManager:
         if loop is None:
             return
 
-        loop.create_task(self._safe_notify(message))
+        loop.create_task(self._safe_notify(message,kind=kind))
 
-    async def _safe_notify(self, message: str) -> None:
+    async def _safe_notify(self, message: str,*,kind:str="error") -> None:
+        from .notifications import allows
+        if not allows(kind):
+            return
         notifier = self._notifier
         if notifier is None:
             return
@@ -433,7 +498,10 @@ class AetherManager:
         return True, "密码已接收，正在继续登录。"
 
     def request_stop(self) -> tuple[bool, str]:
-        if not self.running:
+        if self.scheduler.running:
+            return self.scheduler.request_stop()
+
+        if not self.single_running:
             return False, "当前没有运行中的 Aether 任务。"
 
         self._stop_requested.set()
@@ -443,13 +511,65 @@ class AetherManager:
             if pending.kind == "layout":
                 pending.result = "abort"
             else:
-                # event/password 都以 None 表示取消。
                 pending.result = None
             pending.event.set()
 
         return True, "已请求停止；会在安全节点暂停并保留地下城进度。"
 
+    def status_payload(self)->dict[str,Any]:
+        batch=None
+        if self.scheduler.running or not self.single_running and self.scheduler.has_status:
+            batch=self.scheduler.status_payload()
+        if batch is not None:
+            return {
+                "version":1,
+                "mode":"batch",
+                "running":batch["running"],
+                "recoverable":batch["recoverable"],
+                "updated_at":time.time(),
+                "single":None,
+                "batch":batch,
+            }
+        with self._status_lock:
+            status=ManagerStatus(**self._status.__dict__)
+        if not status.running and status.phase=="idle":
+            return {
+                "version":1,
+                "mode":"idle",
+                "running":False,
+                "recoverable":False,
+                "updated_at":time.time(),
+                "single":None,
+                "batch":None,
+            }
+        return {
+            "version":1,
+            "mode":"single",
+            "running":status.running,
+            "recoverable":False,
+            "updated_at":time.time(),
+            "single":{
+                "preset_key":status.preset_key,
+                "preset_label":status.preset_label,
+                "fast_mode":status.fast_mode,
+                "phase":status.phase,
+                "node_name":status.node_name,
+                "node_index":status.node_index,
+                "nodes":list(status.nodes),
+                "started_at":status.started_at,
+                "last_message":status.last_message,
+                "pending_kind":status.pending_kind,
+            },
+            "batch":None,
+        }
+
     def status_text(self) -> str:
+        if self.scheduler.running:
+            return self.scheduler.status_text()
+
+        if not self.single_running and self.scheduler.has_status:
+            return self.scheduler.status_text()
+
         with self._status_lock:
             status = ManagerStatus(**self._status.__dict__)
 

@@ -9,6 +9,7 @@ from .routers.charcounter import router as charcounter_router
 from .routers.wordcloud import router as wordcloud_router
 from .routers.watchice import router as watchice_router
 from .routers.watchice_gacha import router as watchice_gacha_router
+from .routers.aether import router as aether_router,status_router as aether_status_router
 
 
 def setup_api():
@@ -23,3 +24,5 @@ def setup_api():
     app.include_router(wordcloud_router,dependencies=[Depends(require_internal_api_key)])
     app.include_router(watchice_router,dependencies=[Depends(require_internal_api_key)])
     app.include_router(watchice_gacha_router,dependencies=[Depends(require_internal_api_key)])
+    app.include_router(aether_router,dependencies=[Depends(require_internal_api_key)])
+    app.include_router(aether_status_router,dependencies=[Depends(require_internal_api_key)])

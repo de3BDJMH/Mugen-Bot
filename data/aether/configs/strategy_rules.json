@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "preset_names": {
+    "beginner": "侵蚀废墟",
+    "deep": "侵蚀废墟深处",
+    "withered_forest": "枯萎密林",
+    "living_stone": "活石矿脉",
+    "cognition_garden": "认知晶庭",
+    "red_leaf_canyon": "红叶山谷",
+    "snow_watch": "望雪台"
+  },
+  "event_choices": {
+    "baili_mark": {
+      "name": "白璃的记号",
+      "choice_index": 0
+    },
+    "mirror_core": {
+      "name": "破碎的镜像核心",
+      "choice_index": 1
+    },
+    "resonance_vein": {
+      "name": "共鸣晶脉",
+      "choice_index": 0
+    },
+    "overloaded_runestone": {
+      "name": "过载的符文石",
+      "choice_index": 0
+    },
+    "aether_crystal": {
+      "name": "神秘的以太结晶",
+      "choice_index": 1
+    },
+    "abandoned_supply_box": {
+      "name": "废弃的补给箱",
+      "choice_index": 0
+    },
+    "old_armory": {
+      "name": "旧时代的军械架",
+      "choice_index": 0
+    },
+    "underground_spring": {
+      "name": "纯净的地下泉眼",
+      "choice_index": 0
+    },
+    "comrade_relic": {
+      "name": "同类的遗物",
+      "choice_index": 0
+    },
+    "scrapped_sentinel": {
+      "name": "报废的机械哨卫",
+      "choice_index": 0
+    },
+    "abyss_whisper": {
+      "name": "深渊低语",
+      "choice_index": 1
+    },
+    "lonely_traveler": {
+      "name": "孤独的旅行者",
+      "choice_index": 0
+    },
+    "crackling_root": {
+      "name": "噼啪作响的树根",
+      "choice_index": 0
+    },
+    "ancient_carving": {
+      "name": "古老的树皮刻文",
+      "choice_index": 1
+    },
+    "lost_traveler_camp": {
+      "name": "迷途旅者的营地",
+      "choice_index": 0
+    },
+    "burning_vine_wall": {
+      "name": "燃烧的藤蔓墙",
+      "choice_index": 0
+    },
+    "fallen_bark_pile": {
+      "name": "堆积的树皮",
+      "choice_index": 0
+    },
+    "sap_stream": {
+      "name": "树液溪流",
+      "choice_index": 0
+    },
+    "strangled_bones": {
+      "name": "藤蔓缠骨",
+      "choice_index": 0
+    },
+    "spore_cloud": {
+      "name": "孢子云团",
+      "choice_index": 0
+    },
+    "electric_mushroom_ring": {
+      "name": "电蘑菇阵",
+      "choice_index": 0
+    },
+    "singing_wind": {
+      "name": "歌声般的风",
+      "choice_index": 0
+    },
+    "forest_fog": {
+      "name": "密林迷雾",
+      "choice_index": 1
+    },
+    "bark_workshop": {
+      "name": "遗弃的简陋工坊",
+      "choice_index": 0
+    },
+    "battle_journal": {
+      "name": "遗弃的战场笔记",
+      "choice_index": 0
+    },
+    "dormant_repair_array": {
+      "name": "休眠的修复阵列",
+      "choice_index": 0
+    },
+    "corrosion_fog": {
+      "name": "腐蚀毒雾",
+      "choice_index": 0
+    },
+    "vine_cocoon": {
+      "name": "藤蔓茧房",
+      "choice_index": 0
+    },
+    "withered_altar": {
+      "name": "枯萎的祭坛",
+      "choice_index": 0
+    },
+    "overgrown_path": {
+      "name": "迷途荆棘",
+      "choice_index": 0
+    },
+    "abandoned_woodcutters_camp": {
+      "name": "废弃的伐木营地",
+      "choice_index": 0
+    },
+    "dying_embers": {
+      "name": "未熄灭的余烬",
+      "choice_index": 0
+    },
+    "twisted_reflection": {
+      "name": "扭曲的倒影",
+      "choice_index": 0
+    },
+    "dried_spring": {
+      "name": "干涸的泉眼",
+      "choice_index": 0
+    },
+    "ancient_hollow_tree": {
+      "name": "空心古树",
+      "choice_index": 0
+    },
+    "cognition_garden_difficulty_select": {
+      "name": "认知棱镜的诘问",
+      "choice_index": 3
+    },
+    "ls_abnormal_warmth": {
+      "name": "不该存在的温热",
+      "choice_index": 0
+    },
+    "ls_arranged_stones": {
+      "name": "自己排列的矿石",
+      "choice_index": 0
+    },
+    "ls_beast_footprints": {
+      "name": "巨兽未成形的脚印",
+      "choice_index": 1
+    },
+    "ls_breathing_wall": {
+      "name": "会呼吸的矿壁",
+      "choice_index": 0
+    },
+    "ls_collapse_whisper": {
+      "name": "塌方后的低语",
+      "choice_index": 0
+    },
+    "ls_crystal_echo": {
+      "name": "晶簇里的回声",
+      "choice_index": 0
+    },
+    "ls_embedded_lunchbox": {
+      "name": "被矿石包住的饭盒",
+      "choice_index": 0
+    },
+    "ls_miner_journal": {
+      "name": "矿工的半截日志",
+      "choice_index": 1
+    },
+    "ls_missing_miner_lamp": {
+      "name": "失踪矿工的灯",
+      "choice_index": 0
+    },
+    "ls_reversed_rail": {
+      "name": "倒流的矿车轨道",
+      "choice_index": 2
+    },
+    "ls_shedding_layer": {
+      "name": "活石剥落层",
+      "choice_index": 0
+    },
+    "ls_stone_handprints": {
+      "name": "石中手印",
+      "choice_index": 0
+    },
+    "predator_marking": {
+      "name": "掠食者的领地标记",
+      "choice_index": 0
+    },
+    "rlc_clean_road": {
+      "name": "过分干净的巡逻道",
+      "choice_index": 1
+    },
+    "rlc_cut_report": {
+      "name": "只剩结论的报告",
+      "choice_index": 1
+    },
+    "rlc_erased_survey_post": {
+      "name": "被抹去的测绘桩",
+      "choice_index": 1
+    },
+    "rlc_extra_footstep": {
+      "name": "多出来的一串脚步",
+      "choice_index": 0
+    },
+    "rlc_packed_tent": {
+      "name": "收拾整齐的空帐篷",
+      "choice_index": 0
+    },
+    "rlc_returned_leaf": {
+      "name": "回到掌心的红叶",
+      "choice_index": 1
+    },
+    "rlc_seven_vein_sap": {
+      "name": "第七道叶脉",
+      "choice_index": 1
+    },
+    "rlc_warm_ashes": {
+      "name": "尚有余温的灰烬",
+      "choice_index": 0
+    },
+    "snow_watch_difficulty_select": {
+      "name": "雪线之前",
+      "choice_index": 0
+    },
+    "snow_watch_cecilia_blessing": {
+      "name": "塞西莉亚的加护",
+      "choice_index": 2
+    },
+    "snow_watch_frost_oath_blessing": {
+      "name": "霜誓之卫的祝福",
+      "choice_index": 2
+    }
+  },
+  "branch_choices": {
+    "deep": 1,
+    "red_leaf_canyon": 1
+  },
+  "retreat_battle_presets": [],
+  "legacy_shop": {
+    "always_contains": [
+      "（★★）",
+      "（★★★★）"
+    ],
+    "three_star_marker": "（★★★）",
+    "three_star_excludes": [
+      "技能书"
+    ]
+  }
+}

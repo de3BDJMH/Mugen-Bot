@@ -7,13 +7,27 @@ import pathlib
 import pickle
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass,field
 from typing import Any, Callable, Literal
 from urllib.parse import quote
 
 import requests
 
 from . import config as cfg
+from .shop_rules import (
+    SanityOffer,
+    ShopRules,
+    effective_rule,
+    is_sanity_item,
+    load_shop_rules,
+    sanity_recovery,
+    select_sanity_purchases,
+)
+from .runtime_settings import RuntimeSettings,load_runtime_settings
+from .layout_rules import load_layout_rules as load_layout_rules_config
+from .dungeon_presets import load_dungeon_presets_config
+from src.storage.aether import AetherConfigError
+from .strategy_rules import StrategyRules,load_strategy_rules,save_event_choice
 
 
 # =========================
@@ -24,8 +38,15 @@ BASE_URL = "https://chiyuki.diving-fish.com/api/aether"
 WEB_URL = "https://chiyuki.diving-fish.com/aether/"
 REQUEST_TIMEOUT = 10
 PARTY_ACTION_DELAY = 0.5
+PARTY_STATE_CHECK_ATTEMPTS = 10
 DUNGEON_REROLL_DELAY = 2.0
 BATTLE_FINISH_BUFFER = 3
+
+# 新 OAuth / 多角色体系：
+# 一个水鱼登录态，通过 query 参数选择具体 Aether 角色。
+AETHER_CHARACTER_PARAM = "_aether_character"
+AETHER_CHARACTER_HEADER = "X-Aether-Character"
+AETHER_AUTH_COOKIE_NAME = "divingfish_aether_token"
 
 VISIBILITY_NAMES = {
     "private": "仅自己可见",
@@ -60,14 +81,18 @@ NODE_SYMBOLS = {
 # API key 统一按“领域_动作”命名，避免 current / next / enter 这类含义不明的名字。
 API_ENDPOINTS = {
     "login": "/login",
+    "account": "/account",
     "status": "/status",
     "preset_apply": "/status/presets/apply",
     "dungeon_search": "/dungeon/search",
     "dungeon_disband": "/dungeon/disband",
     "dungeon_join": "/dungeon/join",
+    "dungeon_recruit": "/dungeon/recruit",
     "dungeon_reorder": "/dungeon/reorder",
     "dungeon_current": "/dungeon/current",
     "dungeon_enter": "/dungeon/enter",
+    "dungeon_transfer_leader": "/dungeon/leader/transfer",
+    "dungeon_leave": "/dungeon/leave",
     "dungeon_retreat": "/dungeon/retreat",
     "node_current": "/dungeon/node",
     "node_next": "/dungeon/node/next",
@@ -87,6 +112,8 @@ API_ENDPOINTS = {
 
 
 
+
+AccelerationMode = Literal["never", "threshold", "always"]
 
 # =========================
 # 数据结构
@@ -167,26 +194,110 @@ class RuntimeHooks:
 
 
 @dataclass(frozen=True)
+class PartyMember:
+    """地下城队伍成员。
+
+    kind="owned":
+        当前水鱼账号下、由 Bot 直接控制的 Aether 角色。
+        preset_index 必须是 0~4。
+
+    kind="friend":
+        通过 /dungeon/recruit 作为 offline_friend 招募的离线好友。
+        不需要 OAuth Client，也不参与并发资源锁。
+    """
+
+    username: str
+    kind: Literal["owned", "friend"] = "owned"
+    preset_index: int | None = None
+    leave_after_enter:bool=False
+
+    @property
+    def controlled(self) -> bool:
+        return self.kind == "owned"
+
+
+@dataclass(frozen=True)
 class DungeonPreset:
     """一次独立地下城运行所需的完整预设。
 
-    key 是稳定标识，适合 CLI / QQ Bot 直接引用；
-    name 是展示名，可以随时修改。
-    party 中每一项为 (用户名, 角色预设槽位)，第一项是队长。
-    layout_rule 指向 DUNGEON_LAYOUT_RULES 中的一套筛图规则。
+    party 表示进入地下城时的站位顺序，第一位允许是 offline_friend。
+    opener_username 表示开本角色；captain_username 未配置时继承开本角色。
+    队伍最多 3 人；离线好友可以重复出现在不同并行任务中。
     """
 
     key: str
     name: str
     preset_id: str
     difficulty: str
-    party: tuple[tuple[str, int], ...]
+    party: tuple[PartyMember, ...]
     visibility: str = "private"
     layout_rule: str | None = None
+    opener_username:str|None=None
+    captain_username: str | None = None
+    event_overrides:dict[str,int]=field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        owned = self.owned_members
+        if not owned:
+            raise ValueError(f"预设 {self.key!r} 至少需要一名自有角色担任队长")
+
+        owned_usernames={member.username for member in owned}
+        if self.opener_username is not None and self.opener_username not in owned_usernames:
+            raise ValueError(f"预设 {self.key!r} 的 opener 必须是 party 中的自有角色")
+        if self.captain_username is not None and self.captain_username not in owned_usernames:
+            raise ValueError(f"预设 {self.key!r} 的 captain 必须是 party 中的自有角色")
+        if self.leader.leave_after_enter:
+            raise ValueError(f"预设 {self.key!r} 的实际队长不能在进入后退出")
+        if not self.runtime_owned_members:
+            raise ValueError(f"预设 {self.key!r} 至少要保留一名自有角色")
 
     @property
     def label(self) -> str:
         return self.name
+
+    @property
+    def leader(self) -> PartyMember:
+        if self.captain_username is not None:
+            for member in self.owned_members:
+                if member.username == self.captain_username:
+                    return member
+        return self.opener
+
+    @property
+    def opener(self)->PartyMember:
+        if self.opener_username is not None:
+            for member in self.owned_members:
+                if member.username==self.opener_username:
+                    return member
+        return self.owned_members[0]
+
+    @property
+    def owned_members(self) -> tuple[PartyMember, ...]:
+        return tuple(member for member in self.party if member.controlled)
+
+    @property
+    def owned_usernames(self) -> tuple[str, ...]:
+        return tuple(member.username for member in self.owned_members)
+
+    @property
+    def runtime_members(self)->tuple[PartyMember,...]:
+        return tuple(member for member in self.party if not member.leave_after_enter)
+
+    @property
+    def runtime_owned_members(self)->tuple[PartyMember,...]:
+        return tuple(member for member in self.runtime_members if member.controlled)
+
+    @property
+    def runtime_owned_usernames(self)->tuple[str,...]:
+        return tuple(member.username for member in self.runtime_owned_members)
+
+    @property
+    def runtime_member_usernames(self)->tuple[str,...]:
+        return tuple(member.username for member in self.runtime_members)
+
+    @property
+    def member_usernames(self) -> tuple[str, ...]:
+        return tuple(member.username for member in self.party)
 
 
 # =========================
@@ -197,7 +308,7 @@ class DungeonPreset:
 def load_layout_rules() -> dict[str, LayoutRule]:
     rules: dict[str, LayoutRule] = {}
 
-    for preset_id, raw in cfg.DUNGEON_LAYOUT_RULES.items():
+    for preset_id, raw in load_layout_rules_config().items():
         if not isinstance(raw, dict):
             raise TypeError(f"布局规则 {preset_id!r} 必须是 dict")
 
@@ -228,43 +339,147 @@ def _parse_party(
     raw_party: object,
     *,
     context: str,
-) -> tuple[tuple[str, int], ...]:
+) -> tuple[PartyMember, ...]:
     if not isinstance(raw_party, (list, tuple)):
         raise TypeError(f"{context} 的 party 必须是 list/tuple")
 
-    party: list[tuple[str, int]] = []
+    party: list[PartyMember] = []
 
-    for member in raw_party:
-        if not isinstance(member, (list, tuple)) or len(member) != 2:
-            raise TypeError(
-                f"{context} 的 party 成员必须是 (用户名, 预设槽位)"
+    for raw_member in raw_party:
+        username: str
+        kind: Literal["owned", "friend"]
+        preset_index: int | None
+        leave_after_enter=False
+
+        if isinstance(raw_member, dict):
+            if not set(raw_member)<={
+                "username","kind","preset_index","preset","leave_after_enter"
+            }:
+                raise TypeError(f"{context} 的 party dict 成员字段无效")
+            if "username" not in raw_member:
+                raise TypeError(f"{context} 的 party dict 成员缺少 username")
+
+            username = str(raw_member["username"])
+            raw_kind = str(raw_member.get("kind", "owned")).lower()
+
+            if raw_kind in {"owned", "self", "player"}:
+                kind = "owned"
+            elif raw_kind in {"friend", "offline_friend", "offline"}:
+                kind = "friend"
+            else:
+                raise ValueError(
+                    f"{context}：{username} 的 kind 无效：{raw_kind!r}"
+                )
+
+            raw_preset = raw_member.get(
+                "preset_index",
+                raw_member.get("preset"),
             )
 
-        username, preset_index = member
-        preset_index = int(preset_index)
+            if kind == "owned":
+                if raw_preset is None:
+                    raise ValueError(
+                        f"{context}：自有角色 {username} 必须配置 preset_index"
+                    )
+                if isinstance(raw_preset,bool):
+                    raise ValueError(f"{context}：{username} 的预设槽位不能是 boolean")
+                preset_index = int(raw_preset)
+            else:
+                if raw_preset is not None:
+                    raise ValueError(f"{context}：离线好友 {username} 不能配置预设槽位")
+                preset_index = None
+            leave_after_enter=raw_member.get("leave_after_enter",False)
+            if not isinstance(leave_after_enter,bool):
+                raise ValueError(f"{context}：{username} 的进入后退出必须是 boolean")
+            if kind=="friend" and leave_after_enter:
+                raise ValueError(f"{context}：离线好友 {username} 不能配置进入后退出")
 
-        if not 0 <= preset_index <= 4:
-            raise ValueError(
-                f"{context}：{username} 的预设槽位必须在 0~4"
+        elif isinstance(raw_member, (list, tuple)):
+            if len(raw_member) == 2:
+                username = str(raw_member[0])
+                second = raw_member[1]
+
+                # 兼容旧格式 ("用户名", 预设槽位)。
+                if isinstance(second, str) and second.lower() in {
+                    "friend",
+                    "offline_friend",
+                    "offline",
+                }:
+                    kind = "friend"
+                    preset_index = None
+                else:
+                    kind = "owned"
+                    if isinstance(second,bool):
+                        raise ValueError(f"{context}：{username} 的预设槽位不能是 boolean")
+                    preset_index = int(second)
+
+            elif len(raw_member) == 3:
+                username = str(raw_member[0])
+                raw_kind = str(raw_member[1]).lower()
+
+                if raw_kind in {"owned", "self", "player"}:
+                    kind = "owned"
+                    if isinstance(raw_member[2],bool):
+                        raise ValueError(f"{context}：{username} 的预设槽位不能是 boolean")
+                    preset_index = int(raw_member[2])
+                elif raw_kind in {"friend", "offline_friend", "offline"}:
+                    if raw_member[2] is not None:
+                        raise ValueError(f"{context}：离线好友 {username} 不能配置预设槽位")
+                    kind = "friend"
+                    preset_index = None
+                else:
+                    raise ValueError(
+                        f"{context}：{username} 的 kind 无效：{raw_kind!r}"
+                    )
+            else:
+                raise TypeError(
+                    f"{context} 的 party tuple 必须是 "
+                    "(用户名, 预设槽位)、(好友名, 'friend') "
+                    "或 (用户名, kind, 预设槽位)"
+                )
+        else:
+            raise TypeError(f"{context} 的 party 成员格式无效：{raw_member!r}")
+
+        if not username:
+            raise ValueError(f"{context} 的成员用户名不能为空")
+
+        if kind == "owned":
+            assert preset_index is not None
+            if not 0 <= preset_index <= 4:
+                raise ValueError(
+                    f"{context}：{username} 的预设槽位必须在 0~4"
+                )
+
+        party.append(
+            PartyMember(
+                username=username,
+                kind=kind,
+                preset_index=preset_index,
+                leave_after_enter=leave_after_enter,
             )
-
-        party.append((str(username), preset_index))
+        )
 
     if not party:
         raise ValueError(f"{context} 的 party 不能为空")
+
+    if len(party) > 3:
+        raise ValueError(f"{context} 的 party 最多只能有 3 名成员")
+
+    if not any(member.controlled for member in party):
+        raise ValueError(f"{context} 至少需要一名自有角色担任队长")
+
+    usernames = [member.username for member in party]
+    if len(set(usernames)) != len(usernames):
+        raise ValueError(f"{context} 的队伍成员重复：{usernames}")
 
     return tuple(party)
 
 
 def load_dungeon_presets() -> dict[str, DungeonPreset]:
-    """读取独立地下城预设。
-
-    优先读取新版 DUNGEON_PRESETS。
-
-    如果用户仍保留旧 DUNGEON_TASKS，则自动兼容成独立预设，
-    避免升级主程序时必须立刻重写配置。
-    """
-    raw_presets = getattr(cfg, "DUNGEON_PRESETS", None)
+    """从独立配置文件读取地下城预设。"""
+    raw_presets=load_dungeon_presets_config()
+    layout_rules=load_layout_rules_config()
+    strategy_rules=load_strategy_rules()
 
     if raw_presets is not None:
         if not isinstance(raw_presets, dict):
@@ -277,28 +492,69 @@ def load_dungeon_presets() -> dict[str, DungeonPreset]:
 
             if not isinstance(raw, dict):
                 raise TypeError(f"预设 {key!r} 必须是 dict")
+            if not {"preset_id","difficulty","party"}<=set(raw)<= {
+                "name","preset_id","difficulty","party","visibility","layout_rule","opener","captain",
+                "event_overrides"
+            }:
+                raise AetherConfigError(f"预设 {key!r} 字段无效")
 
             preset_id = str(raw["preset_id"])
             difficulty = str(raw["difficulty"])
             default_name = (
-                f"{cfg.PRESET_NAMES.get(preset_id, preset_id)} · {difficulty}"
+                f"{strategy_rules.preset_names.get(preset_id,preset_id)} · {difficulty}"
             )
 
+            visibility=str(raw.get("visibility","private"))
+            if visibility not in VISIBILITY_NAMES:
+                raise AetherConfigError(f"预设 {key!r} 的 visibility 无效：{visibility}")
+            layout_rule=(
+                preset_id
+                if raw.get("layout_rule") is None
+                else str(raw["layout_rule"])
+            )
+            if layout_rule not in layout_rules:
+                raise AetherConfigError(f"预设 {key!r} 引用了不存在的布局规则：{layout_rule}")
+            raw_event_overrides=raw.get("event_overrides",{})
+            if not isinstance(raw_event_overrides,dict):
+                raise AetherConfigError(f"预设 {key!r} 的 event_overrides 必须是 object")
+            event_overrides={}
+            for raw_event_id,choice_index in raw_event_overrides.items():
+                event_id=str(raw_event_id)
+                if event_id not in strategy_rules.event_choices:
+                    raise AetherConfigError(f"预设 {key!r} 覆写了不存在的事件：{event_id}")
+                if (
+                    isinstance(choice_index,bool)
+                    or not isinstance(choice_index,int)
+                    or not 0<=choice_index<=1000
+                ):
+                    raise AetherConfigError(
+                        f"预设 {key!r} 的事件 {event_id!r} 选项下标无效"
+                    )
+                event_overrides[event_id]=choice_index
+            party=_parse_party(raw.get("party"),context=f"预设 {key!r}")
+            if "opener" in raw:
+                opener_username=(
+                    None if raw.get("opener") is None else str(raw["opener"])
+                )
+                captain_username=(
+                    None if raw.get("captain") is None else str(raw["captain"])
+                )
+            else:
+                opener_username=(
+                    None if raw.get("captain") is None else str(raw["captain"])
+                )
+                captain_username=None
             presets[key] = DungeonPreset(
                 key=key,
                 name=str(raw.get("name") or default_name),
                 preset_id=preset_id,
                 difficulty=difficulty,
-                party=_parse_party(
-                    raw.get("party"),
-                    context=f"预设 {key!r}",
-                ),
-                visibility=str(raw.get("visibility", "private")),
-                layout_rule=(
-                    None
-                    if raw.get("layout_rule") is None
-                    else str(raw["layout_rule"])
-                ),
+                party=party,
+                visibility=visibility,
+                layout_rule=layout_rule,
+                opener_username=opener_username,
+                captain_username=captain_username,
+                event_overrides=event_overrides,
             )
 
         return presets
@@ -325,7 +581,7 @@ def load_dungeon_presets() -> dict[str, DungeonPreset]:
         presets[key] = DungeonPreset(
             key=key,
             name=(
-                f"{cfg.PRESET_NAMES.get(preset_id, preset_id)} · "
+                f"{strategy_rules.preset_names.get(preset_id,preset_id)} · "
                 f"{difficulty}"
             ),
             preset_id=preset_id,
@@ -336,6 +592,11 @@ def load_dungeon_presets() -> dict[str, DungeonPreset]:
             ),
             visibility=str(raw.get("visibility", "private")),
             layout_rule=preset_id,
+            opener_username=(
+                None
+                if raw.get("captain") is None
+                else str(raw["captain"])
+            ),
         )
 
     return presets
@@ -343,6 +604,13 @@ def load_dungeon_presets() -> dict[str, DungeonPreset]:
 
 DUNGEON_LAYOUT_RULES = load_layout_rules()
 DUNGEON_PRESETS = load_dungeon_presets()
+
+
+def reload_dungeon_presets()->dict[str,DungeonPreset]:
+    presets=load_dungeon_presets()
+    DUNGEON_PRESETS.clear()
+    DUNGEON_PRESETS.update(presets)
+    return DUNGEON_PRESETS
 
 
 # =========================
@@ -358,7 +626,11 @@ class AetherClient:
 
     def __init__(self, account: Account, cookie_file: pathlib.Path | None = None):
         self.session = requests.Session()
+
+        # 新账号体系下，username 表示 Aether “角色 username”，
+        # 不再表示水鱼主账号登录名。
         self.username = account.username
+        self.character = account.username
         self.password = account.password
         self.dungeon_id: Any | None = None
         self.last_search_result: dict[str, Any] | None = None
@@ -426,6 +698,24 @@ class AetherClient:
         endpoint = API_ENDPOINTS.get(endpoint_name, endpoint_name)
         request_label = f"{method.upper()} {endpoint}"
 
+        # OAuth 多角色协议：
+        # 浏览器实际请求同时携带：
+        #   ?_aether_character=<角色>
+        #   X-Aether-Character: <角色>
+        #
+        # Header 才是后端识别当前 active_character 的关键上下文；
+        # query 参数也保留，严格跟随 Web 端协议。
+        if endpoint_name != "login":
+            raw_params = kwargs.pop("params", None)
+            params = dict(raw_params or {})
+            params.setdefault(AETHER_CHARACTER_PARAM, self.character)
+            kwargs["params"] = params
+
+            raw_headers = kwargs.pop("headers", None)
+            headers = dict(raw_headers or {})
+            headers.setdefault(AETHER_CHARACTER_HEADER, self.character)
+            kwargs["headers"] = headers
+
         try:
             response = self.session.request(
                 method,
@@ -480,6 +770,96 @@ class AetherClient:
             return None
         return data
 
+    def set_oauth_token(self, token: str) -> None:
+        """把水鱼 OAuth 登录后的 Aether Cookie 注入当前角色 Session。"""
+        token = str(token).strip()
+        if not token:
+            raise ValueError("OAuth token 不能为空")
+
+        self.session.cookies.clear()
+        self.session.cookies.set(
+            AETHER_AUTH_COOKIE_NAME,
+            token,
+            domain="chiyuki.diving-fish.com",
+            path="/",
+        )
+
+    def get_account_info(self) -> dict[str, Any] | None:
+        """读取当前水鱼账号下的 Aether 角色列表。"""
+        response = self._request(
+            "GET",
+            "account",
+            error_message=f"{self.username} 查询 OAuth 账号信息失败",
+        )
+        if response is None:
+            return None
+
+        return self._response_json(
+            response,
+            context=f"{self.username} 查询 OAuth 账号信息失败",
+        )
+
+    def try_oauth_login(self, token: str) -> bool:
+        """使用同一个水鱼 OAuth Cookie，以当前 character 身份验证。
+
+        验证成功条件：
+        1. /account 请求成功；
+        2. data.active_character == 当前角色；
+        3. characters 中确实存在当前角色。
+        """
+        try:
+            self.set_oauth_token(token)
+        except ValueError as exc:
+            self._set_last_error(str(exc))
+            return False
+
+        result = self.get_account_info()
+        if result is None:
+            self.session.cookies.clear()
+            return False
+
+        data = result.get("data")
+        if not isinstance(data, dict):
+            self._set_last_error("OAuth /account 响应中缺少 data")
+            self.session.cookies.clear()
+            return False
+
+        active_character = data.get("active_character")
+        characters = data.get("characters")
+        if not isinstance(characters, list):
+            self._set_last_error("OAuth /account 响应中缺少 characters")
+            self.session.cookies.clear()
+            return False
+
+        character_names = {
+            str(item.get("username"))
+            for item in characters
+            if isinstance(item, dict) and item.get("username")
+        }
+
+        if self.character not in character_names:
+            self._set_last_error(
+                f"当前水鱼账号下没有 Aether 角色：{self.character}"
+            )
+            self.session.cookies.clear()
+            return False
+
+        if active_character != self.character:
+            self._set_last_error(
+                "OAuth 角色切换校验失败："
+                f"请求 {self.character!r}，"
+                f"服务器返回 active_character={active_character!r}"
+            )
+            self.session.cookies.clear()
+            return False
+
+        print(
+            f"{self.username} OAuth 登录有效，"
+            "已绑定到当前水鱼账号下的角色"
+        )
+        self.get_current_dungeon(silent=True)
+        return True
+
     def _save_cookies(self) -> None:
         try:
             with self.cookie_file.open("wb") as file:
@@ -502,7 +882,12 @@ class AetherClient:
 
     def _saved_session_is_valid(self) -> bool:
         try:
-            response = self.session.get(self._url("status"), timeout=5)
+            response = self.session.get(
+                self._url("status"),
+                params={AETHER_CHARACTER_PARAM: self.character},
+                headers={AETHER_CHARACTER_HEADER: self.character},
+                timeout=5,
+            )
             return response.ok
         except requests.RequestException:
             return False
@@ -557,7 +942,13 @@ class AetherClient:
         print(f"{self.username} 已切换到预设槽位 {index}")
         return True
 
-    def search_dungeon(self, difficulty: str, preset_id: str, visibility: str) -> bool:
+    def search_dungeon(
+        self,
+        difficulty:str,
+        preset_id:str,
+        visibility:str,
+        display_name:str|None=None,
+    )->bool:
         """搜索并创建地下城。"""
         response = self._request(
             "POST",
@@ -602,8 +993,9 @@ class AetherClient:
         )
         invite_link = f"{WEB_URL}?dungeon_id={self.dungeon_id}"
 
+        label=display_name or f"{preset_id} · {difficulty}"
         print(
-            f"{cfg.PRESET_NAMES.get(preset_id, preset_id)} · {difficulty} 搜索成功\n"
+            f"{label} 搜索成功\n"
             f"可见性：{VISIBILITY_NAMES.get(visibility, visibility)}\n"
             f"花费：{result.get('cost', '?')}\n"
             f"节点：{' '.join(node_symbols)}\n"
@@ -643,6 +1035,42 @@ class AetherClient:
         self.dungeon_id = dungeon_id
         leader_id = result.get("data", {}).get("leader_id", "未知队长")
         print(f"{self.username} 成功加入 {leader_id} 的队伍")
+        return True
+
+    def recruit_offline_friend(self, key: str) -> bool:
+        """招募一个离线好友加入当前地下城大厅。
+
+        Web 端已确认协议：
+            POST /dungeon/recruit
+            {"type": "offline_friend", "key": "<好友username>"}
+        """
+        if not self._require_dungeon():
+            return False
+
+        response = self._request(
+            "POST",
+            "dungeon_recruit",
+            error_message=f"招募离线好友 {key} 失败",
+            json={
+                "type": "offline_friend",
+                "key": key,
+            },
+        )
+        if response is None:
+            return False
+
+        result = self._response_json(
+            response,
+            context=f"招募离线好友 {key} 失败",
+        )
+        if result is None:
+            return False
+
+        data = result.get("data")
+        if isinstance(data, dict) and data.get("dungeon_id"):
+            self.dungeon_id = data["dungeon_id"]
+
+        print(f"已招募离线好友：{key}")
         return True
 
     def reorder_members(self, from_index: int, to_index: int) -> bool:
@@ -690,6 +1118,52 @@ class AetherClient:
             return False
 
         print("已成功进入地下城")
+        return True
+
+    def transfer_dungeon_leader(self,target_username:str)->bool:
+        if not self._require_dungeon():
+            return False
+        response=self._request(
+            "POST",
+            "dungeon_transfer_leader",
+            error_message=f"转移队长给 {target_username} 失败",
+            json={"target_username":target_username},
+        )
+        if response is None:
+            return False
+        result=self._response_json(response,context="转移队长失败")
+        if result is None:
+            return False
+        data=result.get("data")
+        if (
+            result.get("code")!=0
+            or not isinstance(data,dict)
+            or data.get("leader_id")!=target_username
+        ):
+            self._set_last_error("转移队长响应未确认新队长")
+            print(f"转移队长失败：响应未确认 {target_username}")
+            return False
+        print(f"已将队长转移给 {target_username}")
+        return True
+
+    def leave_dungeon(self)->bool:
+        if not self._require_dungeon():
+            return False
+        response=self._request(
+            "POST",
+            "dungeon_leave",
+            error_message=f"{self.username} 退出地下城失败",
+        )
+        if response is None:
+            return False
+        result=self._response_json(response,context="退出地下城失败")
+        if result is None:
+            return False
+        if result.get("code")!=0:
+            self._set_last_error(str(result.get("message") or "退出地下城失败"))
+            return False
+        self.dungeon_id=None
+        print(f"{self.username} 已退出地下城")
         return True
 
     def retreat_dungeon(self) -> bool:
@@ -1134,21 +1608,20 @@ class AetherClient:
 
 
 def _ntfy_setting(
-    config_name: str,
+    configured: str | None,
     env_name: str,
     default: str | None = None,
 ) -> str | None:
-    """优先读取环境变量，其次读取 config.py；未配置则返回默认值。"""
+    """优先读取环境变量，其次读取运行设置；未配置则返回默认值。"""
     env_value = os.getenv(env_name)
     if env_value is not None:
         value = env_value.strip()
         return value or default
 
-    raw = getattr(cfg, config_name, default)
-    if raw is None:
+    if configured is None:
         return default
 
-    value = str(raw).strip()
+    value = str(configured).strip()
     return value or default
 
 
@@ -1159,22 +1632,27 @@ class NtfyNotifier:
     推送使用 daemon thread，不阻塞地下城主流程。
     """
 
-    def __init__(self, preset: DungeonPreset):
+    def __init__(
+        self,
+        preset:DungeonPreset,
+        settings:RuntimeSettings|None=None,
+    ):
+        settings=settings or load_runtime_settings()
         self.preset = preset
         self.topic = _ntfy_setting(
-            "NTFY_TOPIC",
+            settings.ntfy_topic,
             "AETHER_NTFY_TOPIC",
         )
         self.server = (
             _ntfy_setting(
-                "NTFY_SERVER",
+                settings.ntfy_server,
                 "AETHER_NTFY_SERVER",
                 "https://ntfy.sh",
             )
             or "https://ntfy.sh"
         ).rstrip("/")
         self.token = _ntfy_setting(
-            "NTFY_TOKEN",
+            None,
             "AETHER_NTFY_TOKEN",
         )
 
@@ -1232,6 +1710,9 @@ class NtfyNotifier:
         tags: str = "computer",
     ) -> None:
         """异步发送一条推送，不让通知网络延迟拖慢打本。"""
+        from .notifications import allows
+        if not allows("detail"):
+            return
         if not self.enabled:
             return
 
@@ -1505,110 +1986,6 @@ def print_layout_stats_summary(
 
 
 # =========================
-# 运行时事件选择记忆
-# =========================
-
-_EVENT_CHOICES_FILE = pathlib.Path(cfg.AETHER_DATA_DIR) / "event_choices.json"
-_EVENT_CHOICES_LOCK = threading.Lock()
-
-
-def _load_learned_event_choices_unlocked() -> dict[str, dict[str, Any]]:
-    """读取运行过程中记住的事件选择。
-
-    文件损坏时保守地忽略，不影响 Bot 启动。
-    """
-    if not _EVENT_CHOICES_FILE.exists():
-        return {}
-
-    try:
-        with _EVENT_CHOICES_FILE.open("r", encoding="utf-8") as file:
-            data = json.load(file)
-    except (OSError, ValueError):
-        print(f"读取事件记忆失败：{_EVENT_CHOICES_FILE}")
-        return {}
-
-    if not isinstance(data, dict):
-        return {}
-
-    result: dict[str, dict[str, Any]] = {}
-    for event_id, record in data.items():
-        if isinstance(record, dict):
-            result[str(event_id)] = record
-
-    return result
-
-
-def get_learned_event_choice(event_id: str) -> tuple[str, int] | None:
-    """读取某个由 QQ 交互学习到的事件选择。"""
-    event_id = str(event_id)
-
-    with _EVENT_CHOICES_LOCK:
-        choices = _load_learned_event_choices_unlocked()
-
-    record = choices.get(event_id)
-    if not isinstance(record, dict):
-        return None
-
-    choice_index = record.get("choice_index")
-    if not isinstance(choice_index, int) or choice_index < 0:
-        return None
-
-    choice_name = record.get("choice_name")
-    if not isinstance(choice_name, str) or not choice_name:
-        choice_name = f"选项 {choice_index}"
-
-    return choice_name, choice_index
-
-
-def save_learned_event_choice(
-    event: UnknownEvent,
-    choice_index: int,
-) -> bool:
-    """把一次成功执行的未知事件选择写入 data/aether/event_choices.json。"""
-    if not event.event_id or choice_index < 0:
-        return False
-
-    choice_name = (
-        event.options[choice_index]
-        if 0 <= choice_index < len(event.options)
-        else f"选项 {choice_index}"
-    )
-
-    record = {
-        "event_name": event.event_name,
-        "choice_index": choice_index,
-        "choice_name": choice_name,
-    }
-
-    try:
-        with _EVENT_CHOICES_LOCK:
-            choices = _load_learned_event_choices_unlocked()
-            choices[event.event_id] = record
-
-            _EVENT_CHOICES_FILE.parent.mkdir(parents=True, exist_ok=True)
-
-            # 先写临时文件再 replace，避免进程中断留下半截 JSON。
-            temp_file = _EVENT_CHOICES_FILE.with_suffix(".json.tmp")
-            with temp_file.open("w", encoding="utf-8") as file:
-                json.dump(
-                    choices,
-                    file,
-                    ensure_ascii=False,
-                    indent=2,
-                    sort_keys=True,
-                )
-                file.write("\n")
-
-            temp_file.replace(_EVENT_CHOICES_FILE)
-
-    except OSError as exc:
-        print(f"保存事件记忆失败：{exc}")
-        return False
-
-    return True
-
-
-# =========================
 # 策略
 # =========================
 
@@ -1616,45 +1993,38 @@ def save_learned_event_choice(
 class DungeonStrategy:
     """只负责“遇到某种情况该怎么选”，不发送 HTTP 请求。"""
 
-    @staticmethod
-    def get_event_choice(event_id: str) -> tuple[str, int] | None:
+    def __init__(self,rules:StrategyRules|None=None):
+        self.rules=rules or load_strategy_rules()
+
+    def get_event_choice(
+        self,event_id:str,event_overrides:dict[str,int]|None=None
+    )->tuple[str,int]|None:
         event_id = str(event_id)
 
-        # 手工配置始终拥有最高优先级，便于你以后覆盖错误的学习结果。
-        configured = cfg.EVENT_CHOICES.get(event_id)
+        configured = self.rules.event_choices.get(event_id)
         if configured is not None:
-            return configured
-
-        learned = get_learned_event_choice(event_id)
-        if learned is not None:
-            print(
-                f"事件 {event_id} 使用已记住的选择："
-                f"{learned[0]} ({learned[1]})"
-            )
-            return learned
+            choice_index=(event_overrides or {}).get(event_id,configured.choice_index)
+            return configured.name,choice_index
 
         return None
 
-    @staticmethod
-    def get_branch_choice(preset_id: str) -> int | None:
-        return cfg.BRANCH_CHOICES.get(preset_id)
+    def get_branch_choice(self,preset_id: str) -> int | None:
+        return self.rules.branch_choices.get(preset_id)
 
-    @staticmethod
-    def should_buy(item_name: str) -> bool:
-        if any(marker in item_name for marker in cfg.SHOP_BUY_ALWAYS_CONTAINS):
+    def should_buy(self,item_name: str) -> bool:
+        if any(marker in item_name for marker in self.rules.shop_buy_always_contains):
             return True
 
-        if cfg.SHOP_BUY_THREE_STAR_MARKER in item_name:
+        if self.rules.shop_buy_three_star_marker in item_name:
             return not any(
                 excluded in item_name
-                for excluded in cfg.SHOP_BUY_THREE_STAR_EXCLUDES
+                for excluded in self.rules.shop_buy_three_star_excludes
             )
 
         return False
 
-    @staticmethod
-    def should_retreat_from_battle(battle_preset: str | None) -> bool:
-        return battle_preset in cfg.RETREAT_BATTLE_PRESETS
+    def should_retreat_from_battle(self,battle_preset: str | None) -> bool:
+        return battle_preset in self.rules.retreat_battle_presets
 
 
 # =========================
@@ -1675,25 +2045,148 @@ class DungeonRunner:
         strategy: DungeonStrategy | None = None,
         hooks: RuntimeHooks | None = None,
         fast_mode: bool = False,
+        acceleration_mode: AccelerationMode | None = None,
+        accel_min_wait_seconds: float | None = None,
+        accel_ticket_reserve: int | None = None,
+        skip_camp_wait: bool | None = None,
+        resume:bool=False,
     ):
         if not party:
             raise ValueError("队伍不能为空")
 
-        self.party = party
-        self.captain = party[0]
+        self.all_party=party
+        self.clients_by_name={client.username:client for client in party}
+        self.party=[
+            self.clients_by_name[member.username]
+            for member in preset.runtime_owned_members
+        ]
+        self.captain = self.clients_by_name.get(preset.leader.username)
+        if self.captain is None:
+            raise ValueError(f"缺少队长 Client：{preset.leader.username}")
+        self.opener=self.clients_by_name.get(preset.opener.username)
+        if self.opener is None:
+            if not resume or not preset.opener.leave_after_enter:
+                raise ValueError(f"缺少开本角色 Client：{preset.opener.username}")
+            self.opener=self.captain
         self.preset = preset
         self.strategy = strategy or DungeonStrategy()
         self.hooks = hooks or RuntimeHooks()
-        self.fast_mode = fast_mode
-        self.notifier = NtfyNotifier(preset)
+        self.runtime_settings=load_runtime_settings()
 
-        # 快速模式第一次遇到战斗时才查询三个账号的真实库存。
-        # 后续每成功使用一张就在内存里 -1，避免每场战斗都请求三个
+        # fast_mode 继续作为旧单任务接口的兼容开关：
+        #   /aether 快速 -> 战斗 always 加速 + 营地立即离开。
+        #
+        # 批量调度器会显式传 acceleration_mode，把“战斗是否烧票”
+        # 和“营地是否等待”拆开。
+        self.fast_mode = fast_mode
+
+        if acceleration_mode is None:
+            acceleration_mode = "always" if fast_mode else "never"
+        if acceleration_mode not in {"never", "threshold", "always"}:
+            raise ValueError(f"未知加速模式：{acceleration_mode!r}")
+        self.acceleration_mode: AccelerationMode = acceleration_mode
+
+        if accel_min_wait_seconds is None:
+            accel_min_wait_seconds=float(
+                self.runtime_settings.acceleration_balanced_min_wait_seconds
+            )
+        self.accel_min_wait_seconds = max(0.0, float(accel_min_wait_seconds))
+
+        if accel_ticket_reserve is None:
+            accel_ticket_reserve=self.runtime_settings.acceleration_ticket_reserve
+        self.accel_ticket_reserve = max(0, int(accel_ticket_reserve))
+
+        if skip_camp_wait is None:
+            skip_camp_wait = fast_mode
+        self.skip_camp_wait = bool(skip_camp_wait)
+
+        self.notifier=NtfyNotifier(preset,self.runtime_settings)
+
+        # 只有真正可能使用加速券时才读取库存。
+        # 后续每成功使用一张就在内存里 -1，避免每场战斗都请求
         # 体积很大的 /status 响应。
         self._accel_ticket_counts: dict[str, int] | None = None
 
+    def _prepare_runtime_party(self,dungeon_data:dict[str,Any])->bool:
+        actual_leader=dungeon_data.get("leader_id")
+        target_leader=self.preset.leader.username
+        if actual_leader!=target_leader:
+            if actual_leader!=self.preset.opener.username:
+                print(f"当前队长异常：{actual_leader!r}")
+                return False
+            self.hooks.state(
+                "transferring_leader",
+                opener=self.preset.opener.username,
+                captain=target_leader,
+            )
+            if not self.opener.transfer_dungeon_leader(target_leader):
+                return False
+            time.sleep(PARTY_ACTION_DELAY)
+
+        members=dungeon_data.get("members")
+        if not isinstance(members,list):
+            print("地下城信息中缺少成员列表")
+            return False
+        present={
+            member.get("key")
+            for member in members
+            if isinstance(member,dict) and isinstance(member.get("key"),str)
+        }
+        for member in self.preset.owned_members:
+            if not member.leave_after_enter or member.username not in present:
+                continue
+            client=self.clients_by_name.get(member.username)
+            if client is None:
+                continue
+            self.hooks.state("leaving_party",username=member.username)
+            if not client.leave_dungeon():
+                return False
+            present.remove(member.username)
+            time.sleep(PARTY_ACTION_DELAY)
+
+        expected_members=set(self.preset.runtime_member_usernames)
+        preset_members=set(self.preset.member_usernames)
+        actual_status=None
+        actual_leader=None
+        actual_members:set[str]|None=None
+        for attempt in range(PARTY_STATE_CHECK_ATTEMPTS):
+            current=self.captain.get_current_dungeon(silent=True)
+            data=current.get("data") if isinstance(current,dict) else None
+            if isinstance(data,dict):
+                actual_status=data.get("status")
+                actual_leader=data.get("leader_id")
+                current_members=data.get("members")
+                if isinstance(current_members,list):
+                    actual_members={
+                        member.get("key")
+                        for member in current_members
+                        if isinstance(member,dict) and isinstance(member.get("key"),str)
+                    }
+                    if (
+                        actual_status=="exploring"
+                        and actual_leader==target_leader
+                        and expected_members<=actual_members<=preset_members
+                    ):
+                        self.hooks.state(
+                            "runtime_party_ready",
+                            captain=target_leader,
+                            dungeon_id=str(data.get("dungeon_id") or ""),
+                        )
+                        return True
+            if attempt+1<PARTY_STATE_CHECK_ATTEMPTS:
+                time.sleep(PARTY_ACTION_DELAY)
+        print(
+            "队长转移或成员退出后的队伍状态与预设不一致："
+            f"状态={actual_status!r}，队长={actual_leader!r}，"
+            f"成员={sorted(actual_members) if actual_members is not None else None!r}，"
+            f"必须保留成员={sorted(expected_members)!r}，"
+            f"预设成员={sorted(preset_members)!r}"
+        )
+        return False
+
     def run(self, *, resume: bool = False) -> bool:
-        dungeon = self.captain.get_current_dungeon()
+        controller=self.captain if resume else self.opener
+        dungeon = controller.get_current_dungeon()
         if dungeon is None:
             self.notifier.error("读取当前地下城失败，探索未开始")
             return False
@@ -1715,18 +2208,33 @@ class DungeonRunner:
                 return False
             print(
                 f"恢复进行中的地下城："
-                f"{cfg.PRESET_NAMES.get(self.preset.preset_id, self.preset.preset_id)} "
+                f"{self.strategy.rules.preset_names.get(self.preset.preset_id,self.preset.preset_id)} "
                 f"· {self.preset.difficulty}"
             )
         else:
-            if not self.captain.enter_dungeon():
+            self.hooks.state("entering",opener=self.preset.opener.username)
+            if not self.opener.enter_dungeon():
                 self.notifier.error(
                     self._append_error_detail(
                         "进入地下城失败",
-                        self.captain.last_error,
+                        self.opener.last_error,
                     )
                 )
                 return False
+            dungeon=self.captain.get_current_dungeon()
+            dungeon_data=dungeon.get("data") if isinstance(dungeon,dict) else None
+            if not isinstance(dungeon_data,dict):
+                self.notifier.error("进入后无法读取地下城，探索停止")
+                return False
+
+        if not self._prepare_runtime_party(dungeon_data):
+            self.notifier.error(
+                self._append_error_detail(
+                    "准备运行队伍失败，探索停止",
+                    get_latest_client_error(self.all_party),
+                )
+            )
+            return False
 
         node = self.captain.get_current_node()
         if node is None:
@@ -1849,7 +2357,7 @@ class DungeonRunner:
         if node_type in self.TREASURE_NODE_TYPES:
             return self.captain.open_treasure()
         if node_type == "shop":
-            return self._handle_shop(data)
+            return self._handle_shop(data,node.get("sanity"))
         if node_type == "branch":
             return self._handle_branch()
 
@@ -1901,10 +2409,19 @@ class DungeonRunner:
         return counts
 
     def _choose_accelerator(self) -> tuple[AetherClient, int] | None:
-        """选择当前加速券最多的队员。
+        """选择“超过库存保护线”且加速券最多的受控角色。
 
-        数量并列时，max() 保留 party 中最先出现的成员，
-        因此并列规则稳定且可预测。
+        注意：
+        DungeonRunner.party 来自 select_party()，只包含 owned Client。
+        offline friend 没有 Client，因此不会进入候选，也绝不可能发送
+        battle/accelerate 请求或消耗加速券。
+
+        例如保护线为 300：
+        - 301 张可以使用 1 张；
+        - 300 张不能再使用；
+        因此正常情况下不会把库存烧到保护线以下。
+
+        数量并列时，max() 保留 party 中最先出现的成员。
         """
         counts = self._accel_ticket_counts
         if counts is None:
@@ -1913,7 +2430,7 @@ class DungeonRunner:
         candidates = [
             member
             for member in self.party
-            if counts.get(member.username, 0) > 0
+            if counts.get(member.username, 0) > self.accel_ticket_reserve
         ]
         if not candidates:
             return None
@@ -1933,36 +2450,14 @@ class DungeonRunner:
         counts[username] = max(0, counts.get(username, 0) - 1)
 
     def _handle_battle(self, node_data: dict[str, Any]) -> bool:
+        resumed=self._resume_finished_battle(node_data)
+        if resumed is not None:
+            return resumed
         battle_preset = node_data.get("battle_preset")
 
-        accelerator: AetherClient | None = None
-        accelerator_before = 0
-
-        if self.fast_mode:
-            selected = self._choose_accelerator()
-            if selected is None:
-                print(
-                    "快速模式：三个账号都没有可用加速券，"
-                    "本场自动改为普通等待"
-                )
-                self.hooks.state("battle")
-            else:
-                accelerator, accelerator_before = selected
-                self.hooks.state(
-                    "battle_accelerating",
-                    accelerator=accelerator.username,
-                    tickets=accelerator_before,
-                )
-                print(
-                    f"快速模式：本场由 {accelerator.username} 使用加速券"
-                    f"（当前 {accelerator_before} 张）"
-                )
-        else:
-            self.hooks.state("battle")
-
-        # 普通模式仍保留原来的指定战斗撤退策略。
-        # 快速模式即使暂时无券，也不因为 RETREAT_BATTLE_PRESETS 改变策略；
-        # 它只是这一场退化为普通等待。
+        # 保留旧普通模式的指定战斗撤退策略。
+        # /aether 快速 仍按旧行为不走该撤退分支；
+        # 批量任务默认 skip_camp_wait=True，因此同样以“完成整把”为优先。
         if (
             not self.fast_mode
             and self.strategy.should_retreat_from_battle(battle_preset)
@@ -1971,9 +2466,24 @@ class DungeonRunner:
             self.captain.retreat_dungeon()
             return False
 
-        # 战斗仍由队长负责 start。
+        # 必须先 start，才能从 available_at 得知这一场实际要等多久。
         battle = self.captain.start_battle()
         if battle is None:
+            error=self.captain.last_error or ""
+            if "HTTP 400" in error and "战斗已经执行完毕" in error:
+                current=self.captain.get_current_node()
+                data=current.get("data") if isinstance(current,dict) else None
+                if (
+                    isinstance(data,dict)
+                    and isinstance(node_data.get("index"),int)
+                    and data.get("index")==node_data["index"]
+                    and data.get("node_type")==node_data.get("node_type")
+                ):
+                    resumed=self._resume_finished_battle(data)
+                    if resumed is True:
+                        self.captain.clear_last_error()
+                    if resumed is not None:
+                        return resumed
             return False
 
         if battle.forced_exit:
@@ -1993,26 +2503,87 @@ class DungeonRunner:
             print(f"forced_exit 后地下城状态未知：{status!r}")
             return False
 
+        should_accelerate = False
+        reason = ""
+
+        if self.acceleration_mode == "always":
+            should_accelerate = True
+            reason = "策略要求始终加速"
+
+        elif self.acceleration_mode == "threshold":
+            if battle.wait_time >= self.accel_min_wait_seconds:
+                should_accelerate = True
+                reason = (
+                    f"预计等待 {int(battle.wait_time)} 秒 "
+                    f">= 阈值 {int(self.accel_min_wait_seconds)} 秒"
+                )
+            else:
+                reason = (
+                    f"预计等待 {int(battle.wait_time)} 秒 "
+                    f"< 阈值 {int(self.accel_min_wait_seconds)} 秒"
+                )
+
+        else:
+            reason = "当前任务禁止使用加速券"
+
+        accelerator: AetherClient | None = None
+        accelerator_before = 0
+
+        if should_accelerate:
+            selected = self._choose_accelerator()
+
+            if selected is None:
+                print(
+                    f"本场原计划使用加速券（{reason}），"
+                    f"但所有受控角色都已到库存保护线 "
+                    f"{self.accel_ticket_reserve} 张或以下，改为普通等待"
+                )
+                self.hooks.state(
+                    "battle",
+                    acceleration_mode=self.acceleration_mode,
+                    acceleration_skipped="reserve",
+                    wait_seconds=battle.wait_time,
+                )
+            else:
+                accelerator, accelerator_before = selected
+                self.hooks.state(
+                    "battle_accelerating",
+                    accelerator=accelerator.username,
+                    tickets=accelerator_before,
+                    reserve=self.accel_ticket_reserve,
+                    acceleration_mode=self.acceleration_mode,
+                    wait_seconds=battle.wait_time,
+                )
+                print(
+                    f"加速：{reason}；由 {accelerator.username} 使用加速券"
+                    f"（当前 {accelerator_before} 张，"
+                    f"保护线 {self.accel_ticket_reserve}）"
+                )
+        else:
+            print(f"不加速：{reason}")
+            self.hooks.state(
+                "battle",
+                acceleration_mode=self.acceleration_mode,
+                wait_seconds=battle.wait_time,
+            )
+
         if accelerator is not None:
-            # 加速接口无 payload，消耗的是“发送这个请求的账号”的券。
-            # 因此这里故意使用被选中队员自己的 Session，而不是固定 captain。
+            # 加速接口无 payload，消耗的是发送这个请求的角色自己的券。
             if not accelerator.accelerate_battle():
                 return False
 
-            # 只有服务器确认 accelerate 成功后才修改本地库存，
-            # 避免网络/400 错误造成虚假扣券。
+            # 只有服务器确认 accelerate 成功后才修改本地缓存。
             self._mark_accel_ticket_used(accelerator.username)
-            remaining = self._accel_ticket_counts.get(
-                accelerator.username,
-                0,
-            ) if self._accel_ticket_counts is not None else 0
+            remaining = (
+                self._accel_ticket_counts.get(accelerator.username, 0)
+                if self._accel_ticket_counts is not None
+                else 0
+            )
             print(
                 f"{accelerator.username} 加速券剩余（本地缓存）："
                 f"{remaining}"
             )
 
-            # accelerate 只完成 battle_status。
-            # 节点仍需队长读取结果并 complete 正式结算。
             result = self.captain.get_current_node()
             if result is None:
                 return False
@@ -2020,7 +2591,7 @@ class DungeonRunner:
             self._print_battle_result(result)
             return self.captain.complete_battle()
 
-        # 普通模式，或快速模式但全队无券：正常等待。
+        # 不加速，正常等待服务器 available_at。
         time.sleep(max(0.0, battle.wait_time + BATTLE_FINISH_BUFFER))
 
         result = self.captain.get_current_node()
@@ -2029,6 +2600,19 @@ class DungeonRunner:
 
         self._print_battle_result(result)
         return self.captain.complete_battle()
+
+    def _resume_finished_battle(self,node_data:dict[str,Any])->bool|None:
+        """恢复已结束的战斗，只在节点结算成功后允许推进。"""
+        if node_data.get("completed") is True:
+            print("当前战斗节点已结算，继续推进")
+            return True
+        battle_status=node_data.get("battle_status")
+        if isinstance(battle_status,dict):
+            battle_status=battle_status.get("status")
+        if battle_status=="completed":
+            print("当前战斗已执行完毕，补办节点结算")
+            return self.captain.complete_battle()
+        return None
 
     @staticmethod
     def _print_battle_result(node: dict[str, Any]) -> None:
@@ -2054,13 +2638,13 @@ class DungeonRunner:
         if not self.captain.enter_camp():
             return False
 
-        if self.fast_mode:
-            print("快速模式：已进入营地，跳过停留等待并立即离开")
+        if self.skip_camp_wait:
+            print("批量/快速节点模式：已进入营地，跳过停留等待并立即离开")
             self.hooks.state("camp_accelerated")
             return self.captain.leave_camp()
 
-        print(f"营地停留 {cfg.CAMP_STAY_TIME} 秒")
-        time.sleep(cfg.CAMP_STAY_TIME)
+        print(f"营地停留 {self.runtime_settings.camp_stay_time} 秒")
+        time.sleep(self.runtime_settings.camp_stay_time)
 
         return self.captain.leave_camp()
 
@@ -2072,16 +2656,42 @@ class DungeonRunner:
 
         event_id = event.get("id")
         event_name = event.get("name", event_id)
-        choice = self.strategy.get_event_choice(event_id)
+
+        raw_options = event.get("choices")
+        if not isinstance(raw_options, list):
+            raw_options = event.get("options")
+        if not isinstance(raw_options, list):
+            raw_options = []
+
+        # 无分支事件在 API 中没有真正的 choices/options：
+        #
+        #   "type": "plain",
+        #   "options": []
+        #
+        # 前端表现上相当于只有一个“继续/确认”按钮。旧逻辑会把它当作
+        # “未知事件但没有任何选项”，批量模式因为没有 QQ 交互处理器而直接失败。
+        #
+        # random 等类型也可能返回空 options；只有一个选项的普通事件同样
+        # 没有决策空间。只要选项不超过一个，就固定向 event/choice 提交
+        # choice_index=0，不写入全局事件配置。
+        if len(raw_options)<=1:
+            print(f"遇到无分支事件：{event_name}，自动继续")
+            self.hooks.state(
+                "event_plain",
+                event_id=str(event_id or ""),
+                event_name=str(event_name or event_id or "未知事件"),
+            )
+
+            if not self.captain.choose_event(0):
+                return False
+
+            self.hooks.state("event_resolved")
+            return True
+
+        choice = self.strategy.get_event_choice(event_id,self.preset.event_overrides)
         learned_event: UnknownEvent | None = None
 
         if choice is None:
-            raw_options = event.get("choices")
-            if not isinstance(raw_options, list):
-                raw_options = event.get("options")
-            if not isinstance(raw_options, list):
-                raw_options = []
-
             option_names: list[str] = []
             for index, option in enumerate(raw_options):
                 if isinstance(option, dict):
@@ -2139,79 +2749,168 @@ class DungeonRunner:
 
         print(f"已选择事件选项：{choice_name}")
 
-        # 只有本次原本是未知事件，并且服务器已经确认选择成功，
-        # 才把 QQ 选择记下来。
+        # 只有服务器确认选择成功后，才把未知事件写入全局策略。
         if learned_event is not None:
-            if save_learned_event_choice(learned_event, choice_index):
+            try:
+                saved=save_event_choice(
+                    learned_event.event_id,learned_event.event_name,choice_index
+                )
+                self.strategy.rules.event_choices[learned_event.event_id]=saved
                 print(
-                    f"已记住事件选择："
+                    f"已保存全局事件选择："
                     f"{learned_event.event_id} -> {choice_index}"
                 )
                 self.hooks.emit(
-                    f"Aether：已记住「{learned_event.event_name}」"
+                    f"Aether：已将「{learned_event.event_name}」"
                     f"选择 {choice_index}，以后将自动处理。"
                 )
-            else:
+            except (AetherConfigError,OSError) as exc:
+                print(f"保存全局事件选择失败：{exc}")
                 self.hooks.emit(
                     f"Aether：事件已处理，但「{learned_event.event_name}」"
-                    "的选择未能写入事件记忆文件。"
+                    "的选择未能写入全局策略配置。"
                 )
 
         self.hooks.state("event_resolved")
         return True
 
-    def _handle_shop(self, node_data: dict[str, Any]) -> bool:
+    def _handle_shop(self,node_data:dict[str,Any],current_sanity:Any)->bool:
         player_shops = node_data.get("player_shops")
         if not isinstance(player_shops, dict):
             print("商店数据中缺少 player_shops")
             return False
 
-        own_items = player_shops.get(self.captain.username)
-        if not self._maybe_buy_third_item(own_items):
-            return False
+        rules=load_shop_rules()
+        shops=[]
 
-        for member in self.party[1:]:
+        # DungeonRunner.party 只包含 owned Client；offline friend 没有 Client，
+        # 因此不会查询商店、也不会尝试购买物品。
+        #
+        # 队长与最终站位在 v18 后已经分离，不能再假设 self.party[0]
+        # 一定是 captain。先处理 captain，再遍历所有“其他 owned Client”。
+        own_items=node_data.get("shop_items")
+        if not isinstance(own_items,list):
+            print(f"商店物品列表异常：{own_items!r}")
+            return False
+        shops.append((self.captain.username,own_items,node_data.get("current_money"),None))
+
+        for member in self.party:
+            if member.username == self.captain.username:
+                continue
+
             shop = self.captain.get_shop(member.username)
             if shop is None:
                 return False
 
-            shop_items = shop.get("data", {}).get("shop_items")
-            if not self._maybe_buy_third_item(shop_items, target_username=member.username):
+            data=shop.get("data")
+            if not isinstance(data,dict) or not isinstance(data.get("shop_items"),list):
+                print(f"{member.username} 的商店数据异常：{shop!r}")
+                return False
+            shops.append((member.username,data["shop_items"],data.get("current_money"),member.username))
+
+        sanity_slots:dict[str,set[int]]={}
+        offers=[]
+        balances={}
+        for username,items,money,_target_username in shops:
+            balances[username]=money if isinstance(money,int) and not isinstance(money,bool) else 0
+            for item_index,item in enumerate(items):
+                if not is_sanity_item(item):
+                    continue
+                sanity_slots.setdefault(username,set()).add(item_index)
+                recovery=sanity_recovery(item)
+                if recovery is None:
+                    print(f"无法解析理智商品恢复量，已跳过：{item!r}")
+                    continue
+                price=item.get("price") if isinstance(item,dict) else None
+                remaining=item.get("remaining") if isinstance(item,dict) else None
+                if (
+                    not isinstance(price,int)
+                    or isinstance(price,bool)
+                    or not isinstance(remaining,int)
+                    or isinstance(remaining,bool)
+                ):
+                    print(f"理智商品数据异常，已跳过：{item!r}")
+                    continue
+                offers.append(SanityOffer(
+                    username=username,
+                    item_index=item_index,
+                    recovery=recovery,
+                    price=max(0,price),
+                    remaining=max(0,remaining),
+                ))
+
+        if isinstance(current_sanity,(int,float)) and not isinstance(current_sanity,bool):
+            purchases=select_sanity_purchases(int(current_sanity),rules.sanity,offers,balances)
+            if purchases:
+                total=sum(purchase.recovery for purchase in purchases)
+                print(f"当前理智 {int(current_sanity)}，计划购买恢复 {total} 点理智")
+            for purchase in purchases:
+                target_username=None if purchase.username==self.captain.username else purchase.username
+                if not self.captain.buy_item(
+                    purchase.item_index,
+                    quantity=purchase.quantity,
+                    target_username=target_username,
+                ):
+                    return False
+        elif rules.sanity.buyers:
+            print("商店节点缺少当前理智，已跳过理智购买")
+
+        for username,items,_money,target_username in shops:
+            if not self._maybe_buy_shop_items(
+                items,
+                username=username,
+                rules=rules,
+                target_username=target_username,
+                skipped_indexes=sanity_slots.get(username,set()),
+            ):
                 return False
 
         return self.captain.leave_shop()
 
-    def _maybe_buy_third_item(
+    def _maybe_buy_shop_items(
         self,
         items: Any,
         *,
+        username:str,
+        rules:ShopRules,
         target_username: str | None = None,
+        skipped_indexes:set[int]|None=None,
     ) -> bool:
-        """保留旧策略：只检查商店第 3 个物品，需要时购买。"""
-        if not isinstance(items, list) or len(items) <= 2:
+        if not isinstance(items,list):
             print(f"商店物品列表异常：{items!r}")
             return False
-
-        item = items[2]
-        if not isinstance(item, dict):
-            print(f"商店物品数据异常：{item!r}")
-            return False
-
-        item_name = str(item.get("name", ""))
-        if not self.strategy.should_buy(item_name):
-            return True
-
-        return self.captain.buy_item(
-            2,
-            target_username=target_username,
-        )
+        for item_index,item in enumerate(items[:3]):
+            if not isinstance(item,dict):
+                print(f"商店物品数据异常：{item!r}")
+                return False
+            if skipped_indexes and item_index in skipped_indexes:
+                continue
+            rule=effective_rule(rules,username,item_index+1)
+            if rule=="never":
+                continue
+            if rule=="legacy" and not self.strategy.should_buy(str(item.get("name",""))):
+                continue
+            if not self.captain.buy_item(item_index,target_username=target_username):
+                return False
+        return True
 
     def _handle_branch(self) -> bool:
         choice_index = self.strategy.get_branch_choice(self.preset.preset_id)
         if choice_index is None:
             print(f"副本 {self.preset.preset_id} 没有配置分支选择，停止自动探索")
             return False
-        return self.captain.choose_branch(choice_index)
+        if not self.captain.choose_branch(choice_index):
+            return False
+
+        # 分支确认后服务器才生成后续节点，立即刷新完整地下城状态，
+        # 让 checkpoint 和 Web 都能显示新生成的路线。
+        current=self.captain.get_current_dungeon(silent=True)
+        data=current.get("data") if isinstance(current,dict) else None
+        if isinstance(data,dict) and isinstance(data.get("nodes"),list):
+            self.hooks.state("branch_resolved",nodes=data["nodes"])
+        else:
+            print("分支已选择，但读取新节点列表失败")
+        return True
 
 
 # =========================
@@ -2219,19 +2918,142 @@ class DungeonRunner:
 # =========================
 
 
-def load_accounts() -> list[Account]:
-    """只读取账号名，不在这里主动询问密码。
+def load_oauth_token() -> str | None:
+    """读取共享的水鱼 OAuth token。
 
-    登录顺序由 login_all_accounts() 决定：
-    1. 先尝试每个账号自己的 Cookie；
-    2. Cookie 无效时才使用 AETHER_PASSWORD；
-    3. 环境变量也没有时，才在终端询问一次共享密码。
+    优先级：
+    1. 环境变量 AETHER_OAUTH_TOKEN
+    2. data/aether/oauth_token.txt
+
+    oauth_token.txt 只放 token 本体，不要加引号。
     """
+    env_token = os.getenv("AETHER_OAUTH_TOKEN")
+    if env_token:
+        token = env_token.strip()
+        if token:
+            return token
+
+    token_file = pathlib.Path(cfg.AETHER_DATA_DIR) / "oauth_token.txt"
+    if token_file.exists():
+        try:
+            token = token_file.read_text(encoding="utf-8").strip()
+        except OSError as exc:
+            print(f"读取 OAuth token 文件失败：{exc}")
+        else:
+            if token:
+                return token
+
+    return None
+
+
+def discover_oauth_characters(token: str) -> tuple[str, ...]:
+    """从 /account 自动发现当前水鱼账号下的所有 Aether 角色。
+
+    会取运行设置中的第一个回退角色作为探针，
+    同时带 query + X-Aether-Character。
+    即便以后新增小号，也会从响应 characters 中自动发现。
+    """
+    token = str(token).strip()
+    if not token:
+        return ()
+
+    session = requests.Session()
+    session.cookies.set(
+        AETHER_AUTH_COOKIE_NAME,
+        token,
+        domain="chiyuki.diving-fish.com",
+        path="/",
+    )
+
+    configured=load_runtime_settings().account_usernames
+    seed = None
+    if isinstance(configured, (list, tuple)) and configured:
+        seed = str(configured[0])
+
+    kwargs: dict[str, Any] = {"timeout": REQUEST_TIMEOUT}
+    if seed:
+        kwargs["params"] = {AETHER_CHARACTER_PARAM: seed}
+        kwargs["headers"] = {AETHER_CHARACTER_HEADER: seed}
+
+    try:
+        response = session.get(
+            BASE_URL + API_ENDPOINTS["account"],
+            **kwargs,
+        )
+    except requests.RequestException as exc:
+        print(f"自动发现 Aether 角色失败：网络异常：{exc}")
+        return ()
+
+    if not response.ok:
+        print(
+            "自动发现 Aether 角色失败："
+            f"HTTP {response.status_code}: {response.text[:500]}"
+        )
+        return ()
+
+    try:
+        result = response.json()
+    except ValueError:
+        print("自动发现 Aether 角色失败：/account 返回非 JSON")
+        return ()
+
+    data = result.get("data") if isinstance(result, dict) else None
+    characters = data.get("characters") if isinstance(data, dict) else None
+    if not isinstance(characters, list):
+        print("自动发现 Aether 角色失败：响应缺少 data.characters")
+        return ()
+
+    usernames: list[str] = []
+    seen: set[str] = set()
+
+    for item in characters:
+        if not isinstance(item, dict):
+            continue
+        username = item.get("username")
+        if not isinstance(username, str) or not username or username in seen:
+            continue
+        seen.add(username)
+        usernames.append(username)
+
+    return tuple(usernames)
+
+
+def load_accounts() -> list[Account]:
+    """读取当前可控制的 Aether 角色。
+
+    OAuth 模式优先从 /account 自动发现全部角色；
+    如果自动发现失败，则回退到 settings.json 的 account_usernames。
+    """
+    oauth_token = load_oauth_token()
+    if oauth_token:
+        usernames = discover_oauth_characters(oauth_token)
+        if usernames:
+            print(
+                "OAuth 自动发现角色："
+                + "，".join(usernames)
+            )
+            return [Account(username=username) for username in usernames]
+
+    configured=load_runtime_settings().account_usernames
+
     password = os.getenv("AETHER_PASSWORD")
     return [
-        Account(username=username, password=password)
-        for username in cfg.ACCOUNT_USERNAMES
+        Account(username=str(username), password=password)
+        for username in configured
     ]
+
+
+def initialize_client_pool() -> dict[str, AetherClient] | None:
+    """初始化一次 OAuth 客户端池，供批量调度器长期复用。"""
+    accounts = load_accounts()
+    clients = login_all_accounts(
+        accounts,
+        allow_password_prompt=False,
+        password_provider=None,
+    )
+    if clients is None:
+        return None
+    return {client.username: client for client in clients}
 
 
 def login_all_accounts(
@@ -2240,19 +3062,55 @@ def login_all_accounts(
     allow_password_prompt: bool = True,
     password_provider: Callable[[str], str | None] | None = None,
 ) -> list[AetherClient] | None:
-    """Cookie 优先登录全部账号。
+    """登录并创建全部 Aether 角色客户端。
 
-    登录顺序：
-    1. 每个账号先尝试 Cookie；
-    2. Cookie 失效时优先复用已有 shared_password；
-    3. 没有密码时，如果提供了 password_provider（Bot 模式），
-       就阻塞等待 QQ 侧提交密码；
-    4. 只有 CLI 模式才允许 getpass()；
-    5. 登录成功后更新 Cookie，后续失效账号复用同一个密码。
+    新流程优先：
+        一个水鱼 OAuth token
+        -> 多个 AetherClient
+        -> 每个请求自动带 ?_aether_character=<角色>
+
+    兼容旧流程：
+        如果没有配置 AETHER_OAUTH_TOKEN，
+        仍尝试旧 per-character Cookie / password 登录。
     """
+    oauth_token = load_oauth_token()
+
+    if oauth_token:
+        clients: list[AetherClient] = []
+        print(
+            "检测到水鱼 OAuth 登录态，"
+            f"准备加载 {len(accounts)} 个 Aether 角色"
+        )
+
+        for account in accounts:
+            client = AetherClient(account)
+
+            if not client.try_oauth_login(oauth_token):
+                detail = client.last_error or "未知 OAuth 验证错误"
+                print(
+                    f"{account.username} OAuth 角色验证失败："
+                    f"{detail}"
+                )
+                return None
+
+            clients.append(client)
+
+        print(
+            "OAuth 多角色初始化完成："
+            + "，".join(client.username for client in clients)
+        )
+        return clients
+
+    # -------------------------
+    # 兼容旧认证流程
+    # -------------------------
+    print(
+        "未配置 AETHER_OAUTH_TOKEN，"
+        "尝试旧 Cookie / 密码登录兼容流程"
+    )
+
     clients: list[AetherClient] = []
 
-    # 如果环境变量 AETHER_PASSWORD 已经存在，Account.password 会带进来。
     shared_password = next(
         (account.password for account in accounts if account.password),
         None,
@@ -2261,17 +3119,12 @@ def login_all_accounts(
     for account in accounts:
         client = AetherClient(account)
 
-        # 第一优先级：Cookie。
         if client.try_cookie_login():
             clients.append(client)
             continue
 
-        # Cookie 失效且当前还没有密码。
         if not shared_password:
             if password_provider is not None:
-                # Bot 模式：
-                # 这里运行在 asyncio.to_thread() 的工作线程中。
-                # password_provider 会一直等到 QQ 侧调用 submit_password()。
                 shared_password = password_provider(account.username)
 
                 if not shared_password:
@@ -2282,7 +3135,6 @@ def login_all_accounts(
                     return None
 
             elif allow_password_prompt:
-                # CLI 模式才允许从终端输入。
                 shared_password = getpass.getpass(
                     "检测到 Cookie 失效，请输入 Aether 密码（不会显示）："
                 )
@@ -2336,48 +3188,79 @@ def create_party(
     party: list[AetherClient],
     preset: DungeonPreset,
     hooks: RuntimeHooks | None = None,
+    layout_rules:dict[str,LayoutRule]|None=None,
 ) -> bool:
-    """队长搜索地下城，其他成员加入，并按任务中声明的顺序排列。"""
+    """创建队伍。
+
+    owned:
+        切换自己的角色预设，并通过 /dungeon/join 加入。
+
+    friend:
+        由队长通过 /dungeon/recruit 以 offline_friend 招募。
+        离线好友没有 Client，也不参与并发资源锁。
+    """
     if not party:
         print("队伍不能为空")
         return False
 
-    captain = party[0]
+    clients_by_name = {client.username: client for client in party}
 
-    # 每个账号使用任务中为自己指定的预设槽位。
-    preset_by_username = dict(preset.party)
+    opener=clients_by_name.get(preset.opener.username)
+    if opener is None:
+        print(f"缺少开本角色 Client：{preset.opener.username}")
+        return False
 
-    for member in party:
-        preset_index = preset_by_username[member.username]
-        if not 0 <= preset_index <= 4:
+    # 所有受控角色先切好自己的预设。
+    for member in preset.owned_members:
+        client = clients_by_name.get(member.username)
+        if client is None:
+            print(f"缺少自有角色 Client：{member.username}")
+            return False
+
+        preset_index = member.preset_index
+        if preset_index is None or not 0 <= preset_index <= 4:
             print(
-                f"{member.username} 的预设槽位无效：{preset_index}，"
-                "必须在 0~4 之间"
+                f"{member.username} 的预设槽位无效：{preset_index}"
             )
             return False
 
-        if not member.apply_preset(preset_index):
+        if not client.apply_preset(preset_index):
             print(f"{member.username} 切换预设失败，停止创建队伍")
             return False
 
         time.sleep(PARTY_ACTION_DELAY)
 
-    if not search_acceptable_dungeon(captain, preset, hooks):
+    if not search_acceptable_dungeon(opener,preset,hooks,layout_rules=layout_rules):
         print("没有取得可接受的地下城布局，无法继续后续操作")
         return False
 
-    if captain.dungeon_id is None:
+    if opener.dungeon_id is None:
         print("筛图结束但没有取得 dungeon_id，停止执行")
         return False
 
-    time.sleep(PARTY_ACTION_DELAY)
-    for member in party[1:]:
-        if not member.join_dungeon(captain.dungeon_id):
-            print("有队员未能成功加入队伍，请检查")
-            return False
+    # party 表示进入时站位；实际队长和开本角色都可以不在第 1 位。
+    # 按 party 声明顺序加入/招募，但跳过已经创建地下城的开本角色。
+    for member in preset.party:
+        if member.username == preset.opener.username:
+            continue
+
+        time.sleep(PARTY_ACTION_DELAY)
+
+        if member.controlled:
+            client = clients_by_name.get(member.username)
+            if client is None:
+                print(f"缺少自有角色 Client：{member.username}")
+                return False
+
+            if not client.join_dungeon(opener.dungeon_id):
+                print(f"{member.username} 未能成功加入队伍")
+                return False
+        else:
+            if not opener.recruit_offline_friend(member.username):
+                return False
 
     time.sleep(PARTY_ACTION_DELAY)
-    return reorder_party(captain, tuple(username for username, _ in preset.party))
+    return reorder_party(opener,preset.member_usernames)
 
 
 def reorder_party(captain: AetherClient, party_order: tuple[str, ...]) -> bool:
@@ -2442,6 +3325,27 @@ def summarize_search_layout(client: AetherClient) -> list[str]:
     return summary
 
 
+def normalize_runtime_nodes(value: Any) -> tuple[dict[str, Any], ...]:
+    if not isinstance(value, (list, tuple)):
+        return ()
+    result = []
+    for position, node in enumerate(value):
+        if not isinstance(node, dict):
+            continue
+        node_type = str(node.get("node_type", ""))
+        if node_type not in NODE_NAMES:
+            continue
+        index = node.get("index")
+        if isinstance(index, bool) or not isinstance(index, int):
+            index = position
+        result.append({"index": index, "node_type": node_type})
+    return tuple(result)
+
+
+def summarize_runtime_nodes(client: AetherClient) -> list[dict[str, Any]]:
+    return list(normalize_runtime_nodes(get_search_nodes(client)))
+
+
 def count_search_layout(client: AetherClient) -> dict[str, int]:
     """统计 search 返回的各类节点数量。"""
     counts: dict[str, int] = {}
@@ -2499,6 +3403,8 @@ def search_acceptable_dungeon(
     captain: AetherClient,
     preset: DungeonPreset,
     hooks: RuntimeHooks | None = None,
+    *,
+    layout_rules:dict[str,LayoutRule]|None=None,
 ) -> bool:
     """搜索地下城，并判断是否接受当前节点布局。
 
@@ -2520,15 +3426,22 @@ def search_acceptable_dungeon(
     """
     hooks = hooks or RuntimeHooks()
     rule_name = preset.layout_rule or preset.preset_id
-    rule = DUNGEON_LAYOUT_RULES.get(rule_name)
+    rule=(layout_rules or DUNGEON_LAYOUT_RULES).get(rule_name)
 
     # 没有配置规则时保持普通搜索行为。
     if rule is None:
-        return captain.search_dungeon(
+        searched = captain.search_dungeon(
             preset.difficulty,
             preset.preset_id,
             preset.visibility,
+            preset.label,
         )
+        if searched:
+            hooks.state(
+                "layout_accepted",
+                nodes=summarize_runtime_nodes(captain),
+            )
+        return searched
 
     attempt = 0
 
@@ -2539,6 +3452,7 @@ def search_acceptable_dungeon(
             preset.difficulty,
             preset.preset_id,
             preset.visibility,
+            preset.label,
         ):
             return False
 
@@ -2548,6 +3462,7 @@ def search_acceptable_dungeon(
 
         score, counts = score_search_layout(captain, rule)
         layout = summarize_search_layout(captain)
+        runtime_nodes = summarize_runtime_nodes(captain)
 
         # 每一张候选图都作为独立样本记录；无论最终接受还是刷新。
         # 这正好对应实际 reroll 的生成概率。
@@ -2586,6 +3501,7 @@ def search_acceptable_dungeon(
                 score=score,
                 counts=dict(counts),
                 layout=list(layout),
+                nodes=runtime_nodes,
             )
 
             if hooks.choose_layout is None:
@@ -2596,7 +3512,11 @@ def search_acceptable_dungeon(
 
             if decision == "accept":
                 print("接受当前布局")
-                hooks.state("layout_accepted", score=score)
+                hooks.state(
+                    "layout_accepted",
+                    score=score,
+                    nodes=runtime_nodes,
+                )
                 return True
 
             if decision == "abort":
@@ -2623,6 +3543,11 @@ def search_acceptable_dungeon(
                 f"  达到最低接受分 {rule.min_score:g}，"
                 "接受当前布局"
             )
+            hooks.state(
+                "layout_accepted",
+                score=score,
+                nodes=runtime_nodes,
+            )
             return True
 
         print(f"  低于最低接受分 {rule.min_score:g}")
@@ -2631,6 +3556,11 @@ def search_acceptable_dungeon(
         if attempt >= max_attempts:
             if rule.accept_last_on_exhausted:
                 print("  已达到最大刷新次数，接受最后一张布局")
+                hooks.state(
+                    "layout_accepted",
+                    score=score,
+                    nodes=runtime_nodes,
+                )
                 return True
 
             print("  已达到最大刷新次数，放弃当前任务")
@@ -2646,23 +3576,22 @@ def search_acceptable_dungeon(
 
 def select_party(
     clients: list[AetherClient],
-    party_config: tuple[tuple[str, int], ...],
+    party_config: tuple[PartyMember, ...],
 ) -> list[AetherClient] | None:
-    """按任务中声明的用户名顺序选择队伍。"""
+    """按预设顺序选择所有受控角色 Client；离线好友不需要 Client。"""
     clients_by_name = {client.username: client for client in clients}
-    usernames = tuple(username for username, _ in party_config)
+    owned = [member for member in party_config if member.controlled]
 
-    missing = [username for username in usernames if username not in clients_by_name]
+    missing = [
+        member.username
+        for member in owned
+        if member.username not in clients_by_name
+    ]
     if missing:
-        print(f"任务引用了不存在的账号：{', '.join(missing)}")
+        print(f"任务引用了不存在的自有角色：{', '.join(missing)}")
         return None
 
-    if len(set(usernames)) != len(usernames):
-        print(f"任务中的队伍成员重复：{usernames}")
-        return None
-
-    return [clients_by_name[username] for username in usernames]
-
+    return [clients_by_name[member.username] for member in owned]
 
 
 
@@ -2670,11 +3599,15 @@ def select_party(
 class ResumeMatch:
     preset_key: str
     dungeon_id: str
+    error: str = field(default="",compare=False)
 
 
 def _preset_matches_dungeon(
     preset: DungeonPreset,
     data: dict[str, Any],
+    *,
+    check_difficulty:bool=True,
+    check_event_overrides:bool=True,
 ) -> bool:
     """判断服务器上的 exploring 地下城是否属于某个预设。"""
     if data.get("status") != "exploring":
@@ -2683,10 +3616,30 @@ def _preset_matches_dungeon(
     if data.get("preset_id") != preset.preset_id:
         return False
 
-    if data.get("difficulty_label") != preset.difficulty:
+    if check_event_overrides:
+        nodes=data.get("nodes")
+        runtime_choices={}
+        if isinstance(nodes,list):
+            runtime_choices={
+                node["event_id"]:node["event_choice"]
+                for node in nodes
+                if (
+                    isinstance(node,dict)
+                    and isinstance(node.get("event_id"),str)
+                    and isinstance(node.get("event_choice"),int)
+                    and not isinstance(node.get("event_choice"),bool)
+                )
+            }
+        for event_id,choice_index in preset.event_overrides.items():
+            if event_id in runtime_choices and runtime_choices[event_id]!=choice_index:
+                return False
+
+    if check_difficulty and data.get("difficulty_label")!=preset.difficulty:
         return False
 
-    if data.get("leader_id") != preset.party[0][0]:
+    if data.get("leader_id") not in {
+        preset.opener.username,preset.leader.username
+    }:
         return False
 
     members = data.get("members")
@@ -2698,30 +3651,41 @@ def _preset_matches_dungeon(
         for member in members
         if isinstance(member, dict) and isinstance(member.get("key"), str)
     }
-    expected_members = {username for username, _ in preset.party}
-
-    return actual_members == expected_members
+    required_members=set(preset.runtime_member_usernames)
+    allowed_members=set(preset.member_usernames)
+    return required_members<=actual_members<=allowed_members
 
 
 def detect_resume_match(
     clients: list[AetherClient],
     presets: dict[str, DungeonPreset],
+    *,
+    expected_preset_key:str|None=None,
+    expected_dungeon_id:str|None=None,
+    allow_legacy_adopt:bool=False,
 ) -> ResumeMatch | None:
     """检测并恢复服务器上的 exploring 地下城状态。"""
     active_by_user: dict[str, dict[str, Any]] = {}
+    query_errors=[]
 
     for client in clients:
         result = client.get_current_dungeon(silent=True)
-        if not isinstance(result, dict):
+        if not isinstance(result, dict) or result.get("code",0)!=0 or "data" not in result:
+            query_errors.append(client.username)
             continue
 
         data = result.get("data")
+        if data is not None and not isinstance(data,dict):
+            query_errors.append(client.username)
+            continue
         if not isinstance(data, dict):
             continue
 
-        if data.get("status") in {"lobby", "exploring"}:
+        if data.get("status") in {"lobby", "exploring"} and not data.get("completion_reason"):
             active_by_user[client.username] = data
 
+    if query_errors:
+        return ResumeMatch("","",error="当前地下城查询失败，不能判断是否结束："+ "，".join(query_errors))
     if not active_by_user:
         return None
 
@@ -2745,6 +3709,34 @@ def detect_resume_match(
     dungeon_id = next(iter(dungeon_ids))
     sample = next(iter(active_by_user.values()))
 
+    if expected_dungeon_id is not None:
+        preset=presets.get(expected_preset_key or "")
+        if (
+            dungeon_id!=expected_dungeon_id
+            or preset is None
+            or any(
+                data.get("status")!="exploring"
+                for data in active_by_user.values()
+            )
+            or set(preset.runtime_owned_usernames)-set(active_by_user)
+        ):
+            print(
+                "进行中的地下城与 checkpoint ID 不一致："
+                f"预期={expected_dungeon_id!r}，实际={dungeon_id!r}"
+            )
+            return ResumeMatch(
+                preset_key="",dungeon_id=dungeon_id,
+                error=f"恢复状态不一致：记录地下城={expected_dungeon_id}，当前地下城={dungeon_id}；请检查队长及在队成员" if dungeon_id==expected_dungeon_id else f"角色已在另一地下城：记录={expected_dungeon_id}，当前={dungeon_id}；不会续跑或重建旧任务",
+            )
+        print(
+            f"按 checkpoint ID 恢复：{preset.label} "
+            f"[{expected_preset_key}]，地下城 {dungeon_id}"
+        )
+        return ResumeMatch(
+            preset_key=expected_preset_key or "",
+            dungeon_id=dungeon_id,
+        )
+
     if sample.get("status") == "lobby":
         print(
             "检测到尚未进入的 lobby 地下城。"
@@ -2752,11 +3744,34 @@ def detect_resume_match(
         )
         return ResumeMatch(preset_key="", dungeon_id=dungeon_id)
 
+    if allow_legacy_adopt and expected_preset_key is not None:
+        preset=presets.get(expected_preset_key)
+        if (
+            preset is not None
+            and _preset_matches_dungeon(
+                preset,
+                sample,
+                check_difficulty=False,
+                check_event_overrides=False,
+            )
+            and not (
+                set(preset.runtime_owned_usernames)-set(active_by_user)
+            )
+        ):
+            print(
+                f"旧 checkpoint 已绑定地下城 ID：{preset.label} "
+                f"[{expected_preset_key}]，地下城 {dungeon_id}"
+            )
+            return ResumeMatch(
+                preset_key=expected_preset_key,
+                dungeon_id=dungeon_id,
+            )
+
     for key, preset in presets.items():
         if not _preset_matches_dungeon(preset, sample):
             continue
 
-        expected_users = {username for username, _ in preset.party}
+        expected_users = set(preset.runtime_owned_usernames)
         missing = expected_users - set(active_by_user)
 
         if missing:
@@ -2802,26 +3817,58 @@ def execute_preset(
     resume: bool = False,
     hooks: RuntimeHooks | None = None,
     fast_mode: bool = False,
+    acceleration_mode: AccelerationMode | None = None,
+    accel_min_wait_seconds: float | None = None,
+    accel_ticket_reserve: int | None = None,
+    skip_camp_wait: bool | None = None,
 ) -> bool:
     """执行一个且仅一个地下城预设。"""
     hooks = hooks or RuntimeHooks()
+    layout_rules=load_layout_rules()
     notifier = NtfyNotifier(preset)
+    resolved_acceleration = (
+        acceleration_mode
+        if acceleration_mode is not None
+        else ("always" if fast_mode else "never")
+    )
+    resolved_skip_camp = (
+        fast_mode if skip_camp_wait is None else bool(skip_camp_wait)
+    )
+
     hooks.state(
         "starting",
         preset_key=preset.key,
         preset_label=preset.label,
         fast_mode=fast_mode,
+        acceleration_mode=resolved_acceleration,
+        skip_camp_wait=resolved_skip_camp,
     )
+    party_text = " -> ".join(
+        (
+            member.username
+            if member.controlled
+            else f"{member.username}(离线好友)"
+        )
+        for member in preset.party
+    )
+    preset_text = ", ".join(
+        f"{member.username}={member.preset_index}"
+        for member in preset.owned_members
+    )
+
     print(
         f"\n准备运行：{preset.label}"
         f"{' [快速模式]' if fast_mode else ''}\n"
         f"  key：{preset.key}\n"
-        f"  队伍：{' -> '.join(username for username, _ in preset.party)}\n"
-        f"  角色预设："
-        f"{', '.join(f'{username}={slot}' for username, slot in preset.party)}"
+        f"  队伍站位：{party_text}\n"
+        f"  实际队长：{preset.leader.username}\n"
+        f"  角色预设：{preset_text}\n"
+        f"  战斗加速：{resolved_acceleration}\n"
+        f"  营地等待：{'跳过' if resolved_skip_camp else '保留'}"
     )
 
-    party = select_party(clients, preset.party)
+    party_config=preset.runtime_members if resume else preset.party
+    party = select_party(clients,party_config)
     if party is None:
         notifier.error("队伍配置异常，无法开始")
         return False
@@ -2829,7 +3876,7 @@ def execute_preset(
     if resume:
         print("发现服务器上的未完成探索，直接从当前节点续跑")
     else:
-        if not create_party(party, preset, hooks):
+        if not create_party(party,preset,hooks,layout_rules=layout_rules):
             print("地下城创建/组队出现故障")
             notifier.error(
                 append_error_detail(
@@ -2844,6 +3891,11 @@ def execute_preset(
         preset,
         hooks=hooks,
         fast_mode=fast_mode,
+        acceleration_mode=resolved_acceleration,
+        accel_min_wait_seconds=accel_min_wait_seconds,
+        accel_ticket_reserve=accel_ticket_reserve,
+        skip_camp_wait=resolved_skip_camp,
+        resume=resume,
     )
     if not runner.run(resume=resume):
         print("地下城探索出现故障、暂停或主动撤退")
@@ -2862,6 +3914,12 @@ def run_preset(
     hooks: RuntimeHooks | None = None,
     allow_password_prompt: bool = False,
     fast_mode: bool = False,
+    acceleration_mode: AccelerationMode | None = None,
+    accel_min_wait_seconds: float | None = None,
+    accel_ticket_reserve: int | None = None,
+    skip_camp_wait: bool | None = None,
+    resume_only:bool=False,
+    expected_dungeon_id:str|None=None,
 ) -> bool:
     """按稳定 key 运行单个预设。
 
@@ -2877,7 +3935,10 @@ def run_preset(
     hooks = hooks or RuntimeHooks()
 
     if clients is None:
-        accounts = load_accounts()
+        accounts = [
+            Account(username=username)
+            for username in preset.owned_usernames
+        ]
         clients = login_all_accounts(
             accounts,
             allow_password_prompt=allow_password_prompt,
@@ -2886,7 +3947,23 @@ def run_preset(
         if clients is None:
             return False
 
-    resume_match = detect_resume_match(clients, DUNGEON_PRESETS)
+    # 已完成队伍交接的恢复任务不再占用已退出的开本角色。
+    party_config=preset.runtime_members if resume_only else preset.party
+    selected_clients = select_party(clients,party_config)
+    if selected_clients is None:
+        return False
+    clients = selected_clients
+
+    resume_match=detect_resume_match(
+        clients,
+        DUNGEON_PRESETS,
+        expected_preset_key=preset_key if expected_dungeon_id else None,
+        expected_dungeon_id=expected_dungeon_id,
+    )
+
+    if resume_only and resume_match is None:
+        print("恢复任务未找到对应的进行中地下城")
+        return False
 
     if resume_match is not None:
         if not resume_match.preset_key:
@@ -2902,6 +3979,26 @@ def run_preset(
             )
             return False
 
-        return execute_preset(clients, preset, resume=True, hooks=hooks, fast_mode=fast_mode)
+        return execute_preset(
+            clients,
+            preset,
+            resume=True,
+            hooks=hooks,
+            fast_mode=fast_mode,
+            acceleration_mode=acceleration_mode,
+            accel_min_wait_seconds=accel_min_wait_seconds,
+            accel_ticket_reserve=accel_ticket_reserve,
+            skip_camp_wait=skip_camp_wait,
+        )
 
-    return execute_preset(clients, preset, resume=False, hooks=hooks, fast_mode=fast_mode)
+    return execute_preset(
+        clients,
+        preset,
+        resume=False,
+        hooks=hooks,
+        fast_mode=fast_mode,
+        acceleration_mode=acceleration_mode,
+        accel_min_wait_seconds=accel_min_wait_seconds,
+        accel_ticket_reserve=accel_ticket_reserve,
+        skip_camp_wait=skip_camp_wait,
+    )

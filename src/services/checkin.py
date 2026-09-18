@@ -1,5 +1,7 @@
 import calendar
 import datetime
+import math
+from zoneinfo import ZoneInfo
 
 from ..storage import checkin as checkin_storage
 from ..libraries.checkin.data import *
@@ -41,6 +43,58 @@ def get_user_info(user_id:int)->dict|None:
             "rate":user["rob_rate"],
             "last_rob":user["last_rob"]
         }
+    }
+
+def _data_activity(data:Data)->float:
+    """计算当前Data对应的Rating"""
+    if data.is_zero:
+        return 0
+    mb=data.getBytes()/(1024**2)
+    return 2.7*math.log2(1+mb/128)/math.log2(9)
+def _day_activity(n:int)->float:
+    """一天内n次主动行为的表现值"""
+    if n<=0:
+        return 0
+    return 1+0.08*math.log2(n)
+def _bp_activity(days:list[float])->float:
+    """按B200加权计算历史Rating"""
+    days=sorted(days,reverse=True)[:200]
+    return 0.51*sum(score*0.97**i for i,score in enumerate(days))
+def _recent_activity(day_scores:dict[datetime.date,float],today:datetime.date)->float:
+    """按R30计算近期Rating，不包含今天"""
+    return 0.064*sum(day_scores.get(today-datetime.timedelta(days=i+1),0)*0.95**i for i in range(30))
+
+def get_user_rating(user_id:int)->dict|None:
+    """获取用户Rating V2：B200+R30+Data"""
+    user=checkin_storage.get_user(user_id)
+    if user is None:
+        return None
+
+    logs=checkin_storage.get_user_logs(user_id)
+    days={}
+    d=Data([user["data_base"],user["data_addition"]],user["data_zero"])
+    for log in logs:#计算用户主动发起日志数量
+        #log["operate"]=="send" and log["type"]=="-":#赠送
+        active=(log["operate"]=="rob" and log["detail"]!="target") or log["operate"] in ["gacha","checkin"]
+        if not active:
+            continue
+        time=datetime.datetime.fromisoformat(log["time"])
+        day=time.date()
+        days[day]=days.get(day,0)+1
+    day_scores={day:_day_activity(n) for day,n in days.items()}#b200
+    today=datetime.datetime.now(ZoneInfo("Asia/Shanghai")).date()
+
+    history_rating=_bp_activity(list(day_scores.values()))
+    recent_rating=_recent_activity(day_scores,today)
+    data_rating=_data_activity(d)
+    rating=history_rating+recent_rating+data_rating
+
+    return {
+        "user_id":user["user_id"],
+        "nickname":user["nickname"],
+        "rating":rating,
+        "tmp":[history_rating,recent_rating,data_rating],#测试数据
+        "tmp_data":[len(days),sum(days.values()),d.display,sorted(day_scores.values(),reverse=True)[:10]]
     }
 
 def get_user_calendar(user_id:int,year:int,month:int)->dict|None:

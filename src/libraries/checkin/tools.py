@@ -19,6 +19,31 @@ LOG_PATH=DATA_PATH/"data"/"logs"
 ROB_CONFIG_PATH=DATA_PATH.parent/"rob"/"config.json"
 OUT_PATH=DATA_PATH/"out"
 
+VOLTAGE_LEVELS=[
+    (0,"Steam"),
+    (3,"ULV"),
+    (5,"LV"),
+    (7,"MV"),
+    (9,"HV"),
+    (11,"EV"),
+    (13,"IV"),
+    (15,"LuV"),
+    (17,"ZPM"),
+    (19,"UV"),
+    (21,"UHV"),
+    (23,"UEV"),
+    (25,"UIV"),
+    (27,"UMV"),
+    (29,"UXV"),
+    (31,"MAX")
+]#GTNH电压
+
+def getVoltageLevel(voltage:float) -> str:
+    """获取电压等级"""
+    for i in range(len(VOLTAGE_LEVELS)):
+        if voltage<VOLTAGE_LEVELS[i][0]:
+            return VOLTAGE_LEVELS[i-1][1]
+    return VOLTAGE_LEVELS[-1][1]
 
 def log(user_id:int,operation:str,change_type:str,created_at:datetime.datetime,data:Data|None=None,item_id:int|None=None,item_count:int|None=None,related_user_id:int|None=None,detail:str|None=None):
     """记录Data或物品变化"""
@@ -67,9 +92,15 @@ class CheckDay:
         return ""
     
     def log(self,id,data:Data):
+        """签到记录"""
         self.info.append([id,self.date])
         checkin_storage.add_checkin(id,self.date)
         log(user_id=id,operation="checkin",change_type="+",data=data,created_at=self.date)
+
+    def makeup_log(self,id,data:Data,now:datetime.datetime,date:datetime.datetime):
+        """补签记录"""
+        self.info.append([id,date])
+        log(user_id=id,operation="makeup_checkin",change_type="-",detail=str(date.date()),data=data,created_at=now)
 
 class User:
     def __init__(self,uid:int,nickname:str=""):
@@ -153,7 +184,18 @@ class User:
         check_config=jsonLoad(CONFIG_PATH)
         #获取data量
         data=Data([0,0],zero=True)
-        result={"data":data,"thursday":False,"super":None,"rank":rank,"rankbonus":1,"basedata":data,"first":today.firstType(),"items":[]}
+        result={"data":data,"consecutivebonus":1,"ratingbonus":1,"thursday":False,"super":None,"rank":rank,"rankbonus":1,"basedata":data,"first":today.firstType(),"items":[]}
+        #result字段说明
+        #data: 最终data量
+        #consecutivebonus: 连续签到加成，乘
+        #ratingbonus: rating加成，乘#已删除，rating影响的是各种操作的口径
+        #thursday: 是否中了fkxqs
+        #super: 是否中了大奖
+        #rank: 签到排名
+        #rankbonus: 签到排名加成，乘
+        #basedata: 最原始未经任何加成的data
+        #first: 第一类型
+        #items: 物品列表
         if now.weekday()+1==4:#周四
             if random.random()<=check_config["thursday"][0]-check_config["thursday"][1]*(rank-1):
                 result["thursday"]=True
@@ -163,7 +205,8 @@ class User:
             superbonus=Data([superbonus//10*10,superbonus%10])
             result["super"]=superbonus
             data=plus(data,superbonus)
-        basedata=rangeRandom(*check_config["checkDataRange"])
+        ratingbonus=1+0.001*self.getRating()["rating"]
+        basedata=rangeRandom(check_config["checkDataRange"][0]*ratingbonus,check_config["checkDataRange"][1]*ratingbonus)
         basedata=Data([basedata//10*10,basedata%10])
         result["basedata"]=basedata
         data=plus(data,basedata)
@@ -172,6 +215,11 @@ class User:
             bonus_rate=final_data.getBytes()/data.getBytes()
             result["rankbonus"]=bonus_rate
             data=final_data
+        #data=exponent(data,math.log2(1+self.getRating()["rating"]))#rating加成
+        #result["ratingbonus"]=1+self.getRating()["rating"]
+        consecutive_bonus=1+0.003*(self.consecutive_check-1)+0.00001*(self.consecutive_check-1)**2
+        result["consecutivebonus"]=consecutive_bonus
+        data=Data([data.base,data.addition+math.log2(consecutive_bonus)])#连续签到加成
         result["data"]=data
         #更新数据
         self.addData(data)
@@ -190,6 +238,45 @@ class User:
             result["items"].append(reward)
         return result
 
+    def makeup_check(self,date:datetime.datetime)->dict:
+        """补签"""
+        checkday=CheckDay(date)
+        result={"success":False,"msg":"","data":Data([0,0],zero=True),"items":[],"first":checkday.firstType(),"rank":checkday.getRank(),"rankbonus":1}
+        now=datetime.datetime.now(ZoneInfo("Asia/Shanghai"))
+        if date.date()>=now.date():#不能补签今天或未来
+            result["msg"]="不能补签今天或未来的日期"
+            return result
+        if self.id in [i[0] for i in checkday.info]:#已经签到过了
+            result["msg"]="这天已经签到过了"
+            return result
+        checkcost=makeup_cost(now,date,self.getRating()["rating"])
+        if self.data.getBytes()<checkcost.getBytes():
+            result["msg"]=f"补签失败，Data不足喵~（{checkcost.display}）"
+            return result
+        if not checkin_storage.add_makeupcheckin(self.id,now,date.date()):
+            result["msg"]="补签失败"
+            return result
+        self.delData(checkcost)
+        checkday.makeup_log(self.id,checkcost,now,date)
+        result["success"]=True
+        self.total_check+=1
+        user_checkin_logs=checkin_storage.get_checkin_dates(self.id)
+        max_consecutive=0
+        consecutive=0
+        for i in range(len(user_checkin_logs)):
+            if i==0:
+                consecutive=1
+            elif (user_checkin_logs[i]-user_checkin_logs[i-1]).days==1:
+                consecutive+=1
+            else:
+                max_consecutive=max(max_consecutive,consecutive)
+                consecutive=1
+        max_consecutive=max(max_consecutive,consecutive)
+        self.max_consecutive_check=max_consecutive
+        self.consecutive_check=consecutive
+        self.updateUserInfo()
+        return result
+
     def rob(self,target:int):
         """模拟一次抢劫其他人，target为被抢人的id"""
         target_user=User(target)
@@ -200,13 +287,14 @@ class User:
         if delta.total_seconds()<rob_config["robCooldown"]:
             return f"还在冷却中哦~别急嘛——\n再等 {int(rest_cooldown//60)} 分 {int(rest_cooldown%60)} 秒 就好啦"
         self.last_rob=now
-        r=rangeRandom(*rob_config["robRange"])
+        ratingbonus=1+0.001*self.getRating()["rating"]
+        r=rangeRandom(rob_config["robRange"][0]*ratingbonus,rob_config["robRange"][1]*ratingbonus)
         rob_data=Data([r//10*10,r%10])
         if random.random()>self.rob_rate:#抢劫失败
             if rob_data.getBytes()>self.data.getBytes():#被抢光了
                 rob_data=self.data
                 self.data=Data([0,0],True)
-                delta_rate=max(1,rob_data.getBytes()/2**(sum(rob_config["robRange"])/2))/100#计算成功率变化
+                delta_rate=min(max(1,rob_data.getBytes()/2**(sum(rob_config["robRange"])/2)),8)/100#计算成功率变化
                 self.rob_rate=min(1,self.rob_rate+delta_rate)
                 if target in self.robbed:#是不是第一次抢这个人
                     self.robbed[target]["fail_times"]+=1
@@ -217,14 +305,14 @@ class User:
                     self.robbed[target]={"success_times":0,"success_data":{"base":0,"addition":0,"zero":True},"fail_times":1,"fail_data":{"base":rob_data.base,"addition":rob_data.addition,"zero":rob_data.is_zero}}
                 checkin_storage.update_rob_record(self.id,target,self.robbed[target])
                 self.updateUserInfo()
-                log(user_id=self.id,operation="rob",change_type="-",related_user_id=target,data=rob_data,created_at=now)
+                log(user_id=self.id,operation="rob",change_type="-",detail="initiator",related_user_id=target,data=rob_data,created_at=now)
                 target_user.addData(rob_data)
                 target_user.updateUserInfo()
-                log(user_id=target,operation="rob",change_type="+",related_user_id=self.id,data=rob_data,created_at=now)
+                log(user_id=target,operation="rob",change_type="+",detail="target",related_user_id=self.id,data=rob_data,created_at=now)
                 return f"( -{rob_data.display} / +{delta_rate*100:.2f}%) 抢劫失败啦，你被 {target_user.nickname} 抢走了 {rob_data.display} ，你现在什么都没有了！\n成功率增加了 {delta_rate*100:.2f}%，当前：{self.rob_rate*100:.2f}%"
             else:
                 self.delData(rob_data)
-                delta_rate=max(1,rob_data.getBytes()/2**(sum(rob_config["robRange"])/2))/100#计算成功率变化
+                delta_rate=min(max(1,rob_data.getBytes()/2**(sum(rob_config["robRange"])/2)),8)/100#计算成功率变化
                 self.rob_rate=min(1,self.rob_rate+delta_rate)
                 if target in self.robbed:#是不是第一次抢这个人
                     self.robbed[target]["fail_times"]+=1
@@ -235,17 +323,17 @@ class User:
                     self.robbed[target]={"success_times":0,"success_data":{"base":0,"addition":0,"zero":True},"fail_times":1,"fail_data":{"base":rob_data.base,"addition":rob_data.addition,"zero":rob_data.is_zero}}
                 checkin_storage.update_rob_record(self.id,target,self.robbed[target])
                 self.updateUserInfo()
-                log(user_id=self.id,operation="rob",change_type="-",related_user_id=target,data=rob_data,created_at=now)
+                log(user_id=self.id,operation="rob",change_type="-",detail="initiator",related_user_id=target,data=rob_data,created_at=now)
                 target_user.addData(rob_data)
                 target_user.updateUserInfo()
-                log(user_id=target,operation="rob",change_type="+",related_user_id=self.id,data=rob_data,created_at=now)
+                log(user_id=target,operation="rob",change_type="+",detail="target",related_user_id=self.id,data=rob_data,created_at=now)
                 return f"( -{rob_data.display} / +{delta_rate*100:.2f}%) 抢劫失败啦，你被 {target_user.nickname} 抢走了 {rob_data.display}\n成功率增加了 {delta_rate*100:.2f}%，当前：{self.rob_rate*100:.2f}%"
         else:#抢劫成功
             if rob_data.getBytes()>target_user.data.getBytes():#把对面抢光了
                 rob_data=target_user.data
                 target_user.data=Data([0,0],True)
                 self.addData(rob_data)
-                delta_rate=max(1,rob_data.getBytes()/2**(sum(rob_config["robRange"])/2))/100#计算成功率变化
+                delta_rate=min(max(1,rob_data.getBytes()/2**(sum(rob_config["robRange"])/2)),8)/100#计算成功率变化
                 self.rob_rate=max(0,self.rob_rate-delta_rate)
                 if target in self.robbed:#是不是第一次抢这个人
                     self.robbed[target]["success_times"]+=1
@@ -256,14 +344,14 @@ class User:
                     self.robbed[target]={"success_times":1,"success_data":{"base":rob_data.base,"addition":rob_data.addition,"zero":rob_data.is_zero},"fail_times":0,"fail_data":{"base":0,"addition":0,"zero":True}}
                 checkin_storage.update_rob_record(self.id,target,self.robbed[target])
                 self.updateUserInfo()
-                log(user_id=self.id,operation="rob",change_type="+",related_user_id=target,data=rob_data,created_at=now)
+                log(user_id=self.id,operation="rob",change_type="+",detail="initiator",related_user_id=target,data=rob_data,created_at=now)
                 target_user.updateUserInfo()
-                log(user_id=target,operation="rob",change_type="-",related_user_id=self.id,data=rob_data,created_at=now)
+                log(user_id=target,operation="rob",change_type="-",detail="target",related_user_id=self.id,data=rob_data,created_at=now)
                 return f"( +{rob_data.display} / -{delta_rate*100:.2f}%) 抢劫成功，{target_user.nickname} 被你抢破产了...\n成功率减少了 {delta_rate*100:.2f}%，当前：{self.rob_rate*100:.2f}%"
             else:
                 self.addData(rob_data)
                 target_user.delData(rob_data)
-                delta_rate=max(1,rob_data.getBytes()/2**(sum(rob_config["robRange"])/2))/100#计算成功率变化
+                delta_rate=min(max(1,rob_data.getBytes()/2**(sum(rob_config["robRange"])/2)),8)/100#计算成功率变化
                 self.rob_rate=max(0,self.rob_rate-delta_rate)
                 if target in self.robbed:#是不是第一次抢这个人
                     self.robbed[target]["success_times"]+=1
@@ -274,9 +362,9 @@ class User:
                     self.robbed[target]={"success_times":1,"success_data":{"base":rob_data.base,"addition":rob_data.addition,"zero":rob_data.is_zero},"fail_times":0,"fail_data":{"base":0,"addition":0,"zero":True}}
                 checkin_storage.update_rob_record(self.id,target,self.robbed[target])
                 self.updateUserInfo()
-                log(user_id=self.id,operation="rob",change_type="+",related_user_id=target,data=rob_data,created_at=now)
+                log(user_id=self.id,operation="rob",change_type="+",detail="initiator",related_user_id=target,data=rob_data,created_at=now)
                 target_user.updateUserInfo()
-                log(user_id=target,operation="rob",change_type="-",related_user_id=self.id,data=rob_data,created_at=now)
+                log(user_id=target,operation="rob",change_type="-",detail="target",related_user_id=self.id,data=rob_data,created_at=now)
                 return f"( +{rob_data.display} / -{delta_rate*100:.2f}%) 抢劫成功，{target_user.nickname} 被你抢走了 {rob_data.display}！\n成功率减少了 {delta_rate*100:.2f}%，当前：{self.rob_rate*100:.2f}%"
 
     def gacha(self):
@@ -313,15 +401,22 @@ class User:
     
     def getCheckInfo(self,day:datetime.date):
         """获取用户的签到信息，只能获取一天的
-        返回[bool,h:m:s,rank]#是否签到，签到时间，签到排名"""
+        返回[bool,h:m:s,rank]#是否签到，签到时间，签到排名，是否为补签"""
         checkin_at=checkin_storage.get_checkin_time(self.id,day)
         if checkin_at is None:
-            return [False,None,None]
+            return [False,None,None,False]
+        makeup=False
+        if checkin_at.date()!=day:
+            makeup=True
 
-        return [True,checkin_at.strftime("%H:%M:%S"),checkin_storage.get_checkin_rank(self.id,day)]
+        return [True,checkin_at.strftime("%H:%M:%S"),checkin_storage.get_checkin_rank(self.id,day),makeup]
     
     def getRobInfo(self):
         return checkin_service.get_rob_rank_data()
+
+    def getRating(self):
+        """获取用户rating"""
+        return checkin_service.get_user_rating(self.id)
 
 def generateRank(ranks:list,target,length:int=10) -> list[str,bool]:
     """
@@ -359,3 +454,8 @@ def generateRank(ranks:list,target,length:int=10) -> list[str,bool]:
         msg+=f"......(剩余 {len(ranks)-max(length,i+1)} 人)\n"
     return [msg,me]
 
+def makeup_cost(now:datetime.datetime,target:datetime.datetime,rating:float)->Data:
+    """获取补签消耗"""#现在是第一天1MB，每隔4天x2
+    days=(now.date()-target.date()).days
+    exp=20+(days-1)/4-math.log2(1+rating/100)
+    return Data([exp//10*10,exp%10],False)

@@ -8,10 +8,52 @@ from zoneinfo import ZoneInfo
 
 from .tools import *
 
+VOLTAGE_COLORS={
+    "Steam":(170,170,170,255),
+    "ULV":(255,85,85,255),
+    "LV":(0,170,0,255),
+    "MV":(255,170,0,255),
+    "HV":(255,255,85,255),
+    "EV":(85,85,85,255),
+    "IV":(85,85,255,255),
+    "LuV":(255,85,255,255),
+    "ZPM":(85,255,255,255),
+    "UV":(0,170,0,255),
+    "UHV":(170,0,0,255),
+    "UEV":(170,0,170,255),
+    "UIV":(0,0,170,255),
+    "UMV":(255,85,85,255),
+    "UXV":(170,0,0,255),
+    "MAX":(255,255,255,255)
+}
+
+VOLTAGE_STYLES={
+    "Steam":{"bold":False,"underline":False},
+    "ULV":{"bold":False,"underline":False},
+    "LV":{"bold":False,"underline":False},
+    "MV":{"bold":False,"underline":False},
+    "HV":{"bold":False,"underline":False},
+    "EV":{"bold":False,"underline":False},
+    "IV":{"bold":False,"underline":False},
+    "LuV":{"bold":False,"underline":False},
+    "ZPM":{"bold":False,"underline":False},
+    "UV":{"bold":False,"underline":True},
+    "UHV":{"bold":False,"underline":True},
+    "UEV":{"bold":False,"underline":True},
+    "UIV":{"bold":True,"underline":True},
+    "UMV":{"bold":True,"underline":True},
+    "UXV":{"bold":True,"underline":True},
+    "MAX":{"bold":True,"underline":True}
+}
+
 FONT_PATH=pathlib.Path(__file__).parent.parent.parent.parent/"data"/"checkin"/"font"/"RuiZiTaiKongPaoKuXiangSuJian-Shan-ChaoHei(REEJI-TaikoRunGB-Flash-Heavy)-2.ttf"
-name_font = ImageFont.truetype(str(FONT_PATH), size=60)
+MCFONT_PATH=pathlib.Path(__file__).parent.parent.parent.parent/"data"/"checkin"/"font"/"Minecraft.ttf"
+name_font = ImageFont.truetype(str(MCFONT_PATH), size=60)
 title_font = ImageFont.truetype(str(FONT_PATH), size=40)
 subtitle_font = ImageFont.truetype(str(FONT_PATH), size=20)
+data_font_big=ImageFont.truetype(str(FONT_PATH),size=42)
+data_font_small=ImageFont.truetype(str(FONT_PATH),size=24)
+info_font=ImageFont.truetype(str(FONT_PATH),size=24)
 
 def paint_cell(day, day_info, cell_w=100, cell_h=140):
     """
@@ -38,6 +80,11 @@ def paint_cell(day, day_info, cell_w=100, cell_h=140):
         border_color = (100, 105, 120, 255)
         text_color = (100, 105, 120, 255)
         has_glow = False
+    elif day_info[3][3]:#补签
+        glow_color=(180,80,255,255)#霓虹紫
+        border_color=(230,170,255,255)#亮紫色边框
+        text_color=(255,255,255,255)
+        has_glow=True
     elif day_info[3][0]:#签到了
         glow_color = (255, 165, 0, 255)     # 闪耀金橙
         border_color = (255, 223, 0, 255)   # 亮金色实体边框
@@ -248,12 +295,90 @@ def paint_progress(ratio, text1,text2,
 
     return bar_img, pad
 
+def _mix_color(color,target,ratio):
+    return tuple(int(color[i]*(1-ratio)+target[i]*ratio) for i in range(3))+(color[3],)
+
+def draw_mc_voltage_text(img:Image.Image,draw:ImageDraw.ImageDraw,pos:tuple,text:str,color:tuple,font:ImageFont.FreeTypeFont,bold:bool=False,underline:bool=False)->float:
+    """画名字左边的电压"""
+    x,y=pos
+    light=_mix_color(color,(255,255,255),0.3)
+    dark=_mix_color(color,(0,0,0),0.6)
+
+    #弱外发光
+    text_mask=Image.new("L",img.size,0)
+    mask_draw=ImageDraw.Draw(text_mask)
+    mask_draw.text((x,y),text,font=font,fill=120,anchor="lt",stroke_width=1,stroke_fill=120)
+    if bold:
+        mask_draw.text((x+2,y),text,font=font,fill=120,anchor="lt",stroke_width=1,stroke_fill=120)
+    glow_mask=text_mask.filter(ImageFilter.GaussianBlur(6))
+    glow=Image.new("RGBA",img.size,(color[0],color[1],color[2],0))
+    glow.putalpha(glow_mask.point(lambda p:int(p*0.45)))
+    img.alpha_composite(glow)
+
+    #右下阴影
+    draw.text((x+4,y+4),text,fill=dark,font=font,anchor="lt")
+    if bold:
+        draw.text((x+6,y+4),text,fill=dark,font=font,anchor="lt")
+
+    #左上高光
+    draw.text((x-1,y-1),text,fill=light,font=font,anchor="lt")
+    if bold:
+        draw.text((x+1,y-1),text,fill=light,font=font,anchor="lt")
+
+    #主体
+    draw.text((x,y),text,fill=color,font=font,anchor="lt",stroke_width=1,stroke_fill=dark)
+    if bold:
+        draw.text((x+2,y),text,fill=color,font=font,anchor="lt",stroke_width=1,stroke_fill=dark)
+
+    bbox=draw.textbbox((x,y),text,font=font,anchor="lt",stroke_width=1)
+    text_w=bbox[2]-bbox[0]
+    text_h=bbox[3]-bbox[1]
+    if bold:
+        text_w+=2
+
+    #下划线
+    if underline:
+        uy=y+text_h+2
+        uh=4
+        underline_img=Image.new("RGBA",img.size,(0,0,0,0))
+        ud=ImageDraw.Draw(underline_img)
+        ud.rectangle([x,uy,x+text_w,uy+uh],fill=color)
+        underline_blur=underline_img.filter(ImageFilter.GaussianBlur(3))
+        img.alpha_composite(underline_blur)
+        draw.rounded_rectangle([x,uy,x+text_w,uy+uh],radius=1,fill=color)
+
+    return text_w
+
+def split_data_display(text:str)->tuple[str,str,str]:
+    """拆data"""
+    num=""
+    unit=""
+    for i,ch in enumerate(text):
+        if not(ch.isdigit() or ch=="."):
+            num=text[:i]
+            unit=text[i:]
+            break
+    else:
+        num=text
+        unit=""
+    if "." in num:
+        int_part,dec_part=num.split(".",1)
+        dec_part="."+dec_part
+    else:
+        int_part=num
+        dec_part=""
+    return int_part,dec_part,unit
 
 def paint(user: User,save_path):
     ###前置信息处理
+    rating=user.getRating()["rating"]#用户rating
+    voltage=getVoltageLevel(int(rating))#用户电压等级
+    voltage_color=VOLTAGE_COLORS[voltage]#用户电压颜色
     robtimes_ranks,robbedtimes_ranks,rob_gain_data_ranks,rob_give_data_ranks=user.getRobInfo()#抢劫次数[成功，失败]，被抢次数[成功，失败]，抢到的Data[主动抢到，被送的]，失去的Data[被抢走，主动送出]
-    robtimes=robtimes_ranks[user.id][0]+robtimes_ranks[user.id][1]#抢劫次数
-    robbedtimes=robbedtimes_ranks[user.id][0]+robbedtimes_ranks[user.id][1]#被抢劫次数
+    rob_times=robtimes_ranks.get(user.id,[0,0])
+    robbed_times=robbedtimes_ranks.get(user.id,[0,0])
+    robtimes=rob_times[0]+rob_times[1]#抢劫次数
+    robbedtimes=robbed_times[0]+robbed_times[1]#被抢劫次数
     rob_most=["",0]
     for rob_user in user.robbed:
         times=user.robbed[rob_user]["success_times"]+user.robbed[rob_user]["fail_times"]
@@ -280,17 +405,17 @@ def paint(user: User,save_path):
         date_str = f"{now.year}-{now.month:02d}-{day:02d}"
         logs=user.getLogsByDate(datetime.date(now.year, now.month, day))
         for log in logs:
-            if log["operate"] in ["rob","checkin","send"]:
+            if log["operate"] in ["rob","checkin","send","gacha","makeup_checkin"]:
                 tmp_data=Data([log["data"]["base"],log["data"]["addition"]],log["data"]["zero"])
                 if log["type"]=="+":
                     increase_data=plus(increase_data,tmp_data)
                 elif log["type"]=="-":
                     decrease_data=plus(decrease_data,tmp_data)
         check_info=user.getCheckInfo(datetime.date(now.year,now.month,day))
-        month_checkinfo.append([date_str,increase_data,decrease_data,check_info])#日期，这天增加的data，这天减少的data，这天的签到信息（是否签到，签到时间，排名）
+        month_checkinfo.append([date_str,increase_data,decrease_data,check_info])#日期，这天增加的data，这天减少的data，这天的签到信息（是否签到，签到时间，排名，是否为补签）
 
     first_weekday, days = calendar.monthrange(now.year, now.month)
-    start_x, start_y = 60, 220        
+    start_x, start_y = 60, 250
     col_space, row_space = 115, 160  
     cell_w = 100                     
 
@@ -318,35 +443,41 @@ def paint(user: User,save_path):
     
     img.paste(avatar_img, (avatar_x, avatar_y), mask=mask)
     
-    #ID
-    text_x = avatar_x + avatar_size + 30
-    name_y = 65
-    nickname_text = getattr(user, 'nickname', 'Mugen')
-    draw.text((text_x, name_y), nickname_text, fill=(255, 255, 255, 240), font=name_font, anchor="lt")
+    #顶部信息
+    text_x=avatar_x+avatar_size+30
+    name_y=55
+    meta_y=125
 
-    #data绘制
-    data_color = (50, 255, 180, 255)
-    shadow_color = (50, 255, 180, 150)
-    shadow_offset = 4
-    if '.' in self_data.display:#整数小数分开画
-        int_part, dec_part = self_data.display.split('.', 1)
-        dec_part = '.' + dec_part
-    else:
-        int_part = self_data.display
-        dec_part = ""
+    nickname_text=getattr(user,"nickname","Mugen")
+    voltage_text=f"[ {voltage} ]"
+    voltage_style=VOLTAGE_STYLES.get(voltage,{"bold":False,"underline":False})
 
-    right_edge_x = 900 - 60
-    y_pos = 90
-    w_dec = draw.textlength(dec_part, font=subtitle_font)
-    draw.text((right_edge_x + shadow_offset, y_pos + 15 + shadow_offset), 
-              dec_part, fill=shadow_color, font=subtitle_font, anchor="rt")
-    draw.text((right_edge_x - w_dec + shadow_offset, y_pos + shadow_offset), 
-              int_part, fill=shadow_color, font=title_font, anchor="rt")  
-    draw.text((right_edge_x, y_pos + 15), 
-              dec_part, fill=data_color, font=subtitle_font, anchor="rt")
-    draw.text((right_edge_x - w_dec, y_pos), 
-              int_part, fill=data_color, font=title_font, anchor="rt")
-    
+    voltage_w=draw_mc_voltage_text(
+        img,draw,(text_x,name_y),voltage_text,voltage_color,name_font,
+        bold=voltage_style["bold"],underline=voltage_style["underline"]
+    )
+    draw.text((text_x+voltage_w,name_y)," "+nickname_text,fill=(255,255,255,240),font=name_font,anchor="lt")
+
+    rating_show=rating
+    rating_text=f"RT {rating_show:.2f}"
+    data_text=f"Data {self_data.display}"
+
+    rt_label_color=(120,210,255,255)
+    rt_shadow_color=(20,60,90,180)
+    data_color=(50,255,180,255)
+    data_shadow_color=(10,80,60,180)
+    shadow_offset=3
+
+    #RT
+    draw.text((text_x+shadow_offset,meta_y+shadow_offset),rating_text,fill=rt_shadow_color,font=info_font,anchor="lt")
+    draw.text((text_x,meta_y),rating_text,fill=rt_label_color,font=info_font,anchor="lt")
+
+    #Data
+    rt_w=draw.textlength(rating_text,font=info_font)
+    data_x=text_x+rt_w+36
+    draw.text((data_x+shadow_offset,meta_y+shadow_offset),data_text,fill=data_shadow_color,font=info_font,anchor="lt")
+    draw.text((data_x,meta_y),data_text,fill=data_color,font=info_font,anchor="lt")
+
     #星期表头
     weeks_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     header_y = start_y - 45           
