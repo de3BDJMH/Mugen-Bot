@@ -3,6 +3,7 @@ import pathlib
 import sqlite3
 
 from . import message
+from . import command
 
 ROOT_PATH=pathlib.Path(__file__).parent.parent.parent.parent#/server
 DATA_PATH=ROOT_PATH/"data"/"log"
@@ -32,6 +33,7 @@ def init_database():
     conn=connect()
     try:
         message.init(conn)
+        command.init(conn)
         conn.commit()
     finally:
         conn.close()

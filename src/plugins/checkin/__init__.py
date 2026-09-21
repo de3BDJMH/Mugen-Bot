@@ -2,7 +2,7 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command,on_message
 from nonebot.adapters import Message
-from nonebot.params import CommandArg,Arg,EventMessage,ArgPlainText
+from nonebot.params import CommandArg,Arg,EventMessage,ArgPlainText,Depends
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent,MessageEvent
 from nonebot import get_bot
@@ -22,6 +22,7 @@ from ...libraries.checkin import infoPaint
 from ...storage import checkin as checkin_storage
 from ...services import checkin as checkin_service
 
+from . import command
 from .config import Config
 
 __plugin_meta__ = PluginMetadata(
@@ -40,18 +41,18 @@ DATA_PATH=MGPLUGIN.data_path
 
 checkin=on_command("签到",aliases={"checkin"})
 @checkin.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+async def handle_function(bot:Bot,cmd:command.Checkin=Depends(command.Checkin.get)):
 
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
     
     bot=get_bot()
-    user=tools.User(event.user_id)
+    user=tools.User(cmd.user_id)
     now=datetime.datetime.now(ZoneInfo("Asia/Shanghai"))
     if not user.nickname:
-        nickname=(await bot.get_stranger_info(user_id=event.user_id,no_cache=True))["nickname"]
+        nickname=(await bot.get_stranger_info(user_id=cmd.user_id,no_cache=True))["nickname"]
         user.nickname=nickname
         user.updateUserInfo()
     if user.last_check==now.date():
@@ -224,46 +225,24 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
 
 send=on_command("赠送",aliases={"send"})
 @send.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+async def handle_function(bot:Bot,cmd:command.Send=Depends(command.Send.get)):
 
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
     
-    recive=event.get_message()
-    if len(recive)<3:
-        return
-    if not (recive[1].type=="at" and recive[2].type=="text"):#send @xxx data
-        return
-    
-    sender=tools.User(event.user_id)
-    reciver_id=int(recive[1].data["qq"])
-    reciver=tools.User(reciver_id)
+    sender=tools.User(cmd.user_id)
+    reciver=tools.User(cmd.target_id)
+    if cmd.user_id==cmd.target_id:#送自己，以前居然没发现这个bug，一直有人尝试抢自己但是没人send自己就很搞笑
+        await send.finish(MessageSegment.reply(cmd.message_id)+"？")
     if not sender.nickname:
         await send.finish("还没有你的信息呢，签到试试看吧？")
     if not reciver.nickname:
-        nickname=(await bot.get_stranger_info(user_id=reciver_id,no_cache=True))["nickname"]
-        reciver=tools.User(reciver_id,nickname)
-    send_data_unit=20#默认MB
-    send_data=recive[2].data["text"].upper()
-    for u in list(tools.DATA_UNIT.keys())[::-1]:#倒序，防止先匹配B
-        if tools.DATA_UNIT[u] in send_data:
-            send_data_unit=u
-            send_data=send_data.replace(tools.DATA_UNIT[u],"")
-            break
-    try:
-        send_data=float(send_data)
-        if send_data_unit==0:#B不能小数，稍微严谨一些
-            send_data=int(send_data)
-    except:
-        await send.finish("输入数据有误，需要为整数或小数+单位(B KB MB...)，无单位默认MB")
-    if send_data<=0 or (send_data<1 and send_data_unit==0):
-        await send.finish("笨蛋！你想干什么？！")
-    elif send_data>=1024:
-        await send.finish("太大了...不可以哦...")
+        nickname=(await bot.get_stranger_info(user_id=cmd.target_id,no_cache=True))["nickname"]
+        reciver=tools.User(cmd.target_id,nickname)
 
-    send_data=tools.Data([send_data_unit,math.log2(send_data)],False)
+    send_data=cmd.send_data
     if send_data.getBytes()>sender.data.getBytes():
         await send.finish("你还没有这么多Data哦")
     sender.delData(send_data)

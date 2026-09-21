@@ -40,3 +40,12 @@ plain_text 解析后纯文本消息
 - commands表
 - command_key
 - 指令写入和查询
+
+#### 字段说明
+
+id 指令ID
+message_id 关联的消息ID
+command_key 指令分类
+args_json 参数的json格式
+
+其他参数与message表共用，不重复保存

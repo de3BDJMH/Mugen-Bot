@@ -24,8 +24,18 @@ def init(conn:sqlite3.Connection):
     """)
 
 def add(conn:sqlite3.Connection,message_id:int,self_id:int,type:str,group_id:int|None,sender_id:int,time:int,message_json:str,plain_text:str):
+    """存储"""
     cursor=conn.execute("""
         INSERT INTO messages(message_id,self_id,type,group_id,sender_id,time,message_json,plain_text)
         VALUES(?,?,?,?,?,?,?,?)
     """,(message_id,self_id,type,group_id,sender_id,time,message_json,plain_text))
     return cursor.lastrowid
+
+def get_id_by_message_id(conn:sqlite3.Connection,message_id:int,self_id:int)->int|None:
+    """根据message_id获取id，需要同时传入self_id（botQQ）"""
+    row=conn.execute("""
+        SELECT id FROM messages
+        WHERE self_id=? AND message_id=?
+    """,(self_id,message_id)).fetchone()
+
+    return row["id"] if row else None
