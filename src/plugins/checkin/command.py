@@ -28,7 +28,10 @@ class Send(Command):#send @xxx data
                 send_data+=seg.data["text"].upper()
         if at is None or send_data=="":
             raise CommandParseError()#静默
-        cmd.target_id=int(at.data["qq"])
+        try:#防@全体
+            cmd.target_id=int(at.data["qq"])
+        except:
+            raise CommandParseError()
         send_data_unit=20#默认MB
         for u in list(DATA_UNIT.keys())[::-1]:#倒序，防止先匹配B
             if send_data.endswith(DATA_UNIT[u]):

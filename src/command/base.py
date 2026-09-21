@@ -8,7 +8,7 @@ class CommandParseError(Exception):
 class Command:
     key=""#指令关键字
 
-    def __init__(self,event:MessageEvent,arg:Message|None=None):
+    def __init__(self,event:MessageEvent):
         self.event=event
         self.user_id=event.user_id
         self.message_id=event.message_id
@@ -16,7 +16,7 @@ class Command:
         self.group_id=event.group_id if isinstance(event,GroupMessageEvent) else None
 
     @classmethod
-    def parse(cls,event:MessageEvent):
+    def parse(cls,event:MessageEvent,arg:Message):
         """参数解析"""
         return cls(event)
 
@@ -26,4 +26,7 @@ class Command:
         try:
             return cls.parse(event,arg)
         except CommandParseError as e:
-            await matcher.finish(str(e))
+            if str(e):#finish("")会报错
+                await matcher.finish(str(e))
+            else:
+                await matcher.finish()
