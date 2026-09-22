@@ -2,7 +2,7 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command
 from nonebot.plugin import on_message
-from nonebot.params import CommandArg
+from nonebot.params import Depends
 from nonebot.adapters import Message
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent
@@ -18,6 +18,7 @@ import datetime
 from ...libraries.tools import *
 
 from .config import Config
+from . import command
 
 __plugin_meta__ = PluginMetadata(
     name="CharCounter",
@@ -91,13 +92,13 @@ async def private(bot:Bot,event:MessageEvent):
         conn.close()
 
 @commands.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:Event,args: Message = CommandArg()):
-    arg=args.extract_plain_text().split(" ")
-    if "message.group" in event.get_event_name():
-        id=f"group{event.group_id}"
-    elif "message.private" in event.get_event_name():
-        id=f"private{event.user_id}"
-    if arg[0]=="字符统计":
+async def handle_function(bot:Bot,cmd:command.CharacterCounter=Depends(command.CharacterCounter.get)):
+    action=cmd.action
+    if cmd.message_type=="group":
+        id=f"group{cmd.group_id}"
+    elif cmd.message_type=="private":
+        id=f"private{cmd.user_id}"
+    if action=="字符统计":
         conn=sql.connect(PATH)
         cursor=conn.cursor()
         cursor.execute(f"SELECT * FROM '{id}'")#获取数据
@@ -123,13 +124,10 @@ async def handle_function(matcher:Matcher,bot:Bot,event:Event,args: Message = Co
                 msg+=f"  {cs1[0]}:  {cs1[1]}\n"
         msg+="数据来源有限，仅供参考"
         await commands.send(msg)
-    elif arg[0]=="总字符统计":
-        num=20
-        if len(arg)>1:
-            try:
-                num=int(arg[1])
-            except:
-                await commands.send("请输入有效的数字")
+    elif action=="总字符统计":
+        num=cmd.count
+        if cmd.invalid_count:
+            await commands.send("请输入有效的数字")
         conn=sql.connect(PATH)
         cursor=conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -158,15 +156,12 @@ async def handle_function(matcher:Matcher,bot:Bot,event:Event,args: Message = Co
                 msg+=f"  {cs1[0]}:  {cs1[1]}\n"
         msg+="数据来源有限，仅供参考"
         await commands.send(msg)
-    elif arg[0]=="查询":
+    elif action=="查询":
         num=20
-        if not "message.group" in event.get_event_name():
+        if cmd.message_type!="group":
             await commands.finish("该指令仅可在群聊中使用")
-        if len(arg)==1:
-            query_id=event.get_user_id()
-        else:
-            query_id=arg[1]
-        id=f"group{event.group_id}"
+        query_id=cmd.query_id
+        id=f"group{cmd.group_id}"
         conn=sql.connect(DATA_PATH/"database"/f"{id}.db")
         cursor=conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -174,7 +169,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:Event,args: Message = Co
         tables=[table[0] for table in tables]
         if not query_id in tables:
             await commands.finish("没有查询到该用户的数据")
-        user_data=await bot.call_api("get_group_member_info",group_id=event.group_id,user_id=int(query_id),no_cache=True)
+        user_data=await bot.call_api("get_group_member_info",group_id=cmd.group_id,user_id=int(query_id),no_cache=True)
         msg="在本群中聊天中最常用字符统计：\n数据记录起始于2024.12.4 23:52（注意：晚于总字符统计的数据起始时间）\n"
         msg+=f"查询用户群昵称：{user_data["card"]}\n"
         cursor.execute(f"SELECT * FROM '{query_id}'")#获取数据
@@ -200,13 +195,13 @@ async def handle_function(matcher:Matcher,bot:Bot,event:Event,args: Message = Co
                 "type": "node",
                 "data": {
                     "name": "プラナ",
-                    "uin": str(event.self_id),
+                    "uin": str(cmd.self_id),
                     "content": msg
                 }
             }
         ]
-        if "message.group" in event.get_event_name():
-            await bot.send_group_forward_msg(group_id=event.group_id, messages=msgs)
-        elif "message.private" in event.get_event_name():
-            await bot.send_private_forward_msg(user_id=event.user_id, messages=msgs)
+        if cmd.message_type=="group":
+            await bot.send_group_forward_msg(group_id=cmd.group_id, messages=msgs)
+        elif cmd.message_type=="private":
+            await bot.send_private_forward_msg(user_id=cmd.user_id, messages=msgs)
         

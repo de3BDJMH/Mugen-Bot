@@ -2,7 +2,7 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command
 from nonebot.adapters import Message
-from nonebot.params import CommandArg,EventPlainText
+from nonebot.params import Depends,EventPlainText
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent
 from nonebot.adapters.onebot.v11.event import MessageEvent
@@ -16,6 +16,7 @@ from ...libraries.pluginmanage.tools import *
 from ...libraries.finaltest.test import *
 
 from .config import Config
+from . import command
 
 __plugin_meta__ = PluginMetadata(
     name="finaltest",
@@ -35,12 +36,12 @@ DATA_PATH=ROOT_PATH/"data"/TAG
 
 test=on_command("期末刷题")
 @test.handle()
-async def choose(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+async def choose(cmd:command.Choose=Depends(command.Choose.get)):
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
-    arg=args.extract_plain_text().strip()
+    arg=cmd.plain_text
     if not arg:
         selections=listall()
         msg="请提供想要刷题的题集名称，当前可用：\n"
@@ -48,11 +49,11 @@ async def choose(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = Comm
             msg+=f"  - {s}\n"
         await test.finish(msg)
     if arg=="继续":
-        TEST:Test=config.TESTS[getGroupID(event)]
+        TEST:Test=config.TESTS[getGroupID(cmd.event)]
         question=TEST.choose()
         await test.pause(question["question"]+f"\n当前成绩： {TEST.state[0]} 次正确 / {TEST.state[1]} 次错误\n剩余 {len(TEST.test)} 题")
-    if getGroupID(event) in config.TESTS:
-        if config.TESTS[getGroupID(event)]:
+    if getGroupID(cmd.event) in config.TESTS:
+        if config.TESTS[getGroupID(cmd.event)]:
             await test.finish("你有正在进行的测试")
     TEST=Test(arg)
     if not TEST.available:
@@ -61,7 +62,7 @@ async def choose(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = Comm
         for s in selections:
             msg+=f"  - {s}\n"
         await test.finish(msg)
-    config.TESTS[getGroupID(event)]=TEST
+    config.TESTS[getGroupID(cmd.event)]=TEST
     question=TEST.choose()
     await test.pause(question["question"]+f"\n当前成绩： {TEST.state[0]} 次正确 / {TEST.state[1]} 次错误\n剩余 {len(TEST.test)} 题")
 

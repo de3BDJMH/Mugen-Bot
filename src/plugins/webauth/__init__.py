@@ -4,7 +4,7 @@ from nonebot import logger, on_command
 from nonebot.adapters import Message
 from nonebot.adapters.onebot.v11 import Bot, MessageEvent
 from nonebot.matcher import Matcher
-from nonebot.params import CommandArg
+from nonebot.params import Depends
 
 import re
 
@@ -16,6 +16,7 @@ from .client import (
 )
 
 from .config import Config
+from . import command
 
 __plugin_meta__ = PluginMetadata(
     name="webauth",
@@ -28,18 +29,14 @@ config = get_plugin_config(Config)
 
 verify=on_command("网站验证",aliases={"网站认证","MGAUTH"},block=True)
 
-CODE_PATTERN=re.compile(r"^[23456789A-HJ-NP-Z]{6}$")
+CODE_PATTERN=command.CODE_PATTERN
 
 @verify.handle()
-async def handle_verify(bot: Bot,event: MessageEvent,matcher: Matcher,args: Message = CommandArg(),):#这边不要接MGPlugin，web需要保证实时在线
-    code = args.extract_plain_text().strip().upper()
-    if not code:
-        await matcher.finish("请在输入网站提供的验证码")
-    if not CODE_PATTERN.fullmatch(code):
-        await matcher.finish("验证码格式不正确，请检查后重新发送")
+async def handle_verify(matcher: Matcher,cmd:command.Verify=Depends(command.Verify.get),):#这边不要接MGPlugin，web需要保证实时在线
+    code=cmd.code
 
-    id=str(event.user_id)
-    nickname=(event.sender.nickname or f"QQ {event.user_id}").strip()[:40]
+    id=str(cmd.user_id)
+    nickname=(cmd.event.sender.nickname or f"QQ {cmd.user_id}").strip()[:40]
 
     try:
         await verify_qq(qq_id=id,code=code,nickname=nickname,)

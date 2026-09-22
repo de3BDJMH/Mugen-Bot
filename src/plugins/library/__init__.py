@@ -2,13 +2,14 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command
 from nonebot.adapters import Message
-from nonebot.params import CommandArg,ArgStr
+from nonebot.params import Depends,ArgStr
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent
 from nonebot.adapters.onebot.v11.event import MessageEvent
 from nonebot.plugin import on_message
 
 from .config import Config
+from . import command
 
 import pathlib
 
@@ -36,27 +37,18 @@ client = ZJNUClient(user_info["username"], user_info["password"],DATA_PATH/"cook
 querycommand=on_command("ZJNU图书馆座位查询",aliases={"ZJNULSQ","zjnulsq"})
 
 @querycommand.handle()
-async def query_handle(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+async def query_handle(matcher:Matcher,cmd:command.Query=Depends(command.Query.get)):
     """负责处理查询"""
 
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
     
-    arg=args.extract_plain_text().strip()
-
-    if arg:
-        args=arg.split(" ")
-        if 0<len(args)<=2:
-            matcher.set_arg("type","all")#type表示查询类型，all为该区域状态，single为单个座位
-            matcher.set_arg("region",args[0])#查询区域，str
-            matcher.set_arg("seat","-1")#-1代表不查询
-            if len(args)==2 and args[-1]!="-1":
-                matcher.set_arg("type","single")
-                matcher.set_arg("seat",args[1])#座位，str
-        elif len(args)>2:
-            await querycommand.finish("参数过多，只需提供区域和座位即可")
+    if cmd.region is not None:
+        matcher.set_arg("type",cmd.query_type)
+        matcher.set_arg("region",cmd.region)
+        matcher.set_arg("seat",cmd.seat)
 
 @querycommand.got("region",prompt=f"请输入需要查询的区域（数字）：\n{"\n".join([f"  - {r}: {REGION_LIST[r][1]}{REGION_LIST[r][0]}" for r in REGION_LIST])}")
 async def handle_region(matcher: Matcher, region: str = ArgStr("region")):
@@ -111,4 +103,3 @@ async def final_query(matcher: Matcher, region: str = ArgStr("region"), seat: st
             await querycommand.finish(f"{REGION_LIST[region][0]} 的 {seat} 号座位当前状态为： {state}")
         else:
             await querycommand.finish("没有查询到该座位的信息")
-

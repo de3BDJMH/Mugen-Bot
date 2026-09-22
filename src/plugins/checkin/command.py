@@ -6,18 +6,22 @@ import math
 from ...command.base import Command,CommandParseError
 from ...libraries.checkin.data import Data,DATA_UNIT
 
+KEY="checkin"
+
 class Checkin(Command):
-    key="checkin.checkin"
+    """签到指令"""
+    key=KEY+".checkin"
 
 class Send(Command):#send @xxx data
-    key="checkin.send"
+    """赠送指令"""
+    key=KEY+".send"
     to_me:bool
     target_id:int
     send_data:Data
 
     @classmethod
-    def parse(cls,event:MessageEvent,arg:Message=CommandArg()):
-        cmd=cls(event)
+    def parse(cls,event:MessageEvent,arg:Message):
+        cmd=cls(event,arg)
         cmd.to_me=event.is_tome()#是否和bot有关，bot的at不会被算在at里
         at=None
         send_data=""
@@ -26,6 +30,7 @@ class Send(Command):#send @xxx data
                 at=seg
             if seg.type=="text":
                 send_data+=seg.data["text"].upper()
+        send_data=send_data.strip()
         if at is None or send_data=="":
             raise CommandParseError()#静默
         try:#防@全体
@@ -54,4 +59,45 @@ class Send(Command):#send @xxx data
         elif send_data>=1024:
             raise CommandParseError("太大了...不可以哦...")
         cmd.send_data=Data([send_data_unit,math.log2(send_data)],False)
+        return cmd
+
+class SelfInfo(Command):
+    """个人信息查询"""
+    key=KEY+".selfinfo"
+
+class MakeUp(Command):
+    """补签指令"""
+    key=KEY+".makeup"
+
+class CheckRank(Command):
+    """签到排行榜指令"""
+    key=KEY+".checkrank"
+
+class DataRank(Command):
+    """data排行榜指令"""
+    key=KEY+".datarank"
+
+class RatingRank(Command):
+    """rt排行榜指令"""
+    key=KEY+".ratingrank"
+
+class DataTrend(Command):
+    """Data趋势指令"""
+    key=KEY+".datatrend"
+    lines:int#查询日志条数
+
+    @classmethod
+    def parse(cls,event:MessageEvent,arg:Message):
+        cmd=cls(event,arg)
+        lines=100
+        if arg := arg.extract_plain_text().strip():#日志条数，乱输入默认100
+            try:
+                lines=int(arg)
+                if lines<=0:
+                    lines=-1
+                elif lines<10:#太少不要
+                    lines=10
+            except:
+                lines=100
+        cmd.lines=lines
         return cmd

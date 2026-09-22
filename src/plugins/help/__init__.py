@@ -2,7 +2,7 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command
 from nonebot.adapters import Message
-from nonebot.params import CommandArg
+from nonebot.params import Depends
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent
 from nonebot.adapters.onebot.v11.event import MessageEvent
@@ -15,6 +15,7 @@ from ...libraries.tools import *
 from ...libraries.pluginmanage.tools import *
 
 from .config import Config
+from . import command
 
 __plugin_meta__ = PluginMetadata(
     name="help",
@@ -55,14 +56,14 @@ HELPKEYS={
 
 help=on_command("help",block=True)
 @help.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+async def handle_function(cmd:command.Help=Depends(command.Help.get)):
 
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
     
-    arg=args.extract_plain_text().strip()
+    arg=cmd.plain_text
     if arg:
         plugin_name=getPluginName(arg)
         if plugin_name:#先匹配有别名的
@@ -86,4 +87,3 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
     else:
         r="帮助文档网站已开放浏览，请前往\nhttps://www.muge.zj.cn/"
         await help.finish(r+MessageSegment.image(DATA_PATH/"img"/"bothelp.png"))
-

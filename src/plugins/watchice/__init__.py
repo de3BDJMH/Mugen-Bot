@@ -2,7 +2,7 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command
 from nonebot.adapters import Message
-from nonebot.params import CommandArg,Arg
+from nonebot.params import Depends,Arg
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent
 from nonebot import get_bot
@@ -21,6 +21,7 @@ from ...libraries.watchice.paint import distibution as paintdis
 from ...services import watchice as services
 
 from .config import Config
+from . import command
 
 __plugin_meta__ = PluginMetadata(
     name="watchice",
@@ -89,7 +90,7 @@ OPS=[2404164262,2421372100]
 
 
 @watch.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Watch=Depends(command.Watch.get)):
 
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -97,17 +98,9 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
     if not plugin.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text().strip()
     user_id=event.user_id
-    img_id=-1#legacy_id
-    if " " in arg:
-        try:
-            target=services.get_member_by_alias(arg.split()[0])
-            img_id=int(arg.split()[1].strip())
-        except (ValueError,IndexError):
-            target=services.get_member_by_alias(arg)
-    else:
-        target=services.get_member_by_alias(arg)
+    img_id=cmd.image_id
+    target=services.get_member_by_alias(cmd.alias)
     #哪个傻逼这么写的，卡死了
     ## 哪个傻逼注释掉的，跑都跑不起来了
     # if target:
@@ -144,7 +137,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
         await watch.finish(MessageSegment.image(img_path)+f"\n图片ID: {img["image"]["legacy_id"]}#{img["image"]["image_id"]}\n上传时间: {upload_time}\n    ——by {uploader}")
 
 @upload.handle()
-async def handle_function(event:GroupMessageEvent,args:Message=CommandArg(),state:T_State=None):
+async def handle_function(event:GroupMessageEvent,cmd:command.Upload=Depends(command.Upload.get),state:T_State=None):
     
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -152,7 +145,7 @@ async def handle_function(event:GroupMessageEvent,args:Message=CommandArg(),stat
     if not plugin.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text()
+    arg=cmd.alias
     target=services.get_member_by_alias(arg)
     if not target:
         await upload.finish("还没有这个群友哦")
@@ -183,7 +176,7 @@ async def get_img(event:GroupMessageEvent,img:Message=Arg(),state:T_State=None):
     )
 
 @addalias.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.AddAlias=Depends(command.AddAlias.get)):
 
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -191,9 +184,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
     if not plugin.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text().split()
-    if len(arg)<2:
-        await addalias.finish("请提供原有别名和新增别名")
+    arg=cmd.aliases
     target=services.get_member_by_alias(arg[0])
     new_aliases=arg[1:]
     if target:
@@ -211,7 +202,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
         await addalias.finish("这个别名不存在")
 
 @delalias.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.DeleteAlias=Depends(command.DeleteAlias.get)):
 
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -219,9 +210,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
     if not plugin.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text().split()
-    if len(arg)<2:
-        await delalias.finish("请提供原有别名和需要删的别名")
+    arg=cmd.aliases
     target=services.get_member_by_alias(arg[0])
     if target:
         aliases=services.get_member_aliases(target)
@@ -238,7 +227,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
         await delalias.finish("不存在这个群友")
 
 @checkalias.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.CheckAlias=Depends(command.CheckAlias.get)):
     
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -246,7 +235,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
     if not plugin.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text().strip()
+    arg=cmd.plain_text
     target=services.get_member_by_alias(arg)
     if target:
         await checkalias.finish("，".join(services.get_member_aliases(target)))
@@ -254,7 +243,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
         await checkalias.finish("还没有这个群友哦")
 
 @addmember.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.AddMember=Depends(command.AddMember.get)):
 
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -262,13 +251,8 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
     if not plugin.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text().split()
-    if len(arg)<1 or not arg[0]:
-        await addmember.finish("需要提供群友名称，可在后面用空格分隔多个别名")
+    arg=cmd.aliases
     target=arg[0]
-    for c in arg[0]:
-        if (not "a"<=c<="z") and (not "0"<=c<="9"):
-            await addmember.finish("需要全为小写字母或数字（尽可能有辨识性），可在别名内添加中文别名，所有别名都不可以包含空格")
     aliases=list(dict.fromkeys(arg))
     alias_set=services.get_alias_set()
     for alias in aliases:
@@ -279,7 +263,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
     await addmember.finish("旅行伙伴加入~")
 
 @delmember.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.DeleteMember=Depends(command.DeleteMember.get)):
 
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -290,10 +274,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
     # if not int(event.get_user_id()) in OPS:
     #     await delmember.finish("无权限")    
     #现在权限由services处理
-    arg=args.extract_plain_text().split()
-    if len(arg)<1 or not arg[0]:
-        await delmember.finish("需要提供群友别名")
-    target=services.get_member_by_alias(arg[0])
+    target=services.get_member_by_alias(cmd.alias)
     if target:
         target_state=services.get_member_state(target)
         if target_state is None or not target_state["enabled"]:
@@ -306,7 +287,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
         await delmember.finish("不存在这个群友")
 
 @delimg.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.DeleteImage=Depends(command.DeleteImage.get)):
 
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -314,20 +295,9 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
     if not plugin.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text().split()
-    if len(arg)<2:
-        await delimg.finish("需要提供别名和图片id，你可以在id前添加#表示使用全局id")
-    target=services.get_member_by_alias(arg[0])
-    id_text=arg[1].strip()
-    try:
-        if id_text.startswith("#"):
-            id_type="global"
-            img_id=int(id_text[1:])
-        else:
-            id_type="single"
-            img_id=int(id_text)
-    except:
-        await delimg.finish("需要提供别名和图片id，你可以在id前添加#表示使用全局id")
+    target=services.get_member_by_alias(cmd.alias)
+    id_type=cmd.id_type
+    img_id=cmd.image_id
     if target:
         img_ids=services.get_all_images(target,event.user_id)
         if id_type=="single":#局部id转为全局id
@@ -347,7 +317,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
         await delimg.finish("需要提供别名和图片id，你可以在id前添加#表示使用全局id")
 
 @watchhelp.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Help=Depends(command.Help.get)):
     
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -375,7 +345,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
                           +"    上传时请注意隐私，所有人可见")
 
 @memberlist.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.MemberList=Depends(command.MemberList.get)):
 
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():
@@ -400,7 +370,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
     await bot.call_api("send_group_forward_msg",group_id=event.group_id,messages=msgs)
 
 @checkdistribution.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Distribution=Depends(command.Distribution.get)):
     
     plugin=MGPlugin(TAG)
     if not plugin.getPluginState():

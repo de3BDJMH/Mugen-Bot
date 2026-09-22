@@ -1,9 +1,9 @@
 from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot import on_command
-from nonebot.adapters import Bot, Event, Message
+from nonebot.adapters import Bot, Event
 from nonebot.matcher import Matcher
-from nonebot.params import CommandArg
+from nonebot.params import Depends
 from nonebot.permission import SUPERUSER
 
 from ...libraries.tools import *
@@ -12,6 +12,7 @@ from ...services.aether.manager import aether_manager
 from ...services.aether.runtime_settings import load_runtime_settings
 
 from .config import Config
+from . import command
 
 __plugin_meta__ = PluginMetadata(
     name="aether",
@@ -74,20 +75,9 @@ async def _start_preset(matcher: Matcher,
     await matcher.finish(message)
 
 
-async def _start_task_plan(matcher: Matcher,bot: Bot,event: Event,raw_choice: str,) -> None:
-    parts = raw_choice.split()
-    if not parts:
+async def _start_task_plan(matcher:Matcher,bot:Bot,event:Event,plan_choice:str,*,run_mode:str="save")->None:
+    if not plan_choice:
         await matcher.finish(aether_manager.task_plan_menu())
-
-    run_mode = "save"
-    # 最后一个词如果是“省票/平衡/赶时间”，就作为整份计划的运行模式。
-    if len(parts) >= 2:
-        maybe_mode = aether_manager.resolve_task_run_mode(parts[-1])
-        if maybe_mode is not None:
-            run_mode = maybe_mode
-            parts = parts[:-1]
-
-    plan_choice = " ".join(parts).strip()
     plan_key = aether_manager.resolve_task_plan(plan_choice)
     if plan_key is None:
         await matcher.finish("没有找到这个批量任务计划。\n\n"+aether_manager.task_plan_menu())
@@ -110,172 +100,74 @@ async def _recover_task_plan(matcher: Matcher,bot: Bot,event: Event,) -> None:
 
 
 @aether.handle()
-async def handle_aether(matcher: Matcher,bot: Bot,event: Event,args: Message = CommandArg(),) -> None:
-    text = args.extract_plain_text().strip()
-    if not text:
+async def handle_aether(matcher:Matcher,bot:Bot,cmd:command.Aether=Depends(command.Aether.get))->None:
+    action=cmd.action
+    if action=="password":
+        _,message=aether_manager.submit_password(cmd.password)
+        await matcher.finish(message)
+    if action=="help":
         await matcher.finish(_help_text())
-
-    # 密码可能包含空格，所以必须在普通 split 逻辑之前单独处理。
-    password_prefixes = ("密码 ", "password ", "passwd ", "pwd ")
-    lowered = text.lower()
-
-    for prefix in password_prefixes:
-        if lowered.startswith(prefix.lower()):
-            password = text[len(prefix):]
-            _, message = aether_manager.submit_password(password)
-            # 回复中绝不包含密码本身。
-            await matcher.finish(message)
-
-    if lowered in {"密码", "password", "passwd", "pwd"}:
-        await matcher.finish(
-            "用法：/aether 密码 <Aether密码>\n"
-            "建议私聊 Bot 发送，避免密码留在群聊记录里。"
-        )
-
-    parts = text.split()
-    action = parts[0].lower()
-    if action in {"帮助", "help", "h"}:
-        await matcher.finish(_help_text())
-    if action in {"预设", "列表", "list", "presets"}:
+    if action=="presets":
         await matcher.finish(aether_manager.preset_menu())
-    if action in {"状态", "status"}:
+    if action=="status":
         await matcher.finish(aether_manager.status_text())
-    if action in {"停止", "stop"}:
-        _, message = aether_manager.request_stop()
+    if action=="stop":
+        _,message=aether_manager.request_stop()
         await matcher.finish(message)
-    if action in {"接受", "accept", "y", "yes"}:
-        _, message = aether_manager.submit_layout("accept")
+    if action in {"accept","refresh","abort"}:
+        _,message=aether_manager.submit_layout(action)
         await matcher.finish(message)
-    if action in {"刷新", "refresh", "n", "no"}:
-        _, message = aether_manager.submit_layout("refresh")
+    if action=="event":
+        _,message=aether_manager.submit_event(cmd.choice_index)
         await matcher.finish(message)
-    if action in {"终止", "abort", "q", "quit"}:
-        _, message = aether_manager.submit_layout("abort")
+    if action=="retry":
+        _,message=aether_manager.retry_task(cmd.sequence)
         await matcher.finish(message)
-    if action in {"事件", "event"}:
-        if len(parts) < 2:
-            await matcher.finish("用法：/aether 事件 <选项下标>")
-        try:
-            choice_index = int(parts[1])
-        except ValueError:
-            await matcher.finish("事件选项必须是整数下标。")
-        _, message = aether_manager.submit_event(choice_index)
+    if action=="skip":
+        _,message=aether_manager.skip_task(cmd.sequence)
         await matcher.finish(message)
-
-    if action in {"恢复", "recover", "resume"}:
+    if action in {"recover","task","fast","start"}:
         if aether_manager.running:
             await matcher.finish("已有 Aether 任务正在运行。\n"+aether_manager.status_text())
-        await _recover_task_plan(matcher,bot,event,)
+    if action=="recover":
+        await _recover_task_plan(matcher,bot,cmd.event)
         return
-    if action in {"重试", "retry"}:
-        if len(parts) < 2:
-            await matcher.finish("用法：/aether 重试 <任务编号>")
-        try:
-            sequence = int(parts[1].lstrip("#"))
-        except ValueError:
-            await matcher.finish("任务编号必须是整数，例如：/aether 重试 17")
-        _, message = aether_manager.retry_task(sequence)
-        await matcher.finish(message)
-    if action in {"跳过", "skip"}:
-        if len(parts) < 2:
-            await matcher.finish("用法：/aether 跳过 <任务编号>")
-        try:
-            sequence = int(parts[1].lstrip("#"))
-        except ValueError:
-            await matcher.finish("任务编号必须是整数，例如：/aether 跳过 17")
-        _, message = aether_manager.skip_task(sequence)
-        await matcher.finish(message)
-
-    if action in {"任务", "task", "计划", "plan"}:
-        if aether_manager.running:
-            await matcher.finish("已有 Aether 任务正在运行。\n"+aether_manager.status_text())
-
-        if len(parts) >= 2:
-            await _start_task_plan(
-                matcher,
-                bot,
-                event,
-                " ".join(parts[1:]),
-            )
+    if action=="task":
+        if cmd.choice:
+            await _start_task_plan(matcher,bot,cmd.event,cmd.choice,run_mode=cmd.run_mode)
             return
-
-        matcher.state["aether_waiting_task_plan"] = True
+        matcher.state["aether_waiting_task_plan"]=True
         await matcher.pause(aether_manager.task_plan_menu()+"\n\n回复：编号/key [省票|平衡|赶时间]；默认省票；回复 q 取消。")
-
-    if action in {"快速", "fast"}:
-        if aether_manager.running:
-            await matcher.finish("已有 Aether 任务正在运行。\n"+aether_manager.status_text())
-
-        if len(parts) >= 2:
-            await _start_preset(
-                matcher,
-                bot,
-                event,
-                " ".join(parts[1:]),
-                fast_mode=True,
-            )
+    if action in {"fast","start"}:
+        if cmd.choice:
+            await _start_preset(matcher,bot,cmd.event,cmd.choice,fast_mode=cmd.fast_mode)
             return
-
-        matcher.state["aether_waiting_preset"] = True
-        matcher.state["aether_fast_mode"] = True
-        await matcher.pause(aether_manager.preset_menu()+"\n\n快速模式：回复编号或预设 key；回复 q 取消。")
-
-    if action in {"开始", "start"}:
-        if aether_manager.running:
-            await matcher.finish("已有 Aether 任务正在运行。\n"+aether_manager.status_text())
-
-        if len(parts) >= 2:
-            choice_parts = parts[1:]
-            fast_mode = False
-            if choice_parts[-1].lower() in {"快速", "fast"}:
-                fast_mode = True
-                choice_parts = choice_parts[:-1]
-            if not choice_parts:
-                await matcher.finish("用法：/aether 开始 <编号或预设 key> [快速]")
-            await _start_preset(
-                matcher,
-                bot,
-                event,
-                " ".join(choice_parts),
-                fast_mode=fast_mode,
-            )
-            return
-
-        matcher.state["aether_waiting_preset"] = True
-        matcher.state["aether_fast_mode"] = False
-        await matcher.pause(aether_manager.preset_menu()+"\n\n回复编号或预设 key；回复 q 取消。")
-
+        matcher.state["aether_waiting_preset"]=True
+        matcher.state["aether_fast_mode"]=cmd.fast_mode
+        prompt="快速模式：回复编号或预设 key；回复 q 取消。" if cmd.fast_mode else "回复编号或预设 key；回复 q 取消。"
+        await matcher.pause(aether_manager.preset_menu()+"\n\n"+prompt)
     await matcher.finish(_help_text())
 
 
 @aether.handle()
-async def handle_preset_selection(matcher: Matcher,bot: Bot,event: Event,) -> None:
+async def handle_preset_selection(matcher:Matcher,bot:Bot,cmd:command.Selection=Depends(command.Selection.get))->None:
     if matcher.state.get("aether_waiting_task_plan"):
-        choice = event.get_plaintext().strip()
-        if choice.lower() in {"q", "quit", "取消"}:
+        if cmd.cancelled:
             await matcher.finish("已取消启动 Aether 批量任务。")
-        await _start_task_plan(matcher,bot,event,choice,)
+        await _start_task_plan(matcher,bot,cmd.event,cmd.plan_choice,run_mode=cmd.run_mode)
         return
     if not matcher.state.get("aether_waiting_preset"):
         return
-    choice = event.get_plaintext().strip()
-    if choice.lower() in {"q", "quit", "取消"}:
+    if cmd.cancelled:
         await matcher.finish("已取消启动 Aether。")
-
-    await _start_preset(
-        matcher,
-        bot,
-        event,
-        choice,
-        fast_mode=bool(matcher.state.get("aether_fast_mode")),
-    )
+    await _start_preset(matcher,bot,cmd.event,cmd.choice,fast_mode=bool(matcher.state.get("aether_fast_mode")))
 
 aetheritem = on_command("aetheritem",aliases={"雷渊物品","AEI"},block=True)
 @aetheritem.handle()
-async def handle_preset_selection(matcher: Matcher,bot: Bot,event: Event,) -> None:
+async def handle_aether_item(matcher:Matcher,bot:Bot,cmd:command.AetherItem=Depends(command.AetherItem.get))->None:
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
 
     account=core.Account("de3BDJMH","20050530BKR")

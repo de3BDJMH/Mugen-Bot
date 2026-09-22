@@ -2,7 +2,7 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command,on_message
 from nonebot.adapters import Message
-from nonebot.params import CommandArg,Arg,EventMessage
+from nonebot.params import Depends,Arg,EventMessage
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent,MessageEvent
 from nonebot import get_bot
@@ -15,6 +15,7 @@ from ...libraries.tools import *
 from ...libraries.checkin import tools
 
 from .config import Config
+from . import command
 
 __plugin_meta__ = PluginMetadata(
     name="rob",
@@ -33,23 +34,14 @@ CONFIG_PATH=MGPLUGIN.data_path/"config.json"
 
 rob=on_command("抢劫")
 @rob.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Rob=Depends(command.Rob.get)):#只响应群聊消息，暂时先这么设计
 
     if not MGPLUGIN.getPluginState():
         return
     if not MGPLUGIN.getGroupPluginState(event):
         return
     
-    recive=event.get_message()
-    robbed_user_id=None
-    if not recive:
-        return
-    for m in recive:
-        if m.type=="at":#前车之鉴，只给@一个人
-            robbed_user_id=int(m.data["qq"])
-            break
-    if not robbed_user_id:
-        return
+    robbed_user_id=cmd.target_id
     robber=tools.User(event.user_id)
     robbed_user=tools.User(robbed_user_id)
     if not robber.nickname:
@@ -80,7 +72,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: 
 
 robrank=on_command("抢劫排行榜",aliases={"抢劫排行","抢劫排名"})
 @robrank.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.RobRank=Depends(command.RobRank.get)):
 
     if not MGPLUGIN.getPluginState():
         return

@@ -2,7 +2,7 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command
 from nonebot.adapters import Message
-from nonebot.params import CommandArg
+from nonebot.params import Depends
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent
 from nonebot.adapters.onebot.v11.event import MessageEvent
@@ -13,6 +13,7 @@ from nonebot import require
 require("nonebot_plugin_apscheduler")
 from nonebot_plugin_apscheduler import scheduler
 from .config import Config
+from . import command
 
 import pathlib
 import datetime
@@ -51,24 +52,15 @@ def isbot(user_id:int)->bool:
 
 wcGnerate=on_command("词云",block=True)
 @wcGnerate.handle()
-async def _(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def _(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Generate=Depends(command.Generate.get)):
 
     if not MGPLUGIN.getPluginState():
         return
     if not MGPLUGIN.getGroupPluginState(event):
         return
     
-    arg=args.extract_plain_text().strip().split(" ")
-    if not arg:
-        return
-    try:
-        days=int(arg[0])
-    except:
-        return
-    if len(arg)>1:
-        group_id=int(arg[1])
-    else:
-        group_id=event.group_id
+    days=cmd.days
+    group_id=cmd.target_group_id
     group=wc.Group(group_id)
     today=datetime.date.today()
     data=Counter()
@@ -109,7 +101,7 @@ async def _(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = Comm
 
 wcUpdate=on_command("更新词频",block=True)
 @wcUpdate.handle()
-async def _(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = CommandArg()):
+async def _(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Update=Depends(command.Update.get)):
 
     if not MGPLUGIN.getPluginState():
         return
@@ -118,13 +110,7 @@ async def _(matcher:Matcher,bot:Bot,event:GroupMessageEvent,args: Message = Comm
     
     if event.user_id!=2404164262:
         return
-    arg=args.extract_plain_text().strip()
-    if not arg:
-        return
-    try:
-        days=int(arg)
-    except:
-        return
+    days=cmd.days
     today=datetime.datetime.now()
     end=int(datetime.datetime(today.year,today.month,today.day,0,0,0).timestamp())
     tasks=[]

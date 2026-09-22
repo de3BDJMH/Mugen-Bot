@@ -2,7 +2,7 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command
 from nonebot.adapters import Message
-from nonebot.params import CommandArg
+from nonebot.params import Depends
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent
 from nonebot.adapters.onebot.v11.event import MessageEvent
@@ -16,6 +16,7 @@ from PIL import Image,ImageFilter,ImageDraw,ImageFont
 from ...libraries.tools import *
 
 from .config import Config
+from . import command
 
 __plugin_meta__ = PluginMetadata(
     name="color",
@@ -39,40 +40,15 @@ PATH=DATA_PATH/"out"
 
 color = on_command("#color", block=True,aliases={"色色","涩涩"})
 @color.handle()
-async def colorcolor(matcher:Matcher,bot:Bot,event:Event,args: Message = CommandArg()):
+async def colorcolor(cmd:command.Color=Depends(command.Color.get)):
 
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
     
-    arg=args.extract_plain_text().lower().split(" ")
-    rgbs=[0,0,0]
-    if arg and arg[0]:
-        if len(arg)==1:
-            if len(arg[0])!=6 and (arg[0][0]=="#" and len(arg[0])!=7):
-                await color.finish("这不是一个有效的颜色代码")
-            for n in range(6):
-                c=arg[0][n-6]
-                if not ("0"<=c<="9" or "a"<=c<="f"):
-                    await color.finish("这不是一个有效的颜色代码")
-                else:
-                    rgbs[n//2]=rgbs[n//2]*16+HEXCODE[c]
-        elif len(arg)==3:
-            p=0
-            for v in arg:
-                if type(v)!=int:
-                    await color.finish("请提供[0,255]内的数")
-                else:
-                    v=int(v)
-                    if v<0 or v>255:
-                        await color.finish("请提供[0,255]内的数")
-                    else:
-                        rgbs[p]=v
-                p+=1
-        else:
-            await color.finish("这不是一个有效的颜色代码")
-    else:
+    rgbs=cmd.rgbs
+    if rgbs is None:
         rgbs=[random.randint(0,255) for _ in range(3)]
     rgbs.append(255)
     rgbs=tuple(rgbs)
@@ -95,4 +71,3 @@ async def colorcolor(matcher:Matcher,bot:Bot,event:Event,args: Message = Command
     text.text((10,200),"#"+colortext,fontcolor,font)
     background.save(PATH/f"{" ".join([str(v) for v in rgbs])}.png")
     await color.finish(MessageSegment.image(PATH/f"{" ".join([str(v) for v in rgbs])}.png"))
-

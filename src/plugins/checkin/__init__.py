@@ -91,14 +91,14 @@ async def handle_function(bot:Bot,cmd:command.Checkin=Depends(command.Checkin.ge
 
 makeup=on_command("补签",aliases={"makeup","补签"})
 @makeup.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,cmd:command.MakeUp=Depends(command.MakeUp.get)):
     
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
     
-    user=tools.User(event.user_id)
+    user=tools.User(cmd.user_id)
     now=datetime.datetime.now(ZoneInfo("Asia/Shanghai"))
     if not user.nickname:
         await makeup.finish("还没有你的信息呢，签到试试看吧？")
@@ -134,20 +134,20 @@ async def _(matcher:Matcher,confirm:str=ArgPlainText()):
         await makeup.finish(result["msg"])
     await makeup.finish("完成啦——")
 
-selfinfo=on_command("我的data",aliases={"/data","/info"})
+selfinfo=on_command("/data",aliases={"/info"})
 @selfinfo.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+async def handle_function(matcher:Matcher,bot:Bot,cmd:command.SelfInfo=Depends(command.SelfInfo.get)):
 
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
     
-    user=tools.User(event.user_id)
+    user=tools.User(cmd.user_id)
     if not user.nickname:
         await selfinfo.finish("还没有你的信息呢，签到试试看吧？")
     
-    if args.extract_plain_text().strip()=="text":#请求文字信息
+    if cmd.plain_text=="text":#请求文字信息
         robtimes_ranks,robbedtimes_ranks,rob_gain_data_ranks,rob_give_data_ranks=user.getRobInfo()
 
         rob_times=robtimes_ranks.get(user.id,[0,0,user.id,user.nickname])#防止缺少键，有些用户的数据不是全都完整的
@@ -192,15 +192,15 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
                 "type": "node",
                 "data": {
                     "name": "プラナ",
-                    "uin": str(event.self_id),
+                    "uin": str(cmd.self_id),
                     "content": msg
                 }
             }
         ]
-        if "message.group" in event.get_event_name():
-            await bot.send_group_forward_msg(group_id=event.group_id, messages=msgs)
-        elif "message.private" in event.get_event_name():
-            await bot.send_private_forward_msg(user_id=event.user_id, messages=msgs)
+        if cmd.message_type=="group":
+            await bot.send_group_forward_msg(group_id=cmd.group_id, messages=msgs)
+        elif cmd.message_type=="private":
+            await bot.send_private_forward_msg(user_id=cmd.user_id, messages=msgs)
     else:
         save_path=tools.DATA_PATH/"out"/f"info_{user.id}.png"
         avatar_path=DATA_PATH/"out"/f"avatar_{user.id}.jpg"
@@ -257,17 +257,17 @@ async def handle_function(bot:Bot,cmd:command.Send=Depends(command.Send.get)):
 
 checkrank=on_command("签到排行榜",aliases={"签到排名","签到排行"})
 @checkrank.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+async def handle_function(cmd:command.CheckRank=Depends(command.CheckRank.get)):
 
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
     
     today=tools.CheckDay(datetime.datetime.now(ZoneInfo("Asia/Shanghai")))
     if not today.info:
         await checkrank.finish("今天还没有人签到哦~")
-    msg,me=today.generateCheckedRank(event.user_id)
+    msg,me=today.generateCheckedRank(cmd.user_id)
     msg=f"{today.day}签到排行榜：\n{msg}"
     if not me:
         msg+=f"\n你还没有签到哦~\n"
@@ -276,11 +276,11 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
 
 datarank=on_command("data排行榜",aliases={"data排名","data排行"})
 @datarank.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+async def handle_function(cmd:command.DataRank=Depends(command.DataRank.get)):
 
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
     
     ranks=[]
@@ -295,7 +295,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
             ])
     ranks.sort(key=lambda x:x[3],reverse=True)
     ranks=[r[:3] for r in ranks]
-    msg,me=tools.generateRank(ranks,event.user_id)
+    msg,me=tools.generateRank(ranks,cmd.user_id)
     msg=f"Data排行榜：\n{msg}"
     if not me:
         msg+=f"\n你还没有Data哦~\n"
@@ -304,11 +304,11 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
 
 ratingrank=on_command("rating排行榜",aliases={"rating排名","rating排行","rt排行榜","rt排名","rt排行"})
 @ratingrank.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+async def handle_function(cmd:command.RatingRank=Depends(command.RatingRank.get)):
 
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
     
     ranks=[]
@@ -323,7 +323,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
             ])
     ranks.sort(key=lambda x:x[3],reverse=True)
     ranks=[r[:3] for r in ranks]
-    msg,me=tools.generateRank(ranks,event.user_id)
+    msg,me=tools.generateRank(ranks,cmd.user_id)
     msg=f"Rating排行榜：\n{msg}"
     if not me:
         msg+=f"\n你还没有数据哦~\n"
@@ -332,26 +332,17 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
 
 datatrend=on_command("data趋势",aliases={"data变化","datatrend","/dt"})
 @datatrend.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+async def handle_function(cmd:command.DataTrend=Depends(command.DataTrend.get)):
 
     if not MGPLUGIN.getPluginState():
         return
-    if not MGPLUGIN.getGroupPluginState(event):
+    if not MGPLUGIN.getGroupPluginState(cmd.event):
         return
     
-    user=tools.User(event.user_id)
+    user=tools.User(cmd.user_id)
     if not user.nickname:
         await datatrend.finish("还没有你的信息呢，签到试试看吧？")
-    lines=100
-    if arg := args.extract_plain_text().strip():#日志条数，乱输入默认100
-        try:
-            lines=int(arg)
-            if lines<=0:
-                lines=-1
-            elif lines<10:#太少不要
-                lines=10
-        except:
-            lines=-100
+    lines=cmd.lines
     logs=user.getLogs(lines)
     for log in logs.copy():
         if not "data" in log:
@@ -364,22 +355,22 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
     trendPaint.paint(user,logs,save_path)
     await datatrend.finish(MessageSegment.image(save_path))
 
-nickrefresh=on_command("/更新数据库")
-@nickrefresh.handle()
-async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
-    mgconfig=jsonLoad(ROOT_PATH/"data"/"pluginmanage"/"config.json")
-    if not event.user_id in mgconfig["op"]:
-        await nickrefresh.finish("权限不足")
+# nickrefresh=on_command("/更新数据库")
+# @nickrefresh.handle()
+# async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+#     mgconfig=jsonLoad(ROOT_PATH/"data"/"pluginmanage"/"config.json")
+#     if not event.user_id in mgconfig["op"]:
+#         await nickrefresh.finish("权限不足")
     
-    await nickrefresh.send("更新中...")
-    users=checkin_storage.get_all_users()
-    statistic=[0,0]#更新人数，更改发生变化人数
-    for user in users:
-        statistic[0]+=1
-        user_id=user["user_id"]
-        print(user_id)
-        nickname=(await bot.get_stranger_info(user_id=user_id,no_cache=True))["nickname"]
-        if user["nickname"]!=nickname:
-            statistic[1]+=1
-            checkin_storage.update_user_nickname(user_id,nickname)
-    await nickrefresh.finish(f"更新完毕，本次更新 {statistic[0]} 人，实际更新 {statistic[1]} 人数据")
+#     await nickrefresh.send("更新中...")
+#     users=checkin_storage.get_all_users()
+#     statistic=[0,0]#更新人数，更改发生变化人数
+#     for user in users:
+#         statistic[0]+=1
+#         user_id=user["user_id"]
+#         print(user_id)
+#         nickname=(await bot.get_stranger_info(user_id=user_id,no_cache=True))["nickname"]
+#         if user["nickname"]!=nickname:
+#             statistic[1]+=1
+#             checkin_storage.update_user_nickname(user_id,nickname)
+#     await nickrefresh.finish(f"更新完毕，本次更新 {statistic[0]} 人，实际更新 {statistic[1]} 人数据")

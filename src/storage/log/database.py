@@ -33,7 +33,6 @@ def init_database():
     conn=connect()
     try:
         message.init(conn)
-        command.init(conn)
         conn.commit()
     finally:
         conn.close()
