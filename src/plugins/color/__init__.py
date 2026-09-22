@@ -29,6 +29,10 @@ config = get_plugin_config(Config)
 
 TAG="color"
 MGPLUGIN=MGPlugin(TAG)
+def plugin_enabled(event:MessageEvent)->bool:
+    if not MGPLUGIN.getPluginState():
+        return False
+    return MGPLUGIN.getGroupPluginState(event)
 
 DATA_PATH=MGPLUGIN.data_path
 
@@ -38,15 +42,9 @@ WIDTH=256
 HEIGHT=256
 PATH=DATA_PATH/"out"
 
-color = on_command("#color", block=True,aliases={"色色","涩涩"})
+color = on_command("#color", block=True,aliases={"色色","涩涩"},rule=plugin_enabled)
 @color.handle()
 async def colorcolor(cmd:command.Color=Depends(command.Color.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-    
     rgbs=cmd.rgbs
     if rgbs is None:
         rgbs=[random.randint(0,255) for _ in range(3)]

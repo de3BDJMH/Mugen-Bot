@@ -28,19 +28,17 @@ config = get_plugin_config(Config)
 
 TAG="rob"
 MGPLUGIN=MGPlugin(TAG)
+def plugin_enabled(event:MessageEvent)->bool:
+    if not MGPLUGIN.getPluginState():
+        return False
+    return MGPLUGIN.getGroupPluginState(event)
 
 DATA_PATH=MGPLUGIN.data_path
 CONFIG_PATH=MGPLUGIN.data_path/"config.json"
 
-rob=on_command("抢劫")
+rob=on_command("抢劫",rule=plugin_enabled)
 @rob.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Rob=Depends(command.Rob.get)):#只响应群聊消息，暂时先这么设计
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(event):
-        return
-    
     robbed_user_id=cmd.target_id
     robber=tools.User(event.user_id)
     robbed_user=tools.User(robbed_user_id)
@@ -70,15 +68,9 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:co
     msg=rtmsg+msg
     await rob.send(msg)
 
-robrank=on_command("抢劫排行榜",aliases={"抢劫排行","抢劫排名"})
+robrank=on_command("抢劫排行榜",aliases={"抢劫排行","抢劫排名"},rule=plugin_enabled)
 @robrank.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.RobRank=Depends(command.RobRank.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(event):
-        return
-    
     robtimes_msg="抢劫总次数排行榜：（总/成功/失败）\n"#抢劫次数排名
     robtimes_ranks={}
     robbedtimes_msg="被抢次数排行榜：\n"#被抢次数排名

@@ -31,22 +31,20 @@ config = get_plugin_config(Config)
 
 TAG="charcounter"
 MGPLUGIN=MGPlugin(TAG)
+def plugin_enabled(event:MessageEvent)->bool:
+    if not MGPLUGIN.getPluginState():
+        return False
+    return MGPLUGIN.getGroupPluginState(event)
 
 DATA_PATH=MGPLUGIN.data_path
 
-commands = on_command("character_counter", block=True,aliases={"chc"})
+commands = on_command("character_counter", block=True,aliases={"chc"},rule=plugin_enabled)
 statistics = on_message()
 
 PATH=DATA_PATH/"database"/"data.db"
 
 @statistics.handle()
 async def private(bot:Bot,event:MessageEvent):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(event):
-        return
-
     if "message.group" in event.get_event_name():#是群聊
         id=f"group{event.group_id}"
         id_member=event.get_user_id()

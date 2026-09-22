@@ -38,6 +38,10 @@ config = get_plugin_config(Config)
 
 TAG="help"
 MGPLUGIN=MGPlugin(TAG)
+def plugin_enabled(event:MessageEvent)->bool:
+    if not MGPLUGIN.getPluginState():
+        return False
+    return MGPLUGIN.getGroupPluginState(event)
 
 DATA_PATH=MGPLUGIN.data_path
 
@@ -54,15 +58,9 @@ HELPKEYS={
     "26":["26","我喜欢你"]
 }
 
-help=on_command("help",block=True)
+help=on_command("help",block=True,rule=plugin_enabled)
 @help.handle()
 async def handle_function(cmd:command.Help=Depends(command.Help.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-    
     arg=cmd.plain_text
     if arg:
         plugin_name=getPluginName(arg)

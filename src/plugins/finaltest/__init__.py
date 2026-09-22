@@ -29,18 +29,18 @@ config = get_plugin_config(Config)
 
 TAG="finaltest"
 MGPLUGIN=MGPlugin(TAG)
+def plugin_enabled(event:MessageEvent)->bool:
+    if not MGPLUGIN.getPluginState():
+        return False
+    return MGPLUGIN.getGroupPluginState(event)
 
 #路径设置
 ROOT_PATH=pathlib.Path(__file__).resolve().parent.parent.parent.parent #/server
 DATA_PATH=ROOT_PATH/"data"/TAG
 
-test=on_command("期末刷题")
+test=on_command("期末刷题",rule=plugin_enabled)
 @test.handle()
 async def choose(cmd:command.Choose=Depends(command.Choose.get)):
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
     arg=cmd.plain_text
     if not arg:
         selections=listall()

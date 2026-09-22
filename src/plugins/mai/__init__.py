@@ -32,6 +32,11 @@ config = get_plugin_config(Config)
 ########################
 #插件自定义设置，保证整体相关性，联通性
 TAG="mai"#该插件的tag，用于指令分割
+MGPLUGIN=MGPlugin(TAG)
+def plugin_enabled(event:MessageEvent)->bool:
+    if not MGPLUGIN.getPluginState():
+        return False
+    return MGPLUGIN.getGroupPluginState(event)
 
 #指令设置
 COMMAND_ALIAS={
@@ -73,16 +78,9 @@ KATAKANA={'ア': 'あ', 'イ': 'い', 'ウ': 'う', 'エ': 'え', 'オ': 'お', 
 JP=list(HIRAGANA.keys())+list(KATAKANA.keys())
 ########################
 
-mai = on_message()
+mai = on_message(rule=plugin_enabled)
 @mai.handle()
 async def maiMain(matcher:Matcher,bot:Bot,event:Event):
-    
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
     #聊天消息转指令
     recive=event.get_message()
     result=command_split.split(recive,TAG,getGroupID(event))

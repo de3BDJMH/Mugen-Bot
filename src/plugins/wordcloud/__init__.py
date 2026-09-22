@@ -36,6 +36,10 @@ config = get_plugin_config(Config)
 
 TAG="wordcloud"
 MGPLUGIN=MGPlugin(TAG)
+def plugin_enabled(event:MessageEvent)->bool:
+    if not MGPLUGIN.getPluginState():
+        return False
+    return MGPLUGIN.getGroupPluginState(event)
 
 DATA_PATH=MGPLUGIN.data_path
 
@@ -50,15 +54,9 @@ def isbot(user_id:int)->bool:
             return True
     return False
 
-wcGnerate=on_command("词云",block=True)
+wcGnerate=on_command("词云",block=True,rule=plugin_enabled)
 @wcGnerate.handle()
 async def _(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Generate=Depends(command.Generate.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(event):
-        return
-    
     days=cmd.days
     group_id=cmd.target_group_id
     group=wc.Group(group_id)
@@ -99,15 +97,9 @@ async def _(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Generate
     path=wc.generate(data,path)
     await wcGnerate.finish(MessageSegment.image(path))
 
-wcUpdate=on_command("更新词频",block=True)
+wcUpdate=on_command("更新词频",block=True,rule=plugin_enabled)
 @wcUpdate.handle()
 async def _(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Update=Depends(command.Update.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(event):
-        return
-    
     if event.user_id!=2404164262:
         return
     days=cmd.days

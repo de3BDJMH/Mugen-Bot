@@ -4,7 +4,7 @@ from nonebot.plugin import on_command
 from nonebot.adapters import Message
 from nonebot.params import Depends,Arg
 from nonebot.matcher import Matcher
-from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent
+from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent,MessageEvent
 from nonebot import get_bot
 from nonebot.typing import T_State
 
@@ -32,23 +32,28 @@ __plugin_meta__ = PluginMetadata(
 
 config = get_plugin_config(Config)
 
-watch=on_command("看",block=True)
-upload=on_command("上传",block=True)
-addalias=on_command("添加群友别名",block=True)
-delalias=on_command("删除群友别名",block=True)
-checkalias=on_command("查看群友别名",block=True)
-addmember=on_command("添加群友",block=True)
-delmember=on_command("删除群友",block=True)
-delimg=on_command("删除",block=True)
-watchhelp=on_command("看群友帮助",block=True)
-memberlist=on_command("群友列表",block=True)
-
-updatealias=on_command("更新群友别名",block=True)
-checkque=on_command("查看队列",block=True)
-
-checkdistribution=on_command("群友图片分布",block=True)
-
 TAG="watchice"
+MGPLUGIN=MGPlugin(TAG)
+def plugin_enabled(event:MessageEvent)->bool:
+    if not MGPLUGIN.getPluginState():
+        return False
+    return MGPLUGIN.getGroupPluginState(event)
+
+watch=on_command("看",block=True,rule=plugin_enabled)
+upload=on_command("上传",block=True,rule=plugin_enabled)
+addalias=on_command("添加群友别名",block=True,rule=plugin_enabled)
+delalias=on_command("删除群友别名",block=True,rule=plugin_enabled)
+checkalias=on_command("查看群友别名",block=True,rule=plugin_enabled)
+addmember=on_command("添加群友",block=True,rule=plugin_enabled)
+delmember=on_command("删除群友",block=True,rule=plugin_enabled)
+delimg=on_command("删除",block=True,rule=plugin_enabled)
+watchhelp=on_command("看群友帮助",block=True,rule=plugin_enabled)
+memberlist=on_command("群友列表",block=True,rule=plugin_enabled)
+
+updatealias=on_command("更新群友别名",block=True,rule=plugin_enabled)
+checkque=on_command("查看队列",block=True,rule=plugin_enabled)
+
+checkdistribution=on_command("群友图片分布",block=True,rule=plugin_enabled)
 
 #路径设置
 ROOT_PATH=pathlib.Path(__file__).resolve().parent.parent.parent.parent #/server
@@ -91,13 +96,6 @@ OPS=[2404164262,2421372100]
 
 @watch.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Watch=Depends(command.Watch.get)):
-
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
     user_id=event.user_id
     img_id=cmd.image_id
     target=services.get_member_by_alias(cmd.alias)
@@ -138,13 +136,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:co
 
 @upload.handle()
 async def handle_function(event:GroupMessageEvent,cmd:command.Upload=Depends(command.Upload.get),state:T_State=None):
-    
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
+
     arg=cmd.alias
     target=services.get_member_by_alias(arg)
     if not target:
@@ -154,13 +146,7 @@ async def handle_function(event:GroupMessageEvent,cmd:command.Upload=Depends(com
 
 @upload.got("img",prompt="请发送图片")
 async def get_img(event:GroupMessageEvent,img:Message=Arg(),state:T_State=None):
-    
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
+
     new=img.get("image")
     if not new:
         await upload.finish("目前只支持上传图片哦")
@@ -177,13 +163,6 @@ async def get_img(event:GroupMessageEvent,img:Message=Arg(),state:T_State=None):
 
 @addalias.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.AddAlias=Depends(command.AddAlias.get)):
-
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
     arg=cmd.aliases
     target=services.get_member_by_alias(arg[0])
     new_aliases=arg[1:]
@@ -203,13 +182,6 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:co
 
 @delalias.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.DeleteAlias=Depends(command.DeleteAlias.get)):
-
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
     arg=cmd.aliases
     target=services.get_member_by_alias(arg[0])
     if target:
@@ -228,13 +200,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:co
 
 @checkalias.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.CheckAlias=Depends(command.CheckAlias.get)):
-    
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
+
     arg=cmd.plain_text
     target=services.get_member_by_alias(arg)
     if target:
@@ -244,13 +210,6 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:co
 
 @addmember.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.AddMember=Depends(command.AddMember.get)):
-
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
     arg=cmd.aliases
     target=arg[0]
     aliases=list(dict.fromkeys(arg))
@@ -264,13 +223,6 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:co
 
 @delmember.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.DeleteMember=Depends(command.DeleteMember.get)):
-
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
     # if not int(event.get_user_id()) in OPS:
     #     await delmember.finish("无权限")    
     #现在权限由services处理
@@ -288,13 +240,6 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:co
 
 @delimg.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.DeleteImage=Depends(command.DeleteImage.get)):
-
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
     target=services.get_member_by_alias(cmd.alias)
     id_type=cmd.id_type
     img_id=cmd.image_id
@@ -318,13 +263,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:co
 
 @watchhelp.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Help=Depends(command.Help.get)):
-    
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
+
     if not event.group_id in WHITELIST:
         return
     await addalias.finish("所有人可用：\n"
@@ -371,13 +310,7 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:co
 
 @checkdistribution.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Distribution=Depends(command.Distribution.get)):
-    
-    plugin=MGPlugin(TAG)
-    if not plugin.getPluginState():
-        return
-    if not plugin.getGroupPluginState(event):
-        return
-    
+
     members=services.get_members(event.user_id)
     dc={}
     for m in members:

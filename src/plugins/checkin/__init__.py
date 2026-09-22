@@ -36,18 +36,16 @@ config = get_plugin_config(Config)
 
 TAG="checkin"
 MGPLUGIN=MGPlugin(TAG)
+def plugin_enabled(event:MessageEvent)->bool:
+    if not MGPLUGIN.getPluginState():
+        return False
+    return MGPLUGIN.getGroupPluginState(event)
 
 DATA_PATH=MGPLUGIN.data_path
 
-checkin=on_command("签到",aliases={"checkin"})
+checkin=on_command("签到",aliases={"checkin"},rule=plugin_enabled)
 @checkin.handle()
 async def handle_function(bot:Bot,cmd:command.Checkin=Depends(command.Checkin.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-    
     bot=get_bot()
     user=tools.User(cmd.user_id)
     now=datetime.datetime.now(ZoneInfo("Asia/Shanghai"))
@@ -89,15 +87,10 @@ async def handle_function(bot:Bot,cmd:command.Checkin=Depends(command.Checkin.ge
         msg+=f"\n获得了 {i["name"]} x1"
     await checkin.finish(msg)
 
-makeup=on_command("补签",aliases={"makeup","补签"})
+makeup=on_command("补签",aliases={"makeup","补签"},rule=plugin_enabled)
 @makeup.handle()
 async def handle_function(matcher:Matcher,cmd:command.MakeUp=Depends(command.MakeUp.get)):
-    
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-    
+
     user=tools.User(cmd.user_id)
     now=datetime.datetime.now(ZoneInfo("Asia/Shanghai"))
     if not user.nickname:
@@ -107,7 +100,7 @@ async def handle_function(matcher:Matcher,cmd:command.MakeUp=Depends(command.Mak
         await makeup.finish("没有找到可以补签的日期呢")
     yesterday=now.date()-datetime.timedelta(days=1)
     if checklogs[-1]<yesterday:
-        checkdate=datetime.datetime.combine(yesterday,datetime.time(),ZoneInfo("Asia/Shanghai")).date()
+        checkdate=datetime.datetime.combine(yesterday,datetime.time(),ZoneInfo("Asia/Shanghai"))
     else:
         for i in range(len(checklogs)-1,0,-1):
             if (checklogs[i]-checklogs[i-1]).days>1:
@@ -134,15 +127,9 @@ async def _(matcher:Matcher,confirm:str=ArgPlainText()):
         await makeup.finish(result["msg"])
     await makeup.finish("完成啦——")
 
-selfinfo=on_command("/data",aliases={"/info"})
+selfinfo=on_command("/data",aliases={"/info"},rule=plugin_enabled)
 @selfinfo.handle()
 async def handle_function(matcher:Matcher,bot:Bot,cmd:command.SelfInfo=Depends(command.SelfInfo.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-    
     user=tools.User(cmd.user_id)
     if not user.nickname:
         await selfinfo.finish("还没有你的信息呢，签到试试看吧？")
@@ -223,15 +210,9 @@ async def handle_function(matcher:Matcher,bot:Bot,cmd:command.SelfInfo=Depends(c
         infoPaint.paint(user,save_path)
         await selfinfo.finish(MessageSegment.image(save_path))
 
-send=on_command("赠送",aliases={"send"})
+send=on_command("赠送",aliases={"send"},rule=plugin_enabled)
 @send.handle()
 async def handle_function(bot:Bot,cmd:command.Send=Depends(command.Send.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-    
     sender=tools.User(cmd.user_id)
     reciver=tools.User(cmd.target_id)
     if cmd.user_id==cmd.target_id:#送自己，以前居然没发现这个bug，一直有人尝试抢自己但是没人send自己就很搞笑
@@ -255,15 +236,9 @@ async def handle_function(bot:Bot,cmd:command.Send=Depends(command.Send.get)):
 
     await send.finish(f"成功向 {reciver.nickname} 赠送了 {send_data.display}")
 
-checkrank=on_command("签到排行榜",aliases={"签到排名","签到排行"})
+checkrank=on_command("签到排行榜",aliases={"签到排名","签到排行"},rule=plugin_enabled)
 @checkrank.handle()
 async def handle_function(cmd:command.CheckRank=Depends(command.CheckRank.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-    
     today=tools.CheckDay(datetime.datetime.now(ZoneInfo("Asia/Shanghai")))
     if not today.info:
         await checkrank.finish("今天还没有人签到哦~")
@@ -274,15 +249,9 @@ async def handle_function(cmd:command.CheckRank=Depends(command.CheckRank.get)):
     
     await checkrank.finish(msg.rstrip("\n"))
 
-datarank=on_command("data排行榜",aliases={"data排名","data排行"})
+datarank=on_command("data排行榜",aliases={"data排名","data排行"},rule=plugin_enabled)
 @datarank.handle()
 async def handle_function(cmd:command.DataRank=Depends(command.DataRank.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-    
     ranks=[]
     for user in checkin_storage.get_all_user_data():
         data=tools.Data([user["base"],user["addition"]],user["zero"])
@@ -302,15 +271,9 @@ async def handle_function(cmd:command.DataRank=Depends(command.DataRank.get)):
     
     await datarank.finish(msg.rstrip("\n"))
 
-ratingrank=on_command("rating排行榜",aliases={"rating排名","rating排行","rt排行榜","rt排名","rt排行"})
+ratingrank=on_command("rating排行榜",aliases={"rating排名","rating排行","rt排行榜","rt排名","rt排行"},rule=plugin_enabled)
 @ratingrank.handle()
 async def handle_function(cmd:command.RatingRank=Depends(command.RatingRank.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-    
     ranks=[]
     for user in checkin_storage.get_all_user_data():
         rating=checkin_service.get_user_rating(user["user_id"])
@@ -330,15 +293,9 @@ async def handle_function(cmd:command.RatingRank=Depends(command.RatingRank.get)
     
     await ratingrank.finish(msg.rstrip("\n"))
 
-datatrend=on_command("data趋势",aliases={"data变化","datatrend","/dt"})
+datatrend=on_command("data趋势",aliases={"data变化","datatrend","/dt"},rule=plugin_enabled)
 @datatrend.handle()
 async def handle_function(cmd:command.DataTrend=Depends(command.DataTrend.get)):
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-    
     user=tools.User(cmd.user_id)
     if not user.nickname:
         await datatrend.finish("还没有你的信息呢，签到试试看吧？")

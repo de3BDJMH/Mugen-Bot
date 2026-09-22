@@ -28,23 +28,21 @@ config = get_plugin_config(Config)
 
 TAG="library"
 MGPLUGIN=MGPlugin(TAG)
+def plugin_enabled(event:MessageEvent)->bool:
+    if not MGPLUGIN.getPluginState():
+        return False
+    return MGPLUGIN.getGroupPluginState(event)
 
 DATA_PATH=pathlib.Path(__file__).resolve().parent.parent.parent.parent/"data"/"library"
 
 user_info=jsonLoad(DATA_PATH/"password.json")
 client = ZJNUClient(user_info["username"], user_info["password"],DATA_PATH/"cookies.json")
 
-querycommand=on_command("ZJNU图书馆座位查询",aliases={"ZJNULSQ","zjnulsq"})
+querycommand=on_command("ZJNU图书馆座位查询",aliases={"ZJNULSQ","zjnulsq"},rule=plugin_enabled)
 
 @querycommand.handle()
 async def query_handle(matcher:Matcher,cmd:command.Query=Depends(command.Query.get)):
     """负责处理查询"""
-
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-    
     if cmd.region is not None:
         matcher.set_arg("type",cmd.query_type)
         matcher.set_arg("region",cmd.region)
