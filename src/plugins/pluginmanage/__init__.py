@@ -191,5 +191,5 @@ async def ldel(cmd:command.PluginListDel=Depends(command.PluginListDel.get)):
     plugin.saveConfig()
     msg="删除成功！"
     if fail:
-        msg=f"删除完成\n失败项：{"、".join(fail)}"
+        msg=f"删除完成\n失败项：{"、".join(map(str,fail))}"
     await listdel.finish(msg)
