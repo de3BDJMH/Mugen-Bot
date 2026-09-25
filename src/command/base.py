@@ -8,7 +8,7 @@ class CommandParseError(Exception):
 class Command:
     key=""#指令关键字
 
-    def __init__(self,event:MessageEvent,arg:Message):
+    def __init__(self,event:MessageEvent,arg:Message):#只有指令头这边arg是[""]
         self.event=event
         self.self_id=event.self_id#botQQ号
         self.user_id=event.user_id

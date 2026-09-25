@@ -142,6 +142,8 @@ dmypy.json
 
 # 该项目
 tests/*
+src/services/data_race_avatars/*
+src/services/data_race.csv
 
 *.db
 !data/charcounter/database/test.db
