@@ -2,6 +2,7 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot import on_command
 from nonebot.adapters import Bot, Event
+from nonebot.adapters.onebot.v11 import MessageEvent
 from nonebot.matcher import Matcher
 from nonebot.params import Depends
 from nonebot.permission import SUPERUSER
@@ -26,8 +27,13 @@ config = get_plugin_config(Config)
 TAG="aether"
 MGPLUGIN=MGPlugin(TAG)
 
+def plugin_enabled(event:MessageEvent)->bool:
+    if not MGPLUGIN.getPluginState():
+        return False
+    return MGPLUGIN.getGroupPluginState(event)
+
 _runtime_settings=load_runtime_settings()
-aether = on_command("aether",aliases={"雷渊"},block=True)
+aether = on_command("aether",aliases={"雷渊"},block=True,rule=plugin_enabled)
 
 def _help_text() -> str:
     return (
@@ -162,14 +168,9 @@ async def handle_preset_selection(matcher:Matcher,bot:Bot,cmd:command.Selection=
         await matcher.finish("已取消启动 Aether。")
     await _start_preset(matcher,bot,cmd.event,cmd.choice,fast_mode=bool(matcher.state.get("aether_fast_mode")))
 
-aetheritem = on_command("aetheritem",aliases={"雷渊物品","AEI"},block=True)
+aetheritem = on_command("aetheritem",aliases={"雷渊物品","AEI"},block=True,rule=plugin_enabled)
 @aetheritem.handle()
 async def handle_aether_item(matcher:Matcher,bot:Bot,cmd:command.AetherItem=Depends(command.AetherItem.get))->None:
-    if not MGPLUGIN.getPluginState():
-        return
-    if not MGPLUGIN.getGroupPluginState(cmd.event):
-        return
-
     account=core.Account("de3BDJMH","20050530BKR")
     user=core.AetherClient(account)
     if not user.try_cookie_login():
