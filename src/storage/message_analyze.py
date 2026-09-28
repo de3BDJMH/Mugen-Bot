@@ -2,7 +2,7 @@ from pydantic import BaseModel,Field,ValidationError
 import json
 import pathlib
 
-ROOT_PATH=pathlib.Path(__file__).parent.parent.parent.parent#/server
+ROOT_PATH=pathlib.Path(__file__).parent.parent.parent#/server
 CONFIG_PATH=ROOT_PATH/"data"/"message_analyze"/"config.json"
 CREDENTIAL_PATH=ROOT_PATH/"data"/"message_analyze"/"credentials.json"
 
@@ -24,7 +24,7 @@ class FeatureConfig(BaseModel):
 
 class GroupConfig(BaseModel):
     ai:AIConfig
-    features:dict[str,FeatureConfig]=Field(default_factory=FeatureConfig)
+    features:FeatureConfig=Field(default_factory=FeatureConfig)
 
 def get_group_config(group_id:int)->GroupConfig|None:
     """读取群聊配置"""
