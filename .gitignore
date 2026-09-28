@@ -187,3 +187,5 @@ data/aether/task_history/*
 data/aether/oauth_token.txt
 data/aether/layout_stats.json
 data/aether/task_state.json
+
+data/message_analyze/credentials.json

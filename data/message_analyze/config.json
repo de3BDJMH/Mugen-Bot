@@ -1,0 +1,23 @@
+{
+    "default":{
+        "protocol":"openai",
+        "base_url":"https://api.deepseek.com",
+        "model":"deepseek-flash",
+        "credential":"default"
+    },
+    "groups":{
+        "example":{
+            "ai":{
+                "protocol": "openai",
+                "base_url": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "credential": "default"
+            },
+            "features":{
+                "daily":{
+                    "enabled":true
+                }
+            }
+        }
+    }
+}

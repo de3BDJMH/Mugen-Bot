@@ -2,11 +2,12 @@ from nonebot import get_plugin_config
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command
 from nonebot.adapters import Message
-from nonebot.params import CommandArg
+from nonebot.params import CommandArg,Depends
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot,MessageSegment,Event,GroupMessageEvent,PrivateMessageEvent
 from nonebot.adapters.onebot.v11.event import MessageEvent
 from nonebot.plugin import on_message
+from nonebot.typing import T_State
 
 from .config import Config
 
@@ -19,6 +20,8 @@ import pathlib
 from ...libraries.mai.tools import *
 from ...libraries import command_split
 from ...libraries.tools import *
+from .parser import parse
+from . import command
 
 __plugin_meta__ = PluginMetadata(
     name="mai",
@@ -33,10 +36,28 @@ config = get_plugin_config(Config)
 #插件自定义设置，保证整体相关性，联通性
 TAG="mai"#该插件的tag，用于指令分割
 MGPLUGIN=MGPlugin(TAG)
-def plugin_enabled(event:MessageEvent)->bool:
+
+def is_guess_running(event:MessageEvent)->bool:
+    """判断该群是否正在猜歌"""
+    gid=getGroupID(event)
+    with open(GUESS_STATE_PATH,encoding="utf-8") as f:
+        state=json.load(f)
+    return gid in state and state[gid]["start"]
+
+def plugin_enabled(event:MessageEvent,state:T_State)->bool:
     if not MGPLUGIN.getPluginState():
         return False
-    return MGPLUGIN.getGroupPluginState(event)
+    if not MGPLUGIN.getGroupPluginState(event):
+        return False
+
+    args=parse(event)
+    if args is not None:
+        state["mai_args"]=args#保存args，不用再解析了，目前用不了，等mai重构完，下面的开字母解析也会做进去，现在会少字段
+        return True
+    if is_guess_running(event):
+        return True
+
+    return False
 
 #指令设置
 COMMAND_ALIAS={
@@ -57,6 +78,7 @@ COMMAND_ALIAS={
     "霸者排行":["霸者排行"],
     "DX霸者排行":["DX霸者排行"]
 }#该内容已转移到libraries中，修改这里无用
+#该内容已转移至parser.py中，改libraries也没用
 
 HELP_KEYWORD=["help","帮助","-h","-help"]
 
@@ -80,30 +102,20 @@ JP=list(HIRAGANA.keys())+list(KATAKANA.keys())
 
 mai = on_message(rule=plugin_enabled)
 @mai.handle()
-async def maiMain(matcher:Matcher,bot:Bot,event:Event):
-    #聊天消息转指令
-    recive=event.get_message()
-    result=command_split.split(recive,TAG,getGroupID(event))
-    if not result:
-        return
-    if result["state"]==False:
-        msg=result["msg"]
-        if result["pic"]:
-            msg+=MessageSegment.image(result["pic"])
-        if result["need_reply"] and msg:
-            await mai.finish(msg)
-        else:
-            return
-    arg=result["arg"]
-    guess_need_reply=result["need_reply"]
-    print(arg)
-    if not arg:
-        return
+async def maiMain(bot:Bot,cmd:command.Mai=Depends(command.Mai.get)):
+    if cmd.key=="mai.help":
+        await mai.finish("1")
+    ###
+    # 目前只更新了参数解析方式，旧逻辑还没改，日后回来重构
+    ###
+
+    arg=cmd.args
+    guess_need_reply=cmd.need_reply if isinstance(cmd,command.MaiGuess) else True
     
     #处理指令
     if arg[0]=="guess":
-        user_id=event.get_user_id()
-        guess_id=getGroupID(event)
+        user_id=cmd.user_id
+        guess_id=getGroupID(cmd.event)
         with open(GUESS_ACCOUNT_PATH,encoding="utf-8") as f:#判断用户是否存在
             accounts=json.load(f)
         if not user_id in accounts:
@@ -319,7 +331,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
                 res="答对题数排行榜：\n"
                 n=0
                 for p in guess_score:
-                    if p[2]==event.get_user_id():
+                    if p[2]==cmd.user_id:
                         res+=f"{p[0]} :  {p[1]}    <--你在这里\n"
                     else:
                         res+=f"{p[0]} :  {p[1]}\n"
@@ -368,7 +380,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -386,7 +398,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -404,7 +416,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -422,7 +434,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -440,7 +452,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -458,7 +470,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -490,20 +502,20 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
                     "type": "node",
                     "data": {
                         "name": "プラナ",
-                        "uin": str(event.self_id),
+                        "uin": str(cmd.self_id),
                         "content": MessageSegment.image(p)
                     }
                 }
             )
-        if "message.group" in event.get_event_name():
-            await bot.call_api("send_group_forward_msg",group_id=event.group_id,messages=msgs)
-        elif "message.private" in event.get_event_name():
-            await bot.call_api("send_private_forward_msg",user_id=event.user_id,messages=msgs)
+        if cmd.message_type=="group":
+            await bot.call_api("send_group_forward_msg",group_id=cmd.group_id,messages=msgs)
+        elif cmd.message_type=="private":
+            await bot.call_api("send_private_forward_msg",user_id=cmd.user_id,messages=msgs)
     elif arg[0]=="DX霸者进度":
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -521,7 +533,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -539,7 +551,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -557,7 +569,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -575,7 +587,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -593,7 +605,7 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
         if len(arg)>1:
             user_id=arg[1]
         else:
-            user_id=event.get_user_id()
+            user_id=cmd.user_id
         with open(QUERY_STATE,encoding="utf-8") as f:
             query_info=json.load(f)
         if (not user_id in query_info) or time.time()-query_info[user_id]>QUERY_COOLDOWN:
@@ -625,144 +637,144 @@ async def maiMain(matcher:Matcher,bot:Bot,event:Event):
                     "type": "node",
                     "data": {
                         "name": "プラナ",
-                        "uin": str(event.self_id),
+                        "uin": str(cmd.self_id),
                         "content": MessageSegment.image(p)
                     }
                 }
             )
-        if "message.group" in event.get_event_name():
-            await bot.call_api("send_group_forward_msg",group_id=event.group_id,messages=msgs)
-        elif "message.private" in event.get_event_name():
-            await bot.call_api("send_private_forward_msg",user_id=event.user_id,messages=msgs)
-    elif arg[0]=="rt排行":
-        members=await bot.get_group_member_list(group_id=event.group_id)
-        rts={}
-        for member in members:
-            user_id=str(member["user_id"])
-            try:
-                with open(r"D:\Nonebot\local\local\plugins\mai\record"+"\\"+f"{user_id}record.json",encoding="utf-8") as f:
-                    record=json.load(f)
-                    rts[member["user_id"]]=record["rating"]
-            except:
-                continue
-                print(f"正在查询{member['nickname']}的rating")
-                rt=get_rating(member["user_id"])
-                if rt is not None:
-                    rts[member["user_id"]]=rt
-        print(rts)
-        rts=sorted(rts.items(),key=lambda x:x[1],reverse=True)
-        res="群rating排行：（数据源：水鱼）\n"
-        n=1
-        for p in rts[:RANKLENGTH]:
-            name=""
-            for member in members:
-                if member["user_id"]==p[0]:
-                    name=member["nickname"]
-                    break
-            res+=f"{n}. {name} :  {p[1]}\n"
-            n+=1
-        msgs=[]
-        msgs.append(
-                    {
-                    "type": "node",
-                    "data": {
-                        "name": "プラナ",
-                        "uin": str(event.self_id),
-                        "content": res
-                    }
-                }
-            )
-        await bot.call_api("send_group_forward_msg",group_id=event.group_id,messages=msgs)
-    elif arg[0]=="霸者排行":
-        members=await bot.get_group_member_list(group_id=event.group_id)
-        await mai.send(f"查询人数较多，请等待 {round(len(members)*0.2)} 秒喵")
-        with open(QUERY_STATE,encoding="utf-8") as f:
-            query_info=json.load(f)
-        querystate=[0,0,0]#未更新人数，更新成功人数，尝试更新人数
-        for member in members:
-            print(f"正在查询{member['nickname']}的进度")
-            user_id=str(member["user_id"])
-            if (not user_id in query_info) or time.time()-query_info[user_id]>RANK_QUERY_COOLDOWN:
-                query_info[user_id]=time.time()
-                update_state=update(user_id)
-                time.sleep(0.1)
-                if update_state:
-                    querystate[1]+=1
-                querystate[2]+=1
-            else:
-                querystate[0]+=1
-        with open(QUERY_STATE,"w",encoding="utf-8") as f:
-            json.dump(query_info,f)
-        recsid=[]
-        for p in os.listdir(r"D:\Nonebot\local\local\plugins\mai\record"):
-            if p.endswith("record.json") and len(p)>11 and p[:-11] in [str(member["user_id"]) for member in members]:
-                recsid.append(p[:-11])
-        progress_all={}
-        for user_id in recsid:
-            sorted_difs,sorted_cleared_difs,sorted_difs_keys,sorted_vers,sorted_cleared_vers=get_records(FiNALEType.A,user_id)
-            prog=[0,0]#完成，总数
-            for p in range(len(sorted_difs_keys)):
-                prog[0]+=sorted_difs[p][0]
-                prog[1]+=sum(sorted_difs[p])
-            progress_all[user_id]=prog
-        print(progress_all)
-        progress_all=sorted(progress_all.items(),key=lambda x:x[1][0]/x[1][1] if x[1][1] else 0,reverse=True)
-        res="群霸者进度排行：（数据源：水鱼）\n"
-        n=1
-        for p in progress_all[:RANKLENGTH]:
-            name=""
-            for member in members:
-                if str(member["user_id"])==p[0]:
-                    name=member["nickname"]
-                    break
-            res+=f"{n}. {name} :  {p[1][0]}/{p[1][1]} ({p[1][0]/p[1][1]*100:.2f}%)\n"
-            n+=1
-        res+=f"\n本次未更新人数：{querystate[0]}，更新成功人数：{querystate[1]}，尝试更新人数：{querystate[2]}"
-        await mai.finish(res)
-    elif arg[0]=="DX霸者排行":
-        members=await bot.get_group_member_list(group_id=event.group_id)
-        await mai.send(f"查询人数较多，请等待 {round(len(members)*0.2)} 秒喵")
-        with open(QUERY_STATE,encoding="utf-8") as f:
-            query_info=json.load(f)
-        querystate=[0,0,0]#未更新人数，更新成功人数，尝试更新人数
-        for member in members:
-            print(f"正在查询{member['nickname']}的进度")
-            user_id=str(member["user_id"])
-            if (not user_id in query_info) or time.time()-query_info[user_id]>RANK_QUERY_COOLDOWN:
-                query_info[user_id]=time.time()
-                update_state=update(user_id)
-                time.sleep(0.1)
-                if update_state:
-                    querystate[1]+=1
-                querystate[2]+=1
-            else:
-                querystate[0]+=1
-        with open(QUERY_STATE,"w",encoding="utf-8") as f:
-            json.dump(query_info,f)
-        recsid=[]
-        for p in os.listdir(r"D:\Nonebot\local\local\plugins\mai\record"):
-            if p.endswith("record.json") and len(p)>11 and p[:-11] in [str(member["user_id"]) for member in members]:
-                recsid.append(p[:-11])
-        progress_all={}
-        for user_id in recsid:
-            sorted_difs,sorted_cleared_difs,sorted_difs_keys,sorted_vers,sorted_cleared_vers=get_records(ALLPERFECTType.A,user_id)
-            prog=[0,0]#完成，总数
-            for p in range(len(sorted_difs_keys)):
-                prog[0]+=sorted_difs[p][0]
-                prog[1]+=sum(sorted_difs[p])
-            progress_all[user_id]=prog
-        print(progress_all)
-        progress_all=sorted(progress_all.items(),key=lambda x:x[1][0]/x[1][1] if x[1][1] else 0,reverse=True)
-        res="群DX霸者进度排行：（数据源：水鱼）\n"
-        n=1
-        for p in progress_all[:RANKLENGTH]:
-            name=""
-            for member in members:
-                if str(member["user_id"])==p[0]:
-                    name=member["nickname"]
-                    break
-            res+=f"{n}. {name} :  {p[1][0]}/{p[1][1]} ({p[1][0]/p[1][1]*100:.2f}%)\n"
-            n+=1
-        res+=f"\n本次未更新人数：{querystate[0]}，更新成功人数：{querystate[1]}，尝试更新人数：{querystate[2]}"
-        await mai.finish(res)
+        if cmd.message_type=="group":
+            await bot.call_api("send_group_forward_msg",group_id=cmd.group_id,messages=msgs)
+        elif cmd.message_type=="private":
+            await bot.call_api("send_private_forward_msg",user_id=cmd.user_id,messages=msgs)
+    # elif arg[0]=="rt排行":
+    #     members=await bot.get_group_member_list(group_id=cmd.group_id)
+    #     rts={}
+    #     for member in members:
+    #         user_id=str(member["user_id"])
+    #         try:
+    #             with open(r"D:\Nonebot\local\local\plugins\mai\record"+"\\"+f"{user_id}record.json",encoding="utf-8") as f:
+    #                 record=json.load(f)
+    #                 rts[member["user_id"]]=record["rating"]
+    #         except:
+    #             continue
+    #             print(f"正在查询{member['nickname']}的rating")
+    #             rt=get_rating(member["user_id"])
+    #             if rt is not None:
+    #                 rts[member["user_id"]]=rt
+    #     print(rts)
+    #     rts=sorted(rts.items(),key=lambda x:x[1],reverse=True)
+    #     res="群rating排行：（数据源：水鱼）\n"
+    #     n=1
+    #     for p in rts[:RANKLENGTH]:
+    #         name=""
+    #         for member in members:
+    #             if member["user_id"]==p[0]:
+    #                 name=member["nickname"]
+    #                 break
+    #         res+=f"{n}. {name} :  {p[1]}\n"
+    #         n+=1
+    #     msgs=[]
+    #     msgs.append(
+    #                 {
+    #                 "type": "node",
+    #                 "data": {
+    #                     "name": "プラナ",
+    #                     "uin": str(cmd.self_id),
+    #                     "content": res
+    #                 }
+    #             }
+    #         )
+    #     await bot.call_api("send_group_forward_msg",group_id=cmd.group_id,messages=msgs)
+    # elif arg[0]=="霸者排行":
+    #     members=await bot.get_group_member_list(group_id=cmd.group_id)
+    #     await mai.send(f"查询人数较多，请等待 {round(len(members)*0.2)} 秒喵")
+    #     with open(QUERY_STATE,encoding="utf-8") as f:
+    #         query_info=json.load(f)
+    #     querystate=[0,0,0]#未更新人数，更新成功人数，尝试更新人数
+    #     for member in members:
+    #         print(f"正在查询{member['nickname']}的进度")
+    #         user_id=str(member["user_id"])
+    #         if (not user_id in query_info) or time.time()-query_info[user_id]>RANK_QUERY_COOLDOWN:
+    #             query_info[user_id]=time.time()
+    #             update_state=update(user_id)
+    #             time.sleep(0.1)
+    #             if update_state:
+    #                 querystate[1]+=1
+    #             querystate[2]+=1
+    #         else:
+    #             querystate[0]+=1
+    #     with open(QUERY_STATE,"w",encoding="utf-8") as f:
+    #         json.dump(query_info,f)
+    #     recsid=[]
+    #     for p in os.listdir(r"D:\Nonebot\local\local\plugins\mai\record"):
+    #         if p.endswith("record.json") and len(p)>11 and p[:-11] in [str(member["user_id"]) for member in members]:
+    #             recsid.append(p[:-11])
+    #     progress_all={}
+    #     for user_id in recsid:
+    #         sorted_difs,sorted_cleared_difs,sorted_difs_keys,sorted_vers,sorted_cleared_vers=get_records(FiNALEType.A,user_id)
+    #         prog=[0,0]#完成，总数
+    #         for p in range(len(sorted_difs_keys)):
+    #             prog[0]+=sorted_difs[p][0]
+    #             prog[1]+=sum(sorted_difs[p])
+    #         progress_all[user_id]=prog
+    #     print(progress_all)
+    #     progress_all=sorted(progress_all.items(),key=lambda x:x[1][0]/x[1][1] if x[1][1] else 0,reverse=True)
+    #     res="群霸者进度排行：（数据源：水鱼）\n"
+    #     n=1
+    #     for p in progress_all[:RANKLENGTH]:
+    #         name=""
+    #         for member in members:
+    #             if str(member["user_id"])==p[0]:
+    #                 name=member["nickname"]
+    #                 break
+    #         res+=f"{n}. {name} :  {p[1][0]}/{p[1][1]} ({p[1][0]/p[1][1]*100:.2f}%)\n"
+    #         n+=1
+    #     res+=f"\n本次未更新人数：{querystate[0]}，更新成功人数：{querystate[1]}，尝试更新人数：{querystate[2]}"
+    #     await mai.finish(res)
+    # elif arg[0]=="DX霸者排行":
+    #     members=await bot.get_group_member_list(group_id=cmd.group_id)
+    #     await mai.send(f"查询人数较多，请等待 {round(len(members)*0.2)} 秒喵")
+    #     with open(QUERY_STATE,encoding="utf-8") as f:
+    #         query_info=json.load(f)
+    #     querystate=[0,0,0]#未更新人数，更新成功人数，尝试更新人数
+    #     for member in members:
+    #         print(f"正在查询{member['nickname']}的进度")
+    #         user_id=str(member["user_id"])
+    #         if (not user_id in query_info) or time.time()-query_info[user_id]>RANK_QUERY_COOLDOWN:
+    #             query_info[user_id]=time.time()
+    #             update_state=update(user_id)
+    #             time.sleep(0.1)
+    #             if update_state:
+    #                 querystate[1]+=1
+    #             querystate[2]+=1
+    #         else:
+    #             querystate[0]+=1
+    #     with open(QUERY_STATE,"w",encoding="utf-8") as f:
+    #         json.dump(query_info,f)
+    #     recsid=[]
+    #     for p in os.listdir(r"D:\Nonebot\local\local\plugins\mai\record"):
+    #         if p.endswith("record.json") and len(p)>11 and p[:-11] in [str(member["user_id"]) for member in members]:
+    #             recsid.append(p[:-11])
+    #     progress_all={}
+    #     for user_id in recsid:
+    #         sorted_difs,sorted_cleared_difs,sorted_difs_keys,sorted_vers,sorted_cleared_vers=get_records(ALLPERFECTType.A,user_id)
+    #         prog=[0,0]#完成，总数
+    #         for p in range(len(sorted_difs_keys)):
+    #             prog[0]+=sorted_difs[p][0]
+    #             prog[1]+=sum(sorted_difs[p])
+    #         progress_all[user_id]=prog
+    #     print(progress_all)
+    #     progress_all=sorted(progress_all.items(),key=lambda x:x[1][0]/x[1][1] if x[1][1] else 0,reverse=True)
+    #     res="群DX霸者进度排行：（数据源：水鱼）\n"
+    #     n=1
+    #     for p in progress_all[:RANKLENGTH]:
+    #         name=""
+    #         for member in members:
+    #             if str(member["user_id"])==p[0]:
+    #                 name=member["nickname"]
+    #                 break
+    #         res+=f"{n}. {name} :  {p[1][0]}/{p[1][1]} ({p[1][0]/p[1][1]*100:.2f}%)\n"
+    #         n+=1
+    #     res+=f"\n本次未更新人数：{querystate[0]}，更新成功人数：{querystate[1]}，尝试更新人数：{querystate[2]}"
+    #     await mai.finish(res)
 

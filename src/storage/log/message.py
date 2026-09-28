@@ -39,3 +39,13 @@ def get_id_by_message_id(conn:sqlite3.Connection,message_id:int,self_id:int)->in
     """,(self_id,message_id)).fetchone()
 
     return row["id"] if row else None
+
+def get_group_message_by_time(conn:sqlite3.Connection,group_id:int,start_time:int,end_time:int)->list:
+    """根据指定时间获取指定群聊的消息"""
+    rows=conn.execute("""
+        SELECT id,message_id,self_id,type,sender_id,group_id,time,message_json,plain_text
+        FROM messages
+        WHERE group_id=? AND time>=? AND time<?
+        ORDER BY time ASC
+    """,(group_id,start_time,end_time)).fetchall()
+    return rows

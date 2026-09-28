@@ -1,0 +1,11 @@
+{
+  "display_name": "消息分析",
+  "help": {
+    "text": "",
+    "image": []
+  },
+  "state": true,
+  "filter_mode": "whitelist",
+  "whitelist": [640447991],
+  "blacklist": []
+}
