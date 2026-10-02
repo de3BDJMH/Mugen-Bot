@@ -1,13 +1,15 @@
 from nonebot import get_plugin_config,get_driver
 from nonebot.plugin import PluginMetadata
-from nonebot.message import event_preprocessor,run_postprocessor
-from nonebot.adapters.onebot.v11 import MessageEvent,Event, Bot
+from nonebot.message import event_preprocessor,run_postprocessor,run_preprocessor
+from nonebot.adapters.onebot.v11 import MessageEvent,Event, Bot,Message
 from nonebot.matcher import Matcher
 from nonebot import logger
+from nonebot.params import Command as NBCommand,CommandArg
 
 from ...storage.log.database import init_database
 from ...services.log import message as message_service
 from ...services.log import command as command_service
+from ...command.base import Command
 
 from .config import Config
 
@@ -63,3 +65,23 @@ async def record_bot_message(bot:Bot,exception:Exception|None,api:str,data:dict,
             await message_service.add_bot_forward(bot,api,data,result)
     except Exception:
         logger.exception("Bot消息日志记录失败")
+
+#指令（广义是matcher）都会经过这里，主要用于第三方插件的记录，自己写的有专门的记录器
+@run_preprocessor
+async def prepare_command_log(matcher:Matcher,event:MessageEvent,cmd:tuple[str,...]|None=NBCommand(),arg:Message=CommandArg()):
+    if cmd is None:
+        return
+    command=Command(event,arg)
+    plugin_name=matcher.plugin_name or "unknown"#key采用插件名.指令名
+    command.key=f"{plugin_name}.{'.'.join(cmd)}"
+    #第三方插件不会记录params，全部都是{}
+    matcher.state["_command"]=command#最后需要被记录的指令
+
+#指令执行完：
+@run_postprocessor
+async def log_command(matcher:Matcher):
+    if matcher.state.get("_command_logged"):#自己的解析器会把这里改为True，所以到这里只会记录第三方的
+        return
+    cmd=matcher.state.get("_command")
+    if cmd:
+        command_service.add(cmd)

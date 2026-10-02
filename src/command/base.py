@@ -34,16 +34,18 @@ class Command:
         try:
             cmd=cls.parse(event,arg)
             command_service.add(cmd)#存储指令
+            matcher.state["_command_logged"]=True#标记，已记录，用于和第三方插件区分，防止重复记录
             return cmd
         except CommandParseError as e:
             cmd.valid=0#解析失败统一改0 
             command_service.add(cmd)
+            matcher.state["_command_logged"]=True
             if str(e):#finish("")会报错
                 await matcher.finish(str(e))
             else:
                 await matcher.finish()
 
-    def log_params(self)->dict:
+    def log_params(self)->dict:#开始记录于2026-10-03 01:07:53
         """返回需要保存的指令参数"""
         if not self.valid:#解析失败时候会进这里，这时候参数都是空的，不能记录
             return {}
