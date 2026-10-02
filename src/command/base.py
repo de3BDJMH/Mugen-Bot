@@ -6,6 +6,10 @@ from ..services.log import command as command_service
 
 class CommandParseError(Exception):
     """处理报错用，输入的指令参数不合法"""
+    #什么时候真正需要log了再取消注释
+    # def __init__(self,message="",log=True):
+    #     super().__init__(message)
+    #     self.log=log#用于处理引发报错是否记录指令，True记录
 
 class Command:
     key=""#指令关键字

@@ -39,56 +39,29 @@ def plugin_enabled(event:MessageEvent)->bool:
         return False
     return MGPLUGIN.getGroupPluginState(event)
 
-watch=on_command("看",block=True,rule=plugin_enabled)
-upload=on_command("上传",block=True,rule=plugin_enabled)
-addalias=on_command("添加群友别名",block=True,rule=plugin_enabled)
-delalias=on_command("删除群友别名",block=True,rule=plugin_enabled)
-checkalias=on_command("查看群友别名",block=True,rule=plugin_enabled)
-addmember=on_command("添加群友",block=True,rule=plugin_enabled)
-delmember=on_command("删除群友",block=True,rule=plugin_enabled)
-delimg=on_command("删除",block=True,rule=plugin_enabled)
-watchhelp=on_command("看群友帮助",block=True,rule=plugin_enabled)
-memberlist=on_command("群友列表",block=True,rule=plugin_enabled)
+watch=on_command("看",rule=plugin_enabled)
+upload=on_command("上传",rule=plugin_enabled)
+addalias=on_command("添加群友别名",rule=plugin_enabled)
+delalias=on_command("删除群友别名",rule=plugin_enabled)
+checkalias=on_command("查看群友别名",rule=plugin_enabled)
+addmember=on_command("添加群友",rule=plugin_enabled)
+delmember=on_command("删除群友",rule=plugin_enabled)
+delimg=on_command("删除",rule=plugin_enabled)
+watchhelp=on_command("看群友帮助",rule=plugin_enabled)
+memberlist=on_command("群友列表",rule=plugin_enabled)
 
-updatealias=on_command("更新群友别名",block=True,rule=plugin_enabled)
-checkque=on_command("查看队列",block=True,rule=plugin_enabled)
+updatealias=on_command("更新群友别名",rule=plugin_enabled)
+checkque=on_command("查看队列",rule=plugin_enabled)
 
-checkdistribution=on_command("群友图片分布",block=True,rule=plugin_enabled)
+checkdistribution=on_command("群友图片分布",rule=plugin_enabled)
 
 #路径设置
 ROOT_PATH=pathlib.Path(__file__).resolve().parent.parent.parent.parent #/server
 DATA_PATH=ROOT_PATH/"data"/"watchice"
 
-MEMBER_ALIAS_PATH=DATA_PATH/"member_alias.json"
-
-MEMBER_ALIAS={}
 IMG_PATH={}
 
 IMG_ID=DATA_PATH/"img"/"id.json"
-
-def get_member(name):
-    for m in MEMBER_ALIAS:
-        for a in MEMBER_ALIAS[m]:
-            if a.lower()==name.lower():
-                return m
-    else:
-        return ""
-
-def reload_alias():
-    global MEMBER_ALIAS
-    global IMG_PATH
-    with open(MEMBER_ALIAS_PATH,encoding="utf-8") as f:
-        MEMBER_ALIAS=json.load(f)
-
-    IMG_PATH={}
-    _ORIGIN_PATH=DATA_PATH/"img"
-    for m in MEMBER_ALIAS:
-        IMG_PATH[m]=_ORIGIN_PATH/m
-        try:
-            os.mkdir(IMG_PATH[m])
-        except:
-            continue
-reload_alias()
 
 WHITELIST=[558248216,727967933,837222085,791163286,1033530604,640447991,640447991,1021122156]
 OPS=[2404164262,2421372100]
@@ -106,8 +79,6 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:co
     # else:
     #     return
     # imgs=[services.get_image_content(image_ids[legacy_id],user_id) for legacy_id in image_ids]
-    if not target:
-        return
     if img_id<=0:#随机
         result=services.get_random_images(user_id,target,count=1)
         if result["count"]==0:
@@ -139,8 +110,6 @@ async def handle_function(event:GroupMessageEvent,cmd:command.Upload=Depends(com
 
     arg=cmd.alias
     target=services.get_member_by_alias(arg)
-    if not target:
-        await upload.finish("还没有这个群友哦")
 
     state["target"]=target
 
@@ -227,16 +196,13 @@ async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:co
     #     await delmember.finish("无权限")    
     #现在权限由services处理
     target=services.get_member_by_alias(cmd.alias)
-    if target:
-        target_state=services.get_member_state(target)
-        if target_state is None or not target_state["enabled"]:
-            await delmember.finish("该群友不存在或已被删除")
-        result=services.set_member_enabled(event.user_id,target,False)
-        if not result:
-            await delmember.finish("无权限")
-        await delmember.finish("删除成功")
-    else:
-        await delmember.finish("不存在这个群友")
+    target_state=services.get_member_state(target)
+    if target_state is None or not target_state["enabled"]:
+        await delmember.finish("该群友不存在或已被删除")
+    result=services.set_member_enabled(event.user_id,target,False)
+    if not result:
+        await delmember.finish("无权限")
+    await delmember.finish("删除成功")
 
 @delimg.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.DeleteImage=Depends(command.DeleteImage.get)):

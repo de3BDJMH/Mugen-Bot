@@ -5,6 +5,7 @@ from nonebot.adapters.onebot.v11 import MessageEvent,Event, Bot,Message
 from nonebot.matcher import Matcher
 from nonebot import logger
 from nonebot.params import Command as NBCommand,CommandArg
+from nonebot.rule import CommandRule
 
 from ...storage.log.database import init_database
 from ...services.log import message as message_service
@@ -69,6 +70,8 @@ async def record_bot_message(bot:Bot,exception:Exception|None,api:str,data:dict,
 #指令（广义是matcher）都会经过这里，主要用于第三方插件的记录，自己写的有专门的记录器
 @run_preprocessor
 async def prepare_command_log(matcher:Matcher,event:MessageEvent,cmd:tuple[str,...]|None=NBCommand(),arg:Message=CommandArg()):
+    if not any(isinstance(checker.call,CommandRule) for checker in matcher.rule.checkers):#只要指令，onmessage滚
+        return
     if cmd is None:
         return
     command=Command(event,arg)

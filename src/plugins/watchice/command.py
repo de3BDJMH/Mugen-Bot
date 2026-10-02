@@ -1,5 +1,7 @@
 from nonebot.adapters.onebot.v11 import Message,MessageEvent
+
 from ...command.base import Command,CommandParseError
+from ...services import watchice as watchice_services
 
 KEY="watchice"
 
@@ -23,6 +25,12 @@ class Watch(Command):
                     raise CommandParseError()
             except (ValueError,IndexError):
                 pass
+        #想过看xx要不要记录，现在觉得算了，乱点就乱点吧，另外这里触碰业务了也有点讨厌
+        #算了存吧，不然日后统计太麻烦
+        #目前只给看、上传、删除做了，其他基本聊天不会触发
+        target=watchice_services.get_member_by_alias(cmd.alias)#群友是否存在转到这里了，不然什么看xx都会被记录
+        if not target:
+            raise CommandParseError()#记录，但是valid要为0
         return cmd
 
 class Upload(Command):
@@ -35,6 +43,9 @@ class Upload(Command):
     def parse(cls,event:MessageEvent,arg:Message):
         cmd=cls(event,arg)
         cmd.alias=arg.extract_plain_text()
+        target=watchice_services.get_member_by_alias(cmd.alias)
+        if not target:
+            raise CommandParseError("还没有这个群友哦")
         return cmd
 
 class AddAlias(Command):
@@ -123,6 +134,9 @@ class DeleteImage(Command):
             cmd.image_id=int(text[1:] if cmd.id_type=="global" else text)
         except ValueError:
             raise CommandParseError(message)
+        target=watchice_services.get_member_by_alias(cmd.alias)
+        if not target:
+            raise CommandParseError("不存在这个群友")
         return cmd
 
 class Help(Command):
