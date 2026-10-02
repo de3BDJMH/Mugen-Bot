@@ -109,7 +109,9 @@ async def handle_function(matcher:Matcher,cmd:command.MakeUp=Depends(command.Mak
                 break
         else:
             await makeup.finish("没有找到可以补签的日期呢")
-    checkcost=tools.makeup_cost(now,checkdate,user.getRating()["rating"])
+    checklogs.append(checkdate.date())
+    _,target_consecutive=tools.calulate_consecutive(checklogs)#模拟
+    checkcost=tools.makeup_cost(now,checkdate,user.getRating()["rating"],target_consecutive)
     matcher.state["user_id"]=user.id
     matcher.state["checkdate"]=checkdate
     await makeup.send(f"补签 {checkdate.date()} 需要消耗 {checkcost.display}，回复ok确认")

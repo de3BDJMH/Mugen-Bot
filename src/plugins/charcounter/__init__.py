@@ -124,8 +124,6 @@ async def handle_function(bot:Bot,cmd:command.CharacterCounter=Depends(command.C
         await commands.send(msg)
     elif action=="总字符统计":
         num=cmd.count
-        if cmd.invalid_count:
-            await commands.send("请输入有效的数字")
         conn=sql.connect(PATH)
         cursor=conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")

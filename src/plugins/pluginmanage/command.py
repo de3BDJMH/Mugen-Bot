@@ -15,6 +15,7 @@ class PluginToggle(Command):
     key=KEY+".toggle"
     plugin_name:str
     state:bool|None
+    log_fields=("plugin_name","state")
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
@@ -40,6 +41,7 @@ class PluginListAdd(Command):
     add_type:str
     plugin_name:str
     groups:list[int]
+    log_fields=("add_type","plugin_name","groups")
 
     @classmethod
     def parse(cls, event, arg):
@@ -68,6 +70,7 @@ class PluginListDel(Command):
     del_type:str
     plugin_name:str
     groups:list[int]
+    log_fields=("del_type","plugin_name","groups")
 
     @classmethod
     def parse(cls, event, arg):

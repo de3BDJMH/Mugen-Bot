@@ -46,6 +46,7 @@ plain_text 解析后纯文本消息
 id 指令ID
 message_id 关联的消息ID
 command_key 指令分类
-args_json 参数的json格式
+valid 参数是否合法（人话：这条指令调用了但是成功了吗）
+params_json 参数的json格式
 
 其他参数与message表共用，不重复保存

@@ -47,6 +47,7 @@ class Aether(Command):
             "presets":{"预设","列表","list","presets"},
             "status":{"状态","status"},
             "stop":{"停止","stop"},
+            "cancel":{"取消任务","取消计划","cancel"},
             "accept":{"接受","accept","y","yes"},
             "refresh":{"刷新","refresh","n","no"},
             "abort":{"终止","abort","q","quit"},

@@ -5,6 +5,7 @@ class Rob(Command):
     """抢劫指令"""
     key="rob.rob"
     target_id:int
+    log_fields=("target_id",)
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):

@@ -156,6 +156,11 @@ class AetherManager:
     def skip_task(self, sequence: int) -> tuple[bool, str]:
         return self.scheduler.skip_task(sequence)
 
+    def cancel_task_plan(self,run_id:str)->tuple[bool,str]:
+        if self.single_running:
+            return False,"当前运行的是单次任务，请使用 /aether 停止"
+        return self.scheduler.cancel_plan(run_id)
+
     async def start(
         self,
         preset_key: str,

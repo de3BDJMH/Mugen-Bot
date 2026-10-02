@@ -8,6 +8,7 @@ class Watch(Command):
     key=KEY+".watch"
     alias:str
     image_id:int
+    log_fields=("alias","image_id")
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
@@ -28,6 +29,7 @@ class Upload(Command):
     """上传图片"""
     key=KEY+".upload"
     alias:str
+    log_fields=("alias",)
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
@@ -39,6 +41,7 @@ class AddAlias(Command):
     """添加群友别名"""
     key=KEY+".add_alias"
     aliases:list[str]
+    log_fields=("aliases",)
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
@@ -52,6 +55,7 @@ class DeleteAlias(AddAlias):
     """删除群友别名"""
     key=KEY+".delete_alias"
     aliases:list[str]
+    log_fields=("aliases",)
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
@@ -69,6 +73,7 @@ class AddMember(Command):
     """添加群友"""
     key=KEY+".add_member"
     aliases:list[str]
+    log_fields=("aliases",)
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
@@ -85,6 +90,7 @@ class DeleteMember(Command):
     """删除群友"""
     key=KEY+".delete_member"
     alias:str
+    log_fields=("alias",)
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
@@ -101,6 +107,7 @@ class DeleteImage(Command):
     alias:str
     image_id:int
     id_type:str
+    log_fields=("alias","image_id","id_type")
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):

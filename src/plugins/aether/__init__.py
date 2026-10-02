@@ -46,6 +46,7 @@ def _help_text() -> str:
         "/aether 恢复       恢复上次中断的批量任务\n"
         "/aether 重试 <n>   重试不确定/失败任务\n"
         "/aether 跳过 <n>   跳过不确定任务\n"
+        "/aether 取消任务   确认后取消剩余批量安排\n"
         "/aether 预设       查看预设列表\n"
         "/aether 状态       查看单任务/批量任务进度\n"
         "/aether 接受       接受当前布局（单任务）\n"
@@ -120,6 +121,13 @@ async def handle_aether(matcher:Matcher,bot:Bot,cmd:command.Aether=Depends(comma
     if action=="stop":
         _,message=aether_manager.request_stop()
         await matcher.finish(message)
+    if action=="cancel":
+        status=aether_manager.status_payload()
+        batch=status.get("batch")
+        if status.get("mode")!="batch" or not batch or not batch.get("run_id"):
+            await matcher.finish("当前没有可取消的批量任务")
+        matcher.state["aether_cancel_run_id"]=batch["run_id"]
+        await matcher.pause("确认取消批量计划「"+str(batch.get("plan_name") or batch.get("plan_key"))+"」？未开始的任务会取消，正在进行的地下城仅安全暂停，不会自动退出或强行解锁。\n回复“确认取消”执行，其他回复放弃。")
     if action in {"accept","refresh","abort"}:
         _,message=aether_manager.submit_layout(action)
         await matcher.finish(message)
@@ -153,6 +161,17 @@ async def handle_aether(matcher:Matcher,bot:Bot,cmd:command.Aether=Depends(comma
         prompt="快速模式：回复编号或预设 key；回复 q 取消。" if cmd.fast_mode else "回复编号或预设 key；回复 q 取消。"
         await matcher.pause(aether_manager.preset_menu()+"\n\n"+prompt)
     await matcher.finish(_help_text())
+
+
+@aether.handle()
+async def confirm_cancel(matcher:Matcher,event:MessageEvent)->None:
+    run_id=matcher.state.pop("aether_cancel_run_id",None)
+    if run_id is None:
+        return
+    if event.get_plaintext().strip()!="确认取消":
+        await matcher.finish("已放弃取消，原任务安排不变")
+    _,message=aether_manager.cancel_task_plan(run_id)
+    await matcher.finish(message)
 
 
 @aether.handle()

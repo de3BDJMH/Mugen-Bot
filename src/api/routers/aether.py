@@ -39,7 +39,7 @@ _control_lock=asyncio.Lock()
 @status_router.post("/control",response_model=ControlResponse)
 async def control_runtime(body:ControlRequest):
     async with _control_lock:
-        if body.action in {"retry","skip"}:
+        if body.action in {"retry","skip","cancel"}:
             batch=aether_manager.status_payload().get("batch")
             if not batch or batch["run_id"]!=body.run_id:
                 raise HTTPException(status_code=409,detail="任务批次已经变化，请刷新页面")
@@ -49,6 +49,8 @@ async def control_runtime(body:ControlRequest):
             ok,message=await aether_manager.recover_task_plan(notifications.notify_web)
         elif body.action=="pause":
             ok,message=aether_manager.request_stop()
+        elif body.action=="cancel":
+            ok,message=aether_manager.cancel_task_plan(body.run_id)
         elif aether_manager.running:
             ok,message=False,"请先暂停任务并等待当前节点完成"
         elif body.action=="retry":

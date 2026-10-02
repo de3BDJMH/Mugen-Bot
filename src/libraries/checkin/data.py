@@ -9,10 +9,8 @@ DATA_UNIT={0:"B",
            60:"EB",
            70:"ZB",
            80:"YB",
-           90:"BB",
-           100:"NB",
-           110:"DB",
-           120:"CB"}
+           90:"RB",
+           100:"QB"}
 
 class Data:
     def __init__(self,data:list[int|float],zero:bool=False):

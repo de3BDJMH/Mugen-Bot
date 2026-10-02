@@ -1252,8 +1252,8 @@ class AetherTaskScheduler:
 
             if self._stop_requested.is_set():
                 self._set_last_message(
-                    "批量任务已按要求暂停；"
-                    "running/pending checkpoint 已保留"
+                    "剩余安排已取消；活动任务已保留，请查看运行状态" if any(task.status=="cancelled" for task in self._tasks) else
+                    "批量任务已按要求暂停；running/pending checkpoint 已保留"
                 )
             elif uncertain or pending or interrupted_running or any(task.holds_resource_lock for task in self._tasks):
                 self._set_last_message(
@@ -1271,10 +1271,11 @@ class AetherTaskScheduler:
 
             with self._lock:
                 success=sum(task.status=="success" for task in self._tasks)
+                cancelled=sum(task.status=="cancelled" for task in self._tasks)
                 failed=sum(task.status in {"failed","blocked","uncertain"} for task in self._tasks)
                 elapsed=int(time.time()-(self._started_at or time.time()))
                 unresolved=[task for task in self._tasks if task.holds_resource_lock]
-                summary=f"{self._plan_name}：成功 {success}，异常 {failed}，等待 {pending}，距首次启动 {elapsed//60} 分钟（含暂停）。详情见 Web 运行状态。"
+                summary=f"{self._plan_name}：成功 {success}，异常 {failed}，取消 {cancelled}，等待 {pending}，距首次启动 {elapsed//60} 分钟（含暂停）。详情见 Web 运行状态。"
                 if unresolved:
                     summary+="\n仍未解除的任务："+ "；".join(f"#{task.sequence}：{task.error or task.lock_reason}" for task in unresolved)
                 title="Aether 批量任务仍有待处理项" if unresolved or pending or interrupted_running else "Aether 批量任务本轮结束"
@@ -2114,6 +2115,49 @@ class AetherTaskScheduler:
             await notifier(message)
         except Exception:
             pass
+
+    def cancel_plan(self,run_id:str)->tuple[bool,str]:
+        """取消未开始的安排，活动及不确定任务仍保留恢复保护。"""
+        with self._lock:
+            if not run_id or run_id!=self._run_id:
+                return False,"任务批次已经变化，请重新确认"
+            if not self._tasks:
+                return False,"当前没有可取消的批量任务"
+            self._stop_requested.set()
+            cancelled=0
+            protected=[]
+            for task in self._tasks:
+                if task.status in {"success","failed","skipped","cancelled"} and not task.holds_resource_lock:
+                    continue
+                if task.status in {"running","uncertain"} or task.holds_resource_lock or task.dungeon_id or task.runtime_party_ready or task.started_at is not None:
+                    if task.status=="pending":
+                        task.status="running"
+                        task.phase="paused"
+                        task.holds_resource_lock=True
+                        task.lock_reason=task.lock_reason or "paused_active"
+                    if task.status!="running":
+                        task.holds_resource_lock=True
+                        task.lock_reason=task.lock_reason or "active_dungeon"
+                    protected.append(task.sequence)
+                    continue
+                task.status="cancelled"
+                task.phase="cancelled"
+                task.finished_at=time.time()
+                task.error="用户取消批量计划"
+                cancelled+=1
+            self._rebuild_blocked_characters_locked()
+            message=f"已取消 {cancelled} 个未开始任务。"
+            if protected:
+                message+="正在进行或需核实的任务："+ "、".join(f"#{n}" for n in protected)+"。不会自动退出地下城或解除角色锁；正在运行的任务会在安全节点暂停。之后可用 /aether 恢复 继续处理。"
+            else:
+                message+="已完成结果保留，可在本轮停止后启动其他计划。"
+            self._last_message=message
+            if self._is_terminal_locked() and self._finished_at is None:
+                self._finished_at=time.time()
+        self._persist_checkpoint()
+        if not self.running:
+            self._archive_current_run_if_terminal(include_failures=True)
+        return True,message
 
     def request_stop(self) -> tuple[bool, str]:
         if not self.running:

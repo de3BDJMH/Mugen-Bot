@@ -249,7 +249,10 @@ class User:
         if self.id in [i[0] for i in checkday.info]:#已经签到过了
             result["msg"]="这天已经签到过了"
             return result
-        checkcost=makeup_cost(now,date,self.getRating()["rating"])
+        user_checkin_logs=checkin_storage.get_checkin_dates(self.id)
+        user_checkin_logs.append(date.date())
+        _,target_consecutive=calulate_consecutive(user_checkin_logs)#若补签，当前连续签到天数
+        checkcost=makeup_cost(now,date,self.getRating()["rating"],target_consecutive)
         if self.data.getBytes()<checkcost.getBytes():
             result["msg"]=f"补签失败，Data不足喵~（{checkcost.display}）"
             return result
@@ -261,19 +264,8 @@ class User:
         result["success"]=True
         self.total_check+=1
         user_checkin_logs=checkin_storage.get_checkin_dates(self.id)
-        max_consecutive=0
-        consecutive=0
-        for i in range(len(user_checkin_logs)):
-            if i==0:
-                consecutive=1
-            elif (user_checkin_logs[i]-user_checkin_logs[i-1]).days==1:
-                consecutive+=1
-            else:
-                max_consecutive=max(max_consecutive,consecutive)
-                consecutive=1
-        max_consecutive=max(max_consecutive,consecutive)
-        self.max_consecutive_check=max_consecutive
-        self.consecutive_check=consecutive
+        self.max_consecutive_check,self.consecutive_check=calulate_consecutive(user_checkin_logs)
+        self.last_check=user_checkin_logs[-1]
         self.updateUserInfo()
         return result
 
@@ -454,8 +446,27 @@ def generateRank(ranks:list,target,length:int=10) -> list[str,bool]:
         msg+=f"......(剩余 {len(ranks)-max(length,i+1)} 人)\n"
     return [msg,me]
 
-def makeup_cost(now:datetime.datetime,target:datetime.datetime,rating:float)->Data:
-    """获取补签消耗"""#现在是第一天1MB，每隔4天x2
+def calulate_consecutive(dates:list[datetime.date]):
+    """提供dates列表，返回最大连续天数和当前连续天数"""
+    if not dates:
+        return 0,0
+    dates=sorted(dates)
+    max_consecutive=1
+    consecutive=1
+    for i in range(1,len(dates)):
+        if (dates[i]-dates[i-1]).days==1:
+            consecutive+=1
+        else:
+            max_consecutive=max(max_consecutive,consecutive)
+            consecutive=1
+    max_consecutive=max(max_consecutive,consecutive)
+    return max_consecutive,consecutive
+
+def makeup_cost(now:datetime.datetime,target:datetime.datetime,rating:float,consecutive:int)->Data:
+    """获取补签消耗"""#现在是第一天baseMB，每隔4天x2
     days=(now.date()-target.date()).days
-    exp=20+(days-1)/4-math.log2(1+rating/100)
+    base=20+consecutive/16#连签天数越多价格越高，每16天x2
+    exp=base+(days-1)/4-math.log2(1+rating/100)
     return Data([exp//10*10,exp%10],False)
+
+print(calulate_consecutive(checkin_storage.get_checkin_dates(2404164262)))

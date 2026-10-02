@@ -7,6 +7,7 @@ class Query(Command):
     region:str|None
     seat:str
     query_type:str
+    log_fields=("region","seat","query_type")
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):

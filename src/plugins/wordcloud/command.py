@@ -6,6 +6,7 @@ class Generate(Command):
     key="wordcloud.generate"
     days:int
     target_group_id:int
+    log_fields=("days","target_group_id")
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
@@ -22,6 +23,7 @@ class Update(Command):
     """更新词频参数"""
     key="wordcloud.update"
     days:int
+    log_fields=("days",)
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):

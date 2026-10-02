@@ -26,6 +26,7 @@ def is_guess_running(event:MessageEvent)->bool:
 class Mai(Command):
     key=KEY
     args:list[str]
+    log_fields=("args",)
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
@@ -58,6 +59,7 @@ class MaiProgress(Mai):
     query_type:str#查询类型
     dx:bool#是否为DX
     target:int#查询目标qq
+    log_fields=("query_type","dx","target")
 
     @classmethod
     def parse_args(cls,event:MessageEvent,arg:Message,args:list[str]):
@@ -80,6 +82,7 @@ class MaiGuess(Mai):
     key=KEY+".guess"
     args:list[str]
     need_reply:bool
+    log_fields=("args","need_reply")
 
     @classmethod
     def parse_args(cls,event:MessageEvent,arg:Message,args:list[str]):

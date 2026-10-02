@@ -9,6 +9,7 @@ class Verify(Command):
     """网站验证码"""
     key="webauth.verify"
     code:str
+    log_fields=("code",)
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):

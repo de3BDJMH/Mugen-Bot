@@ -143,7 +143,7 @@ def get_checkin_dates(user_id:int,date_range:tuple[datetime.date,datetime.date]=
     if date_range:
         cursor.execute("SELECT checkin_date FROM checkin_time WHERE user_id = ? AND checkin_date BETWEEN ? AND ? ORDER BY checkin_date ASC", (user_id, date_range[0].isoformat(), date_range[1].isoformat()))
     else:
-        cursor.execute("SELECT checkin_date FROM checkin_time WHERE user_id = ?", (user_id,))
+        cursor.execute("SELECT checkin_date FROM checkin_time WHERE user_id = ? ORDER BY checkin_date ASC", (user_id,))
     dates=[datetime.date.fromisoformat(row[0]) for row in cursor.fetchall()]
     conn.close()
     return dates

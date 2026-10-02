@@ -4,7 +4,8 @@ from pydantic import BaseModel,ConfigDict,Field,model_validator
 
 class ControlRequest(BaseModel):
     model_config=ConfigDict(extra="forbid")
-    action:Literal["start","pause","recover","retry","skip"]
+    action:Literal["start","pause","recover","retry","skip","cancel"]
+    confirmed:bool=Field(default=False,strict=True)
     plan_key:str|None=Field(default=None,min_length=1,max_length=100)
     run_mode:Literal["save","balanced","rush"]="save"
     sequence:int|None=Field(default=None,ge=1,strict=True)
@@ -16,8 +17,10 @@ class ControlRequest(BaseModel):
             raise ValueError("请选择任务计划")
         if self.action in {"retry","skip"} and self.sequence is None:
             raise ValueError("请选择任务编号")
-        if self.action in {"retry","skip"} and not self.run_id:
+        if self.action in {"retry","skip","cancel"} and not self.run_id:
             raise ValueError("缺少批次标识，请刷新页面")
+        if self.action=="cancel" and not self.confirmed:
+            raise ValueError("请先确认取消批量任务")
         return self
 
 

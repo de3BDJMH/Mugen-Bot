@@ -18,6 +18,7 @@ class Send(Command):#send @xxx data
     to_me:bool
     target_id:int
     send_data:Data
+    log_fields=("to_me","target_id","send_data")
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
@@ -85,6 +86,7 @@ class DataTrend(Command):
     """Data趋势指令"""
     key=KEY+".datatrend"
     lines:int#查询日志条数
+    log_fields=("lines",)
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):

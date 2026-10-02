@@ -1,6 +1,6 @@
 from nonebot import get_plugin_config,get_driver
 from nonebot.plugin import PluginMetadata
-from nonebot.message import event_preprocessor,run_preprocessor
+from nonebot.message import event_preprocessor,run_postprocessor
 from nonebot.adapters.onebot.v11 import MessageEvent,Event, Bot
 from nonebot.matcher import Matcher
 from nonebot import logger

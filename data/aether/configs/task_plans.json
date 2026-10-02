@@ -153,7 +153,7 @@
         {
           "preset_key": "beginner_extreme",
           "count": 1,
-          "acceleration": "never",
+          "acceleration": "auto",
           "skip_camp_wait": true
         },
         {

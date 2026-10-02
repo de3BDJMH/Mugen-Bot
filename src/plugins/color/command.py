@@ -5,6 +5,7 @@ class Color(Command):
     """颜色参数，保留原有解析规则"""
     key="color.color"
     rgbs:list[int]|None
+    log_fields=("rgbs",)
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
