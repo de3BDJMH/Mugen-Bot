@@ -468,5 +468,3 @@ def makeup_cost(now:datetime.datetime,target:datetime.datetime,rating:float,cons
     base=20+consecutive/16#连签天数越多价格越高，每16天x2
     exp=base+(days-1)/4-math.log2(1+rating/100)
     return Data([exp//10*10,exp%10],False)
-
-print(calulate_consecutive(checkin_storage.get_checkin_dates(2404164262)))

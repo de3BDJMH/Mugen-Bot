@@ -18,7 +18,7 @@ class Send(Command):#send @xxx data
     to_me:bool
     target_id:int
     send_data:Data
-    log_fields=("to_me","target_id","send_data")
+    log_fields=("to_me","target_id")
 
     @classmethod
     def parse(cls,event:MessageEvent,arg:Message):
@@ -61,6 +61,17 @@ class Send(Command):#send @xxx data
             raise CommandParseError("太大了...不可以哦...")
         cmd.send_data=Data([send_data_unit,math.log2(send_data)],False)
         return cmd
+
+    def log_params(self)->dict:
+        if not self.valid:
+            return {}
+        params=super().log_params()
+        params["send_data"]={#直接存Data对象炸了...
+            "base":self.send_data.base,
+            "addition":self.send_data.addition,
+            "zero":self.send_data.is_zero
+        }
+        return params
 
 class SelfInfo(Command):
     """个人信息查询"""
