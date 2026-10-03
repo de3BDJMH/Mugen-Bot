@@ -40,6 +40,14 @@ def get_id_by_message_id(conn:sqlite3.Connection,message_id:int,self_id:int)->in
 
     return row["id"] if row else None
 
+def get_message_by_message_id(conn:sqlite3.Connection,message_id:int,self_id:int)->sqlite3.Row|None:
+    """根据message_id获取消息全部字段"""
+    row=conn.execute("""
+        SELECT * FROM messages
+        WHERE self_id=? AND message_id=?
+    """,(self_id,message_id)).fetchone()
+    return row
+
 def get_group_message_by_time(conn:sqlite3.Connection,group_id:int,start_time:int,end_time:int)->list:
     """根据指定时间获取指定群聊的消息"""
     rows=conn.execute("""

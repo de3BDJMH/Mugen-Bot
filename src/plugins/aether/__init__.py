@@ -175,17 +175,20 @@ async def confirm_cancel(matcher:Matcher,event:MessageEvent)->None:
 
 
 @aether.handle()
-async def handle_preset_selection(matcher:Matcher,bot:Bot,cmd:command.Selection=Depends(command.Selection.get))->None:
+async def handle_preset_selection(matcher:Matcher,bot:Bot,event:MessageEvent)->None:
+    choice=event.get_plaintext().strip()
+    cancelled=choice.lower() in {"q","quit","取消"}
     if matcher.state.get("aether_waiting_task_plan"):
-        if cmd.cancelled:
+        if cancelled:
             await matcher.finish("已取消启动 Aether 批量任务。")
-        await _start_task_plan(matcher,bot,cmd.event,cmd.plan_choice,run_mode=cmd.run_mode)
+        plan_choice,run_mode=command.parse_task(choice)
+        await _start_task_plan(matcher,bot,event,plan_choice,run_mode=run_mode)
         return
     if not matcher.state.get("aether_waiting_preset"):
         return
-    if cmd.cancelled:
+    if cancelled:
         await matcher.finish("已取消启动 Aether。")
-    await _start_preset(matcher,bot,cmd.event,cmd.choice,fast_mode=bool(matcher.state.get("aether_fast_mode")))
+    await _start_preset(matcher,bot,event,choice,fast_mode=bool(matcher.state.get("aether_fast_mode")))
 
 aetheritem = on_command("aetheritem",aliases={"雷渊物品","AEI"},block=True,rule=plugin_enabled)
 @aetheritem.handle()

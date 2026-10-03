@@ -41,7 +41,7 @@ async def add(bot:Bot,event:MessageEvent):
     group_id=event.group_id if isinstance(event,GroupMessageEvent) else None
     sender_id=event.user_id
     send_time=event.time
-    message=event.get_message()
+    message=event.original_message#2026.10.3 23：56修改，此时间之前的消息均未记录reply at等字段
     message_data=[{"type":seg.type,"data":seg.data.copy()} for seg in message]
     await fill_forward(bot,message_data)
     message_json=json.dumps(message_data,ensure_ascii=False,separators=(",",":"))
