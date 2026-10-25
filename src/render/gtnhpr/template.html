@@ -1,0 +1,265 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+    *{box-sizing:border-box;}
+    body{
+        margin:0;
+        padding:24px;
+        background:#0d1117;
+        font-family:"Microsoft YaHei","Segoe UI",sans-serif;
+        color:#e6edf3;
+    }
+    .card{
+        width:100%;
+        padding:32px;
+        background:#0d1117;
+        border:1px solid #30363d;
+        border-radius:18px;
+    }
+    .header{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding-bottom:20px;
+        border-bottom:1px solid #30363d;
+    }
+    .brand{font-size:22px;font-weight:700;}
+    .subtitle{font-size:14px;color:#8b949e;}
+    .repo{
+        margin-top:24px;
+        font-size:16px;
+        color:#79c0ff;
+        overflow-wrap:anywhere;
+    }
+    h1{
+        margin:12px 0 8px;
+        font-size:30px;
+        line-height:1.4;
+        overflow-wrap:anywhere;
+    }
+    .original-title{
+        color:#8b949e;
+        font-size:15px;
+        overflow-wrap:anywhere;
+    }
+    .meta{
+        display:flex;
+        align-items:center;
+        gap:12px;
+        margin:24px 0;
+        font-size:15px;
+        color:#a5b2c2;
+        flex-wrap:wrap;
+    }
+    .tag{
+        padding:6px 14px;
+        border-radius:20px;
+        font-weight:600;
+        line-height:1.2;
+    }
+    .merged{background:#382259;color:#d2a8ff;}
+    .high{background:#3d0d12;color:#ffb3ba;}
+    .medium{background:#3b2f00;color:#ffe58f;}
+    .low{background:#0f2d1f;color:#7ee787;}
+    .content{
+        padding:24px;
+        background:#161b22;
+        border:1px solid #30363d;
+        border-radius:12px;
+    }
+    .section+.section{margin-top:24px;}
+    .section-title{
+        color:#79c0ff;
+        font-size:16px;
+        font-weight:600;
+        margin-bottom:10px;
+    }
+    .section-text{
+        font-size:17px;
+        line-height:1.8;
+        white-space:pre-wrap;
+        overflow-wrap:anywhere;
+    }
+
+    /* DeepSeek 评论 */
+    .comment{
+        display:flex;
+        align-items:flex-start;
+        gap:14px;
+        margin-top:24px;
+    }
+    .avatar{
+        width:42px;
+        height:42px;
+        border-radius:50%;
+        object-fit:cover;
+        flex-shrink:0;
+    }
+    .avatar-fallback{
+        width:42px;
+        height:42px;
+        border-radius:50%;
+        background:#21262d;
+        border:1px solid #444c56;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:15px;
+        font-weight:700;
+    }
+    .comment-box{
+        flex:1;
+        min-width:0;
+        border:1px solid #30363d;
+        border-radius:10px;
+        overflow:hidden;
+    }
+    .comment-header{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding:12px 18px;
+        background:#161b22;
+        border-bottom:1px solid #30363d;
+    }
+    .bot-name{
+        font-size:16px;
+        font-weight:600;
+    }
+    .bot-badge{
+        padding:2px 7px;
+        border:1px solid #555d69;
+        border-radius:5px;
+        font-size:12px;
+        color:#8b949e;
+    }
+    .comment-body{
+        display:flex;
+        align-items:center;
+        gap:12px;
+        padding:18px;
+        flex-wrap:wrap;
+    }
+    .rating{
+        display:inline-block;
+        padding:5px 12px;
+        background:#21262d;
+        border:1px solid #444c56;
+        border-radius:6px;
+        font-size:16px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+    .comment-text{
+        flex:1;
+        min-width:180px;
+        font-size:16px;
+        line-height:1.7;
+        color:#c9d1d9;
+        overflow-wrap:anywhere;
+    }
+    .footer{
+        display:flex;
+        justify-content:space-between;
+        margin-top:24px;
+        padding-top:20px;
+        border-top:1px solid #30363d;
+        color:#8b949e;
+        font-size:13px;
+    }
+    .rating-gold{
+        background:#3b3217;
+        color:#f2cc60;
+        border-color:#6e5e2a;
+    }
+    .rating-green{
+        background:#163324;
+        color:#7ee787;
+        border-color:#2f6b46;
+    }
+    .rating-blue{
+        background:#172b43;
+        color:#79c0ff;
+        border-color:#315b82;
+    }
+    .rating-gray{
+        background:#21262d;
+        color:#8b949e;
+        border-color:#444c56;
+    }
+    .rating-red{
+        background:#3b1d22;
+        color:#ffa198;
+        border-color:#873039;
+    }
+</style>
+</head>
+<body>
+<div class="card">
+
+    <div class="header">
+        <div class="brand">GT New Horizons</div>
+        <div class="subtitle">PULL REQUEST</div>
+    </div>
+
+    <div class="repo">{{ repo_name }} / #{{ pr_number }}</div>
+    <h1>{{ cn_title }}</h1>
+    <div class="original-title">{{ pr_title }}</div>
+
+    <div class="meta">
+        <span class="tag merged">Merged</span>
+        <span class="tag {{ level_class }}">{{ level_text }}</span>
+        <span>{{ category }} · {{ author }}</span>
+        <span>合并于 {{ merged_time }} (UTC+8)</span>
+    </div>
+
+    <div class="content">
+        <div class="section">
+            <div class="section-title">摘要</div>
+            <div class="section-text">{{ summary }}</div>
+        </div>
+
+        {% if notice %}
+        <div class="section">
+            <div class="section-title">注意</div>
+            <div class="section-text">{{ notice }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if rating or comment %}
+    <div class="comment">
+        {% if bot_avatar %}
+        <img class="avatar" src="{{ bot_avatar }}">
+        {% else %}
+        <div class="avatar-fallback">DS</div>
+        {% endif %}
+
+        <div class="comment-box">
+            <div class="comment-header">
+                <span class="bot-name">DeepSeek</span>
+                <span class="bot-badge">AI</span>
+            </div>
+            <div class="comment-body">
+                {% if rating %}
+                <span class="rating {{ rating_class }}">{{ rating }}</span>
+                {% endif %}
+                {% if comment %}
+                <span class="comment-text">{{ comment }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <span>GTNH PR</span>
+        <span>github.com</span>
+    </div>
+
+</div>
+</body>
+</html>

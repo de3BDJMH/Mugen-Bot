@@ -1,0 +1,234 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family:
+        "Microsoft YaHei",
+        "PingFang SC",
+        "Segoe UI",
+        sans-serif;
+}
+
+.release-card {
+    width: 100%;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+/* 版本类型配色 */
+.release-card.nightly {
+    --accent: #79c0ff;
+    --tag-bg: #203b58;
+}
+
+.release-card.beta {
+    --accent: #d2a8ff;
+    --tag-bg: #382453;
+}
+
+.release-card.rc {
+    --accent: #f2cc60;
+    --tag-bg: #493914;
+}
+
+.release-card.stable {
+    --accent: #7ee2a8;
+    --tag-bg: #173c2a;
+}
+
+.release-content {
+    padding: 34px 40px 32px;
+}
+
+/* 顶部发布提示 */
+.release-heading {
+    color: var(--accent, #79c0ff);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    margin-bottom: 10px;
+}
+
+/* 大版本号 */
+.release-version {
+    margin: 0;
+    font-size: 52px;
+    font-weight: 750;
+    line-height: 1.2;
+    letter-spacing: -0.8px;
+    color: #f0f6fc;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+}
+
+/* Tag 与发布日期 */
+.release-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.release-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: var(--tag-bg, #203b58);
+    color: var(--accent, #79c0ff);
+    font-size: 16px;
+    font-weight: 650;
+    line-height: 1.4;
+}
+
+.release-date {
+    color: #8b949e;
+    font-size: 16px;
+}
+
+/* 版本介绍 */
+.release-description {
+    margin-top: 24px;
+    color: #c9d1d9;
+    font-size: 19px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* 更新精选 */
+.highlights {
+    margin-top: 28px;
+    border-top: 1px solid #30363d;
+    padding-top: 26px;
+}
+
+.highlights-heading {
+    margin: 0 0 24px;
+    color: #f0f6fc;
+    font-size: 21px;
+    font-weight: 650;
+}
+
+.highlight {
+    margin-bottom: 22px;
+}
+
+.highlight:last-child {
+    margin-bottom: 0;
+}
+
+.highlight-title {
+    color: #e6edf3;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.highlight-description {
+    margin-top: 6px;
+    color: #9daab9;
+    font-size: 17px;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+}
+
+/* 底部装饰色带 */
+.color-strip {
+    height: 6px;
+    display: flex;
+}
+
+.color-strip span:nth-child(1) {
+    flex: 7;
+    background: #397eaf;
+}
+
+.color-strip span:nth-child(2) {
+    flex: 2;
+    background: #5797ce;
+}
+
+.color-strip span:nth-child(3) {
+    flex: 1;
+    background: #e8d65c;
+}
+</style>
+</head>
+
+<body>
+<div class="release-card {{ release_type | lower }}">
+    <div class="release-content">
+
+        <div class="release-heading">
+            GT New Horizons · 新版本发布
+        </div>
+
+        <h1 class="release-version">
+            {{ version }}
+        </h1>
+
+        <div class="release-meta">
+            <span class="release-tag">
+                {{ release_type }}
+            </span>
+
+            {% if date %}
+            <span class="release-date">
+                {{ date }}
+            </span>
+            {% endif %}
+        </div>
+
+        {% if description %}
+        <div class="release-description">{{ description }}</div>
+        {% endif %}
+
+        {% if release_type != "Nightly" and highlights %}
+        <div class="highlights">
+            <h2 class="highlights-heading">
+                更新精选
+            </h2>
+
+            {% for item in highlights %}
+            <div class="highlight">
+                <div class="highlight-title">
+                    {{ item.title }}
+                </div>
+
+                {% if item.description %}
+                <div class="highlight-description">
+                    {{ item.description }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    </div>
+
+    <div class="color-strip">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+</div>
+</body>
+</html>

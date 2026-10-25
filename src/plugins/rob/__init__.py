@@ -36,7 +36,11 @@ def plugin_enabled(event:MessageEvent)->bool:
 DATA_PATH=MGPLUGIN.data_path
 CONFIG_PATH=MGPLUGIN.data_path/"config.json"
 
-rob=on_command("抢劫",rule=plugin_enabled)
+rob=on_command("抢劫",aliases={
+    "搶劫","強盗","강도","ограбление","пограбування","rozbój","loupež","lúpež","rån","ryöstö","rán","rablás","cướp","ปล้น","سطو","שוד","लूट","ডাকাতি",
+    "qiǎngjié","qiǎng jié","ㄑㄧㄤˇㄐㄧㄝˊ","ㄑㄧㄤˇ ㄐㄧㄝˊ","ごうとう","ゴウトウ","ｺﾞｳﾄｳ","gōtō","bplôn","saṭw","lūṭ","ḍakati",
+    "plon˥˩","[plon˥˩]","/plon˥˩/","luːʈ","[luːʈ]","/luːʈ/","rɒb","rɑb","rɑːb","[rɒb]","[rɑb]","/rɒb/","/rɑb/",
+},rule=plugin_enabled)
 @rob.handle()
 async def handle_function(matcher:Matcher,bot:Bot,event:GroupMessageEvent,cmd:command.Rob=Depends(command.Rob.get)):#只响应群聊消息，暂时先这么设计
     robbed_user_id=cmd.target_id

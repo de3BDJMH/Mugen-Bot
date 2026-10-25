@@ -1,0 +1,12 @@
+{
+  "display_name": "GTNH Fithub仓库PR解析",
+  "help": {
+    "text": "GTNHPR",
+    "image": []
+  },
+  "state": true,
+  "filter_mode": "blacklist",
+  "whitelist": [],
+  "blacklist": [
+  ]
+}

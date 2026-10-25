@@ -1,0 +1,32 @@
+from urllib.parse import quote
+from playwright.async_api import async_playwright
+
+async def screenshot_page(query:str)->bytes:
+    async with async_playwright() as p:
+        browser=await p.chromium.launch(
+            channel="chromium",
+            headless=True
+        )
+        page=await browser.new_page(
+            viewport={"width":1400,"height":1800}
+        )
+
+        url=f"https://gtnh.huijiwiki.com/wiki/Special:Search?search={quote(query)}"
+        response=await page.goto(
+            url,
+            wait_until="domcontentloaded",
+            timeout=30000
+        )
+
+        if response and response.status==403:
+            await browser.close()
+            raise RuntimeError("403")
+
+        result=page.locator(".mw-search-result-heading a").first
+        if await result.count():
+            await result.click()
+            await page.wait_for_load_state("domcontentloaded")
+
+        image=await page.screenshot(full_page=True)
+        await browser.close()
+        return image

@@ -11,6 +11,7 @@ from nonebot import get_bot
 import pathlib
 import random
 import requests
+import ntplib
 
 from ...libraries.tools import *
 
@@ -111,6 +112,18 @@ async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Messa
         await bot.call_api("send_group_forward_msg",group_id=event.group_id,messages=msgs)
     elif "message.private" in event.get_event_name():
         await bot.call_api("send_private_forward_msg",user_id=event.user_id,messages=msgs)
+
+systimedelta=on_command("/std")
+@systimedelta.handle()
+async def handle_function(matcher:Matcher,bot:Bot,event:MessageEvent,args: Message = CommandArg()):
+    client=ntplib.NTPClient()
+    response=client.request("time.cloudflare.com",version=3,timeout=5)
+    offset=response.offset*1000
+    delay=response.delay*1000
+    msg=f"Bot系统时间偏差：{offset:+.3f} ms"
+    if offset>=1000:
+        msg+=f" ({response.offset:+.2f} s)"
+    await systimedelta.finish(f"{msg}\n网络往返延迟：{delay:.3f} ms")
 
 mytest=on_command("Mugen!")
 @mytest.handle()

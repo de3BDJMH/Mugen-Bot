@@ -12,6 +12,7 @@ from typing import Any, Callable, Literal
 from urllib.parse import quote
 
 import requests
+from .http_client import AetherSession
 
 from . import config as cfg
 from .shop_rules import (
@@ -34,8 +35,8 @@ from .strategy_rules import StrategyRules,load_strategy_rules,save_event_choice
 # 基础配置
 # =========================
 
-BASE_URL = "https://chiyuki.diving-fish.com/api/aether"
-WEB_URL = "https://chiyuki.diving-fish.com/aether/"
+BASE_URL = "https://game.diving-fish.com/api/aether"
+WEB_URL = "https://game.diving-fish.com/aether/"
 REQUEST_TIMEOUT = 10
 PARTY_ACTION_DELAY = 0.5
 PARTY_STATE_CHECK_ATTEMPTS = 10
@@ -625,7 +626,7 @@ class AetherClient:
     """
 
     def __init__(self, account: Account, cookie_file: pathlib.Path | None = None):
-        self.session = requests.Session()
+        self.session = AetherSession(BASE_URL)
 
         # 新账号体系下，username 表示 Aether “角色 username”，
         # 不再表示水鱼主账号登录名。
@@ -780,7 +781,7 @@ class AetherClient:
         self.session.cookies.set(
             AETHER_AUTH_COOKIE_NAME,
             token,
-            domain="chiyuki.diving-fish.com",
+            domain="game.diving-fish.com",
             path="/",
         )
 
@@ -863,7 +864,9 @@ class AetherClient:
     def _save_cookies(self) -> None:
         try:
             with self.cookie_file.open("wb") as file:
-                pickle.dump(self.session.cookies, file)
+                cookies=requests.cookies.RequestsCookieJar()
+                cookies.update(self.session.cookies.jar)
+                pickle.dump(cookies, file)
         except OSError as exc:
             # Cookie 保存失败不应该让一次成功登录变成失败。
             print(f"{self.username}：Cookie 保存失败：{exc}")
@@ -2957,11 +2960,11 @@ def discover_oauth_characters(token: str) -> tuple[str, ...]:
     if not token:
         return ()
 
-    session = requests.Session()
+    session = AetherSession(BASE_URL)
     session.cookies.set(
         AETHER_AUTH_COOKIE_NAME,
         token,
-        domain="chiyuki.diving-fish.com",
+        domain="game.diving-fish.com",
         path="/",
     )
 
